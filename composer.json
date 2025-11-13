@@ -1,0 +1,33 @@
+{
+    "name": "erilshk/vinti4net-php",
+    "description": "Simples SDK para integração de pagamento via Vinti4Net da SISP (Cabo Verde)",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Erilshk\\Vinti4Net\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Eril Shackle",
+            "email": "erilandocarvalho@gmail.com"
+        }
+    ],
+     "scripts": {
+        "test": "phpunit",
+        "test-coverage": "phpunit --coverage-html coverage"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
