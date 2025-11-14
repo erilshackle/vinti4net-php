@@ -15,15 +15,15 @@ class Payment extends Sisp
      */
     protected function fingerprintRequest(array $data): string
     {
-        $encoded = base64_encode(hash('sha512', $this->posAuthCode, true));
-
-        $amount = (float)($data['amount'] ?? 0);
-        $amountLong = (int)bcmul($amount, '1000', 0);
+        $amount = (float)($data['amount'] ?? 0);;
+        $amountLong = (int) bcmul($amount, '1000', 0);
 
         $entity = !empty($data['entityCode']) ? (int)$data['entityCode'] : '';
         $reference = !empty($data['referenceNumber']) ? (int)$data['referenceNumber'] : '';
 
-        $toHash = $encoded .
+        $encodedPOSAuthCode = base64_encode(hash('sha512', $this->posAuthCode, true));
+
+        $toHash = $encodedPOSAuthCode .
             ($data['timeStamp'] ?? '') .
             $amountLong .
             ($data['merchantRef'] ?? '') .
@@ -42,12 +42,12 @@ class Payment extends Sisp
      */
     protected function fingerprintResponse(array $data): string
     {
-        $encoded = base64_encode(hash('sha512', $this->posAuthCode, true));
+        $amount = (float)($data["merchantRespPurchaseAmount"] ?? 0);
+        $amountLong = (int) bcmul($amount, '1000', 0);
 
-        $amount = (float)($data['merchantRespPurchaseAmount'] ?? 0);
-        $amountLong = (int)bcmul($amount, '1000', 0);
+        $encodedPOSAuthCode = base64_encode(hash('sha512', $this->posAuthCode, true));
 
-        $toHash = $encoded .
+        $toHash = $encodedPOSAuthCode .
             ($data["messageType"] ?? '') .
             ($data["merchantRespCP"] ?? '') .
             ($data["merchantRespTid"] ?? '') .
@@ -69,6 +69,26 @@ class Payment extends Sisp
 
     /**
      * Prepara uma requisição de pagamento (compra, serviço, recarga).
+     * 
+     * @param array{
+     *  transactionCode: string, 
+     *  urlMerchantResponse: string, 
+     *  amount: string, 
+     *  currency: string, 
+     *  merchantRef?: string, 
+     *  merchantSession?: string, 
+     *  languageMessages?: string, 
+     *  entityCode?: string, 
+     *  referenceNumber?: string
+     * } $params parametros da requisição. 
+     * 
+     * Obrigatórios:
+     *  - **transactionCode**
+     *  - **amount**
+     *  - **urlMerchantResponse**
+     * 
+     * @throws \InvalidArgumentException
+     * @return array{fields: array, postUrl: string}
      */
     public function preparePayment(array $params): array
     {

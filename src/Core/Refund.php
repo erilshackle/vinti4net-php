@@ -60,7 +60,29 @@ class Refund extends Sisp
     }
 
     /**
-     * Prepara os parâmetros de uma requisição de refund.
+     * Prepara os parâmetros de uma requisição de estorno / reembolso / refund.
+     
+     * @param array{
+     *  amount: int|string, 
+     *  amount: string, 
+     *  merchantRef: string, 
+     *  merchantSession: string, 
+     *  transactionID: string, 
+     *  clearingPeriod: string, 
+     *  urlMerchantResponse: string, 
+     *  languageMessages?: string, 
+     * } $params parametros da requisição. 
+     * 
+     * Obrigtórios:
+     *  - **amount**
+     *  - **merchantRef**
+     *  - **merchantSession**
+     *  - **urlMerchantResponse**
+     *  - **clearingPeriod**
+     *  - **transactionID**
+     * 
+     * @throws \InvalidArgumentException
+     * @return array{fields: array, postUrl: string}
      */
     public function preparePayment(array $params): array 
     {
