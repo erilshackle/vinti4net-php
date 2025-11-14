@@ -2,7 +2,7 @@
 
 namespace Erilshk\Vinti4Net\Core;
 
-use Erilshk\Vinti4Net\Validator\ParamsValidatorTrait;
+use Erilshk\Vinti4Net\Traits\ParamsValidatorTrait;
 use InvalidArgumentException;
 
 /**

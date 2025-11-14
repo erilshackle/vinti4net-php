@@ -1,6 +1,6 @@
 <?php
 
-namespace Erilshk\Vinti4Net\Validator;
+namespace Erilshk\Vinti4Net\Traits;
 
 trait ParamsValidatorTrait
 {
