@@ -2,6 +2,7 @@
 
 namespace Erilshk\Vinti4Net\Core;
 
+use Erilshk\Vinti4Net\Validator\ParamsValidatorTrait;
 use InvalidArgumentException;
 
 /**
@@ -10,6 +11,11 @@ use InvalidArgumentException;
  */
 abstract class Sisp
 {
+    // ---------------------------------------------------------------------
+    // 🔧 Use Traits
+    // ---------------------------------------------------------------------
+    use ParamsValidatorTrait;
+
     // ---------------------------------------------------------------------
     // 🔧 Atributos comuns
     // ---------------------------------------------------------------------
