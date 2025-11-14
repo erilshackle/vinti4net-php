@@ -11,26 +11,26 @@ class Refund extends Sisp
 {
     /**
      * Gera o fingerprint da requisição de refund.
+     * Segue a lógica SISP: apenas campos obrigatórios do estorno.
      */
     protected function fingerprintRequest(array $data): string
     {
         $encoded = base64_encode(hash('sha512', $this->posAuthCode, true));
 
-        $amount = (float)($data['amount'] ?? 0);
-        $amountLong = (int)bcmul($amount, '1000', 0);
+        // Amount deve ser inteiro, sem casas decimais
+        $amount = (string)($data['amount'] ?? '');
+        if (!preg_match('/^\d+$/', $amount)) {
+            throw new InvalidArgumentException("Amount deve ser inteiro, sem casas decimais.");
+        }
 
         $toHash = $encoded .
-            ($data['transactionCode'] ?? '') .
             ($data['posID'] ?? '') .
             ($data['merchantRef'] ?? '') .
             ($data['merchantSession'] ?? '') .
-            $amountLong .
+            $amount .
             ($data['currency'] ?? '') .
-            ($data['clearingPeriod'] ?? '') .
-            ($data['transactionID'] ?? '') .
-            ($data['urlMerchantResponse'] ?? '') .
-            ($data['languageMessages'] ?? '') .
-            ($data['timeStamp'] ?? '');
+            ($data['transactionCode'] ?? '') .
+            ($data['reversal'] ?? ''); // 'R' para estorno
 
         return base64_encode(hash('sha512', $toHash, true));
     }
@@ -42,26 +42,24 @@ class Refund extends Sisp
     {
         $encoded = base64_encode(hash('sha512', $this->posAuthCode, true));
 
-        $amount = (float)($data['merchantRespPurchaseAmount'] ?? 0);
-        $amountLong = (int)bcmul($amount, '1000', 0);
+        $amount = (int)($data['merchantRespPurchaseAmount'] ?? 0);
 
         $toHash = $encoded .
             ($data['messageType'] ?? '') .
+            ($data['merchantRespClearingPeriod'] ?? '') .
+            ($data['merchantRespTransactionID'] ?? '') .
             ($data['merchantRespMerchantRef'] ?? '') .
             ($data['merchantRespMerchantSession'] ?? '') .
-            $amountLong .
+            $amount .
             ($data['merchantRespMessageID'] ?? '') .
             ($data['merchantResp'] ?? '') .
-            ($data['merchantRespTimeStamp'] ?? '') .
-            ($data['merchantRespTransactionID'] ?? '') .
-            ($data['merchantRespClearingPeriod'] ?? '');
+            ($data['merchantRespTimeStamp'] ?? '');
 
         return base64_encode(hash('sha512', $toHash, true));
     }
 
     /**
-     * Prepara os parâmetros de uma requisição de estorno / reembolso / refund.
-     
+     * Prepara os parâmetros de uma requisição de estorno/refund.
      * @param array{
      *  amount: int|string, 
      *  amount: string, 
@@ -73,36 +71,58 @@ class Refund extends Sisp
      *  languageMessages?: string, 
      * } $params parametros da requisição. 
      * 
-     * Obrigtórios:
-     *  - **amount**
-     *  - **merchantRef**
-     *  - **merchantSession**
-     *  - **urlMerchantResponse**
-     *  - **clearingPeriod**
-     *  - **transactionID**
-     * 
-     * @throws \InvalidArgumentException
+     * Campos obrigatórios:
+     * - amount (inteiro)
+     * - merchantRef
+     * - merchantSession
+     * - urlMerchantResponse (válida)
+     * - clearingPeriod
+     * - transactionID
+     *
+     * @throws InvalidArgumentException
      * @return array{fields: array, postUrl: string}
      */
-    public function preparePayment(array $params): array 
+    public function preparePayment(array $params): array
     {
-        $currencyCode = $this->currencyToCode($params['currency'] ?? self::CURRENCY_CVE);
+        // Validar campos obrigatórios
+        foreach (['amount','merchantRef','merchantSession','urlMerchantResponse','clearingPeriod','transactionID'] as $field) {
+            if (empty($params[$field])) {
+                throw new InvalidArgumentException("Campo obrigatório faltando: $field");
+            }
+        }
+
+        // Validar amount
+        if (!preg_match('/^\d+$/', (string)$params['amount'])) {
+            throw new InvalidArgumentException("Amount deve ser inteiro, sem casas decimais.");
+        }
+
+        // Validar URL
+        if (!filter_var($params['urlMerchantResponse'], FILTER_VALIDATE_URL)) {
+            throw new InvalidArgumentException("urlMerchantResponse deve ser uma URL válida.");
+        }
 
         $request = [
             'posID' => $this->posID,
             'merchantRef' => $params['merchantRef'],
             'merchantSession' => $params['merchantSession'],
-            'amount' => (int)(float)$params['amount'],
-            'currency' => $currencyCode,
+            'amount' => (int)$params['amount'],
+            'currency' => $params['currency'] ?? self::CURRENCY_CVE,
             'transactionCode' => self::TRANSACTION_TYPE_REFUND,
+            'reversal' => 'R', // identifica estorno
+            'urlMerchantResponse' => $params['urlMerchantResponse'],
             'languageMessages' => $params['languageMessages'] ?? 'pt',
             'timeStamp' => date('Y-m-d H:i:s'),
             'fingerprintversion' => '1',
-            'urlMerchantResponse' => $params['urlMerchantResponse'] ?? '',
             'clearingPeriod' => $params['clearingPeriod'],
-            'transactionID' => $params['transactionID']
+            'transactionID' => $params['transactionID'],
         ];
 
+        // Validar params usando trait ou método existente
+        if ($error = $this->validateParams($request)) {
+            throw new InvalidArgumentException($error);
+        }
+
+        // Gerar fingerprint
         $request['fingerprint'] = $this->fingerprintRequest($request);
 
         $postUrl = $this->baseUrl . '?' . http_build_query([

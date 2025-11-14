@@ -2,6 +2,7 @@
 
 namespace Erilshk\Vinti4Net\Core;
 
+use Erilshk\Vinti4Net\Validator\Validator;
 use InvalidArgumentException;
 
 /**
@@ -119,6 +120,10 @@ class Payment extends Sisp
             $request['billing'] = $params['billing'];
             $request = array_merge($request, $params['billing']);
             $request['purchaseRequest'] = $this->generatePurchaseRequest($params['billing']);
+        }
+
+        if($error = $this->validateParams($request)){
+            throw new InvalidArgumentException($error);
         }
 
         $request['fingerprint'] = $this->fingerprintRequest($request);
