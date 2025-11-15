@@ -209,8 +209,9 @@ Contribuições são bem-vindas! Por favor, leia [CONTRIBUTING.md](CONTRIBUTING.
 
 **Desenvolvido com ❤️ para Cabo Verde**
 
-<img src="https://avatars.githubusercontent.com/erilshackle" width="100" alt="Foto do contribuinte" style="float:left; margin-right: 1em;"/>
+[![GitHub followers](https://img.shields.io/github/followers/erilshackle?label=Follow&style=social)](https://github.com/erilshackle) [![Stars](https://img.shields.io/github/stars/erilshackle/vinti4net-php.svg)](https://github.com/erilshackle/vinti4net-php/stargazers) [![Contributors](https://img.shields.io/github/contributors/erilshackle/vinti4net-php.svg)](https://github.com/erilshackle/vinti4net-php/graphs/contributors) [![Maintenance](https://img.shields.io/maintenance/yes/2025.svg)]() [![Issues](https://img.shields.io/github/issues/erilshackle/vinti4net-php)](https://github.com/erilshackle/vinti4net-php/issues)
 
-[![Stars](https://img.shields.io/github/stars/erilshackle/vinti4net-php.svg)](https://github.com/erilshackle/vinti4net-php/stargazers) [![Contributors](https://img.shields.io/github/contributors/erilshackle/vinti4net-php.svg)](https://github.com/erilshackle/vinti4net-php/graphs/contributors) [![Maintenance](https://img.shields.io/maintenance/yes/2025.svg)]() [![Issues](https://img.shields.io/github/issues/erilshackle/vinti4net-php)](https://github.com/erilshackle/vinti4net-php/issues)
+
+
 
   
