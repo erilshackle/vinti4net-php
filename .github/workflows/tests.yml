@@ -6,8 +6,11 @@ on:
   pull_request:
 
 jobs:
-  tests:
+  build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-version: [8.0, 8.1, 8.2]
 
     steps:
       - name: Checkout code
@@ -16,7 +19,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: ${{ matrix.php-version }}
           extensions: mbstring, xml
 
       - name: Install dependencies
@@ -31,3 +34,6 @@ jobs:
           file: coverage.xml
           flags: unittests
           fail_ci_if_error: true
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse src tests --level=max
