@@ -94,7 +94,7 @@ class Vinti4NetTest extends TestCase
             'billAddrCountry' => '132',
             'billAddrCity' => 'Praia',
             'billAddrLine1' => 'Rua Teste',
-            'billAddrPostCode' => '7600'
+            'billAddrPostCode' => '7600',
         ]);
 
         $form = $this->vinti4net->createPaymentForm('https://callback.example.com');

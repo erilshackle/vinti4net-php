@@ -21,7 +21,8 @@ class RefundTest extends TestCase
             'merchantRef' => 'REF123',
             'merchantSession' => 'SESS456',
             'transactionID' => 'TXN789',
-            'clearingPeriod' => '2024-11'
+            'clearingPeriod' => '2411',
+            'urlMerchantResponse' => 'https://callback.example.com'
         ]);
 
         $this->assertArrayHasKey('postUrl', $result);
@@ -34,7 +35,7 @@ class RefundTest extends TestCase
         $this->assertEquals('REF123', $fields['merchantRef']);
         $this->assertEquals('SESS456', $fields['merchantSession']);
         $this->assertEquals('TXN789', $fields['transactionID']);
-        $this->assertEquals('2024-11', $fields['clearingPeriod']);
+        $this->assertEquals('2411', $fields['clearingPeriod']);
         $this->assertArrayHasKey('fingerprint', $fields);
     }
 

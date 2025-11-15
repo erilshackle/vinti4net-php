@@ -150,6 +150,7 @@ class SispTest extends TestCase
             ]
         ];
 
+
         $normalized = $this->sisp->normalizeBilling($billing);
 
         $this->assertEquals('test@example.com', $normalized['email']);

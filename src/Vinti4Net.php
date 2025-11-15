@@ -71,14 +71,17 @@ class Vinti4Net
     public function preparePurchasePayment(float|string $amount, array $billing, string $currency = 'CVE'): static
     {
         $this->prepared = true;
-        $this->request = $this->payment->preparePayment([
-            'amount' => $amount,
+
+        $this->request = [
             'transactionCode' => Sisp::TRANSACTION_TYPE_PURCHASE,
+            'amount' => $amount,
             'billing' => $billing,
             'currency' => $currency
-        ]);
+        ];
+
         return $this;
     }
+
 
     // ------------------------------------------------------------------
     //  🧾 SERVICE PAYMENT
@@ -86,14 +89,17 @@ class Vinti4Net
     public function prepareServicePayment(float|string $amount, int $entity, string $number): static
     {
         $this->prepared = true;
-        $this->request = $this->payment->preparePayment([
-            'amount' => $amount,
+
+        $this->request = [
             'transactionCode' => Sisp::TRANSACTION_TYPE_SERVICE,
+            'amount' => $amount,
             'entityCode' => $entity,
-            'referenceNumber' => $number
-        ]);
+            'referenceNumber' => $number,
+        ];
+
         return $this;
     }
+
 
     // ------------------------------------------------------------------
     //  🔄 RECHARGE PAYMENT
@@ -101,14 +107,17 @@ class Vinti4Net
     public function prepareRechargePayment(float|string $amount, int $entity, string $number): static
     {
         $this->prepared = true;
-        $this->request = $this->payment->preparePayment([
-            'amount' => $amount,
+
+        $this->request = [
             'transactionCode' => Sisp::TRANSACTION_TYPE_RECHARGE,
+            'amount' => $amount,
             'entityCode' => $entity,
-            'referenceNumber' => $number
-        ]);
+            'referenceNumber' => $number,
+        ];
+
         return $this;
     }
+
 
     // ------------------------------------------------------------------
     //  💰 REFUND PAYMENT
@@ -121,15 +130,19 @@ class Vinti4Net
         string $clearingPeriod
     ): static {
         $this->prepared = true;
-        $this->request = $this->refund->preparePayment([
+
+        $this->request = [
+            'transactionCode' => Sisp::TRANSACTION_TYPE_REFUND,
             'amount' => $amount,
             'merchantRef' => $merchantRef,
             'merchantSession' => $merchantSession,
             'transactionID' => $transactionID,
             'clearingPeriod' => $clearingPeriod,
-        ]);
+        ];
+
         return $this;
     }
+
 
     // ------------------------------------------------------------------
     //  🧾 CREATE FORM (auto-submissão)
@@ -140,6 +153,26 @@ class Vinti4Net
             throw new Exception("Nenhum pagamento preparado.");
         }
 
+        // 1) Junta todos os parâmetros acumulados
+        $params = $this->request;
+
+        // 2) Insere parâmetros finais obrigatórios
+        $params['urlMerchantResponse'] = $responseUrl;
+
+        if ($merchantRef !== null) {
+            $params['merchantRef'] = $merchantRef;
+        }
+
+        // 3) Agora prepara a requisição REAL
+        $tc = $params['transactionCode'] ?? null;
+
+        if ($tc === Sisp::TRANSACTION_TYPE_REFUND) {
+            $this->request = $this->refund->preparePayment($params);
+        } else {
+            $this->request = $this->payment->preparePayment($params);
+        }
+
+        // 4) Obtém os campos e URL gerados pelo preparePayment
         $fields = $this->request['fields'] ?? [];
         $postUrl = $this->request['postUrl'] ?? '';
 
@@ -147,19 +180,16 @@ class Vinti4Net
             throw new Exception("Dados de pagamento inválidos.");
         }
 
-        $fields['urlMerchantResponse'] = $responseUrl;
-        if ($merchantRef !== null) {
-            $fields['merchantRef'] = $merchantRef;
-        }
-
+        // 5) Gera os campos HTML
         $html = '';
         foreach ($fields as $key => $value) {
-            if (is_array($value)) continue; // Skip arrays
+            if (is_array($value)) continue;
             $html .= "<input type='hidden' name='{$key}' value='" . htmlspecialchars((string)$value) . "'>\n";
         }
 
+        // 6) HTML final
         return "
-        <html>
+    <html>
         <head><title>Pagamento Vinti4Net</title></head>
         <body onload='document.forms[0].submit()'>
             <form method=\"post\" action=\"{$postUrl}\">
@@ -167,8 +197,9 @@ class Vinti4Net
             </form>
             <p>processando...</p>
         </body>
-        </html>";
+    </html>";
     }
+
 
     // ------------------------------------------------------------------
     //  📥 PROCESS RESPONSE (Simplificado)

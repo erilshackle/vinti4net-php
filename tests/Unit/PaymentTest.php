@@ -28,7 +28,8 @@ class PaymentTest extends TestCase
             'amount' => 1500.50,
             'transactionCode' => '1',
             'billing' => $billing,
-            'currency' => 'CVE'
+            'currency' => 'CVE',
+            'urlMerchantResponse' => 'https://callback.example.com'
         ]);
 
         $this->assertArrayHasKey('postUrl', $result);
@@ -50,7 +51,8 @@ class PaymentTest extends TestCase
             'amount' => 2500,
             'transactionCode' => '2',
             'entityCode' => 10001,
-            'referenceNumber' => '123456789'
+            'referenceNumber' => '123456789',
+            'urlMerchantResponse' => 'https://callback.example.com'
         ]);
 
         $fields = $result['fields'];
@@ -66,7 +68,8 @@ class PaymentTest extends TestCase
             'amount' => 500,
             'transactionCode' => '3',
             'entityCode' => 10021,
-            'referenceNumber' => '9912345'
+            'referenceNumber' => '9912345',
+            'urlMerchantResponse' => 'https://callback.example.com'
         ]);
 
         $fields = $result['fields'];

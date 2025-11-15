@@ -4,59 +4,83 @@ namespace Erilshk\Vinti4Net;
 
 final class Billing
 {
-    public $email;
-    public $billAddrCountry;
-    public $billAddrCity;
-    public $billAddrLine1;
-    public $billAddrLine2;
-    public $billAddrLine3;
-    public $billAddrPostCode;
-    public $mobilePhone;
-    public $workPhone;
-    public $acctID;
-    public $acctInfo;
-    public $suspicious;
+    private array $data = [
+        'email' => '',
+        'billAddrCountry' => '132',
+        'billAddrCity' => '',
+        'billAddrLine1' => '',
+        'billAddrLine2' => '',
+        'billAddrLine3' => '',
+        'billAddrPostCode' => '',
+        'mobilePhone' => '',
+        'workPhone' => '',
+        'acctID' => '',
+        'acctInfo' => [],
+        'suspicious' => false,
+    ];
 
+    private function __construct() {}
 
-    /**
-     * Gera um array padronizado de billing para pagamentos 3DS.
-     *
-     * @param array{
-     *     email?: string,
-     *     country?: string,
-     *     city?: string,
-     *     address?: string,
-     *     address2?: string,
-     *     address3?: string,
-     *     postalCode?: string,
-     *     mobilePhone?: string,
-     *     workPhone?: string,
-     *     acctID?: string,
-     *     acctInfo?: array,
-     *     suspicious?: bool
-     * } $data Dados do usuário
-     *
-     * @return array Array pronto para ser passado em preparePurchasePayment
-     */
-    public static function create(array $data): array
+    public static function make(): self
     {
-        $get = fn($key, $default = null) => $data[$key] ?? $default;
-
-        return [
-            'email'            => $get('email', ''),
-            'billAddrCountry'  => $get('billAddrCountry',$get('country', '132')), // CVE por default
-            'billAddrCity'     => $get('billAddrCity',$get('city', '')),
-            'billAddrLine1'    => $get('billAddrLine1',$get('address', '')),
-            'billAddrLine2'    => $get('billAddrLine2',$get('address2', '')),
-            'billAddrLine3'    => $get('billAddrLine3',$get('address3', '')),
-            'billAddrPostCode' => $get('billAddrPostCode',$get('postalCode', '')),
-            'mobilePhone'      => $get('mobilePhone',$get('phone', '')),
-            'workPhone'        => $get('workPhone',$get('workPhone', '')),
-            'acctID'           => $get('acctID',$get('acctID', '')),
-            'acctInfo'         => $get('acctInfo',$get('acctInfo', [])),
-            'suspicious'       => $get('suspicious',$get('suspicious', false)),
-        ];
+        return new self();
     }
 
-    public function toArray() {}
+    public static function create(array $data): array
+    {
+        return self::make()
+            ->fill($data)
+            ->toArray();
+    }
+
+    public function fill(array $data): self
+    {
+        $map = [
+            'email' => 'email',
+            'country' => 'billAddrCountry',
+            'billAddrCountry' => 'billAddrCountry',
+            'city' => 'billAddrCity',
+            'billAddrCity' => 'billAddrCity',
+            'address' => 'billAddrLine1',
+            'billAddrLine1' => 'billAddrLine1',
+            'address2' => 'billAddrLine2',
+            'billAddrLine2' => 'billAddrLine2',
+            'address3' => 'billAddrLine3',
+            'billAddrLine3' => 'billAddrLine3',
+            'postalCode' => 'billAddrPostCode',
+            'billAddrPostCode' => 'billAddrPostCode',
+            'mobilePhone' => 'mobilePhone',
+            'phone' => 'mobilePhone',
+            'workPhone' => 'workPhone',
+            'acctID' => 'acctID',
+            'acctInfo' => 'acctInfo',
+            'suspicious' => 'suspicious',
+        ];
+
+        foreach ($data as $k => $v) {
+            if (!isset($map[$k])) continue;
+            $this->data[$map[$k]] = $v;
+        }
+
+        return $this;
+    }
+
+    public function email(string $v): self { $this->data['email'] = $v; return $this; }
+    public function country(string $v): self { $this->data['billAddrCountry'] = $v; return $this; }
+    public function city(string $v): self { $this->data['billAddrCity'] = $v; return $this; }
+    public function address(string $v): self { $this->data['billAddrLine1'] = $v; return $this; }
+    public function address2(string $v): self { $this->data['billAddrLine2'] = $v; return $this; }
+    public function postalCode(string $v): self { $this->data['billAddrPostCode'] = $v; return $this; }
+    public function mobilePhone(string $v): self { $this->data['mobilePhone'] = $this->cleanPhone($v); return $this; }
+
+    private function cleanPhone(?string $phone): string
+    {
+        if (!$phone) return '';
+        return preg_replace('/\D+/', '', $phone);
+    }
+
+    public function toArray(): array
+    {
+        return $this->data;
+    }
 }
