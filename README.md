@@ -2,7 +2,7 @@
 
 SDK PHP para integração com o sistema de pagamentos **Vinti4Net** (SISP Cabo Verde, Serviço MOP021).
 
-[![Packagist Version](https://img.shields.io/packagist/v/erilshk/vinti4net)](https://packagist.org/packages/erilshk/vinti4net) [![PHP Version](https://img.shields.io/badge/PHP-8.0%2B-blue.svg)](https://php.net) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) [![Issues](https://img.shields.io/github/issues/erilshackle/vinti4net-php)](https://github.com/erilshackle/vinti4net-php/issues)
+[![Packagist Version](https://img.shields.io/packagist/v/erilshk/vinti4net)](https://packagist.org/packages/erilshk/vinti4net) [![PHP Version](https://img.shields.io/badge/PHP-8.0%2B-blue.svg)](https://php.net) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) [![Build Status](https://img.shields.io/github/actions/workflow/status/erilshackle/vinti4net-php/ci.yml?branch=main&logo=github&label=CI)](https://github.com/erilshackle/vinti4net-php/actions) 
 
 
 ## 📦 Instalação
@@ -165,8 +165,8 @@ try {
 ```
 
 ## 🧪 Testes
- [![Build Status](https://img.shields.io/github/actions/workflow/status/erilshackle/vinti4net-php/ci.yml?branch=main&logo=github&label=CI)](https://github.com/erilshackle/vinti4net-php/actions) [![Coverage Status](https://img.shields.io/codecov/c/github/erilshackle/vinti4net-php/main?logo=codecov)](https://codecov.io/gh/erilshackle/vinti4net-php)
 
+[![Coverage Status](https://img.shields.io/codecov/c/github/erilshackle/vinti4net-php/main?logo=codecov)](https://codecov.io/gh/erilshackle/vinti4net-php) [![Quality Score](https://img.shields.io/scrutinizer/g/erilshackle/vinti4net-php.svg?logo=scrutinizer&label=Quality)](https://scrutinizer-ci.com/g/erilshackle/vinti4net-php/) 
 
 ```bash
 # Executar testes
@@ -203,8 +203,14 @@ MIT License - veja [LICENSE](LICENSE) para detalhes.
 
 ## 🤝 Contribuições
 
-Contribuições são bem-vindas! Por favor, leia [CONTRIBUTING.md](CONTRIBUTING.md) antes de enviar PRs.
+Contribuições são bem-vindas! Por favor, leia [CONTRIBUTING.md](CONTRIBUTING.md) antes de enviar *Pull Requests*.
 
 ---
 
 **Desenvolvido com ❤️ para Cabo Verde**
+
+<img src="https://avatars.githubusercontent.com/erilshackle" width="100" alt="Foto do contribuinte" style="float:left; margin-right: 1em;"/>
+
+[![Stars](https://img.shields.io/github/stars/erilshackle/vinti4net-php.svg)](https://github.com/erilshackle/vinti4net-php/stargazers) [![Contributors](https://img.shields.io/github/contributors/erilshackle/vinti4net-php.svg)](https://github.com/erilshackle/vinti4net-php/graphs/contributors) [![Maintenance](https://img.shields.io/maintenance/yes/2025.svg)]() [![Issues](https://img.shields.io/github/issues/erilshackle/vinti4net-php)](https://github.com/erilshackle/vinti4net-php/issues)
+
+  
