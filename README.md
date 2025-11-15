@@ -165,7 +165,7 @@ try {
 ```
 
 ## 🧪 Testes
- [![Build Status](https://img.shields.io/github/actions/workflow/status/erilshackle/vinti4net-php/ci.yml?branch=main&logo=github&label=CI)](https://github.com/erilshackle/vinti4net-php/actions) [![Coverage Status](https://img.shields.io/codecov/c/github/erilshackle/vinti4net-php/main?logo=codecov)](https://codecov.io/gh/erilshackle/vinti4net-php) [![Quality Score](https://img.shields.io/scrutinizer/g/erilshackle/vinti4net-php.svg?logo=scrutinizer&label=Quality)](https://scrutinizer-ci.com/g/erilshackle/vinti4net-php/) 
+ [![Build Status](https://img.shields.io/github/actions/workflow/status/erilshackle/vinti4net-php/ci.yml?branch=main&logo=github&label=CI)](https://github.com/erilshackle/vinti4net-php/actions) [![Coverage Status](https://img.shields.io/codecov/c/github/erilshackle/vinti4net-php/main?logo=codecov)](https://codecov.io/gh/erilshackle/vinti4net-php)
 
 
 ```bash
