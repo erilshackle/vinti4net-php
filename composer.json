@@ -1,5 +1,5 @@
 {
-    "name": "erilshk/vinti4net-php",
+    "name": "erilshk/vinti4net",
     "description": "Simples SDK para integração de pagamento via Vinti4Net da SISP (Cabo Verde)",
     "type": "library",
     "license": "MIT",
