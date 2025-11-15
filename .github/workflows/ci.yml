@@ -35,6 +35,6 @@ jobs:
         with:
           file: coverage.xml
           flags: unittests
-          token: ${{ secrets.CODECOV_VINTI4NET_TOKEN }}
+          token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
 
