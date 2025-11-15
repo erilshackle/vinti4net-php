@@ -21,6 +21,9 @@ jobs:
           php-version: ${{ matrix.php-version }}
           extensions: mbstring, xml
 
+      - name: Upgrade Composer to v2
+        run: composer self-update --2
+
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-suggest
 
