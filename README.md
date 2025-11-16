@@ -166,7 +166,7 @@ try {
 
 ## 🧪 Testes
 
-[![Coverage Status](https://img.shields.io/codecov/c/github/erilshackle/vinti4net-php/main?logo=codecov)](https://codecov.io/gh/erilshackle/vinti4net-php) [![Quality Score](https://img.shields.io/scrutinizer/g/erilshackle/vinti4net-php.svg?logo=scrutinizer&label=Quality)](https://scrutinizer-ci.com/g/erilshackle/vinti4net-php/) 
+[![Coverage Status](https://img.shields.io/codecov/c/github/erilshackle/vinti4net-php/main?logo=codecov)](https://codecov.io/gh/erilshackle/vinti4net-php)
 
 ```bash
 # Executar testes
