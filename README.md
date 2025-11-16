@@ -166,7 +166,7 @@ try {
 
 ## 🧪 Testes
 
-[![Coverage Status](https://img.shields.io/codecov/c/github/erilshackle/vinti4net-php/main?logo=codecov)](https://codecov.io/gh/erilshackle/vinti4net-php)
+[![Maintenance](https://img.shields.io/maintenance/yes/2025.svg)]() [![Coverage Status](https://img.shields.io/codecov/c/github/erilshackle/vinti4net-php/main?logo=codecov)](https://codecov.io/gh/erilshackle/vinti4net-php)
 
 ```bash
 # Executar testes
@@ -209,7 +209,7 @@ Contribuições são bem-vindas! Por favor, leia [CONTRIBUTING.md](CONTRIBUTING.
 
 **Desenvolvido com ❤️ para Cabo Verde**
 
-[![GitHub followers](https://img.shields.io/github/followers/erilshackle?label=Follow&style=social)](https://github.com/erilshackle) [![Stars](https://img.shields.io/github/stars/erilshackle/vinti4net-php.svg)](https://github.com/erilshackle/vinti4net-php/stargazers) [![Contributors](https://img.shields.io/github/contributors/erilshackle/vinti4net-php.svg)](https://github.com/erilshackle/vinti4net-php/graphs/contributors) [![Maintenance](https://img.shields.io/maintenance/yes/2025.svg)]() [![Issues](https://img.shields.io/github/issues/erilshackle/vinti4net-php)](https://github.com/erilshackle/vinti4net-php/issues)
+[![GitHub followers](https://img.shields.io/github/followers/erilshackle?label=Follow&style=social)](https://github.com/erilshackle) [![Stars](https://img.shields.io/github/stars/erilshackle/vinti4net-php.svg)](https://github.com/erilshackle/vinti4net-php/stargazers) [![Contributors](https://img.shields.io/github/contributors/erilshackle/vinti4net-php.svg)](https://github.com/erilshackle/vinti4net-php/graphs/contributors)  [![Issues](https://img.shields.io/github/issues/erilshackle/vinti4net-php)](https://github.com/erilshackle/vinti4net-php/issues)
 
 
 
