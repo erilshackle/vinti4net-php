@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use Erilshk\Vinti4Net\Core\Sisp;
 use Erilshk\Vinti4Net\Vinti4Response;
 use PHPUnit\Framework\TestCase;
 
@@ -161,6 +162,71 @@ class Vinti4ResponseTest extends TestCase
         $this->assertStringContainsString('1 500,00 CVE', $receipt);
         $this->assertStringContainsString('<style>', $receipt);
         $this->assertStringContainsString('<h2>COMPROVATIVO DE PAGAMENTO</h2>', $receipt);
+    }
+
+    public function testRefundMessage()
+    {
+        // Transaction code = 4 (Sisp::TRANSACTION_TYPE_REFUND)
+        $data = [
+            'transactionCode' => Sisp::TRANSACTION_TYPE_REFUND
+        ];
+
+        $response = Vinti4Response::fromProcessorResult([
+            'success' => true,
+            'fingerprint_valid' => true,
+            'data' => $data
+        ]);
+
+        $this->assertEquals('SUCCESS', $response->status);
+        $this->assertEquals('Reembolso processado com sucesso.', $response->message);
+    }
+
+    public function testDccInvalidJson()
+    {
+        $data = [
+            'transactionCode' => Sisp::TRANSACTION_TYPE_PURCHASE,
+            'merchantRespDCCData' => '{invalid_json}'
+        ];
+
+        $response = Vinti4Response::fromProcessorResult([
+            'success' => true,
+            'fingerprint_valid' => true,
+            'data' => $data
+        ]);
+
+        $this->assertFalse($response->dcc['enabled']);
+        $this->assertEquals('DCC inválido ou mal formatado', $response->dcc['error']);
+    }
+
+    public function testGetMerchantRefAndTransactionIdWithMissingData()
+    {
+        $response = new Vinti4Response(
+            'SUCCESS',
+            'Test',
+            true,
+            [] // sem dados
+        );
+
+        $this->assertNull($response->getMerchantRef());
+        $this->assertNull($response->getTransactionId());
+    }
+
+    public function testGetMerchantRefAndTransactionIdWithData()
+    {
+        $data = [
+            'merchantRespMerchantRef' => 'REF123',
+            'merchantRespTid' => 'TXN456'
+        ];
+
+        $response = new Vinti4Response(
+            'SUCCESS',
+            'Test',
+            true,
+            $data
+        );
+
+        $this->assertEquals('REF123', $response->getMerchantRef());
+        $this->assertEquals('TXN456', $response->getTransactionId());
     }
 
     public function testStaticConstructors()
