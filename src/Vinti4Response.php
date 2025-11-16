@@ -16,13 +16,13 @@ class Vinti4Response
     use ReceiptRenderer;
 
     public function __construct(
-        public string $status,
-        public string $message,
-        public bool $success,
-        public array $data = [],
-        public array $dcc = [],
-        public array $debug = [],
-        public ?string $detail = null
+        public readonly string $status,
+        public readonly string $message,
+        public readonly bool $success,
+        public readonly array $data = [],
+        public readonly array $dcc = [],
+        public readonly array $debug = [],
+        public readonly ?string $detail = null
     ) {}
 
     /**
