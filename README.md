@@ -2,7 +2,7 @@
 
 SDK PHP para integração com o sistema de pagamentos **Vinti4Net** (SISP Cabo Verde, Serviço MOP021).
 
-[![Packagist Version](https://img.shields.io/packagist/v/erilshk/vinti4net)](https://packagist.org/packages/erilshk/vinti4net) [![PHP Version](https://img.shields.io/badge/PHP-8.0%2B-blue.svg)](https://php.net) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) [![Build Status](https://img.shields.io/github/actions/workflow/status/erilshackle/vinti4net-php/ci.yml?branch=main&logo=github&label=CI)](https://github.com/erilshackle/vinti4net-php/actions) 
+[![Packagist Version](https://img.shields.io/packagist/v/erilshk/vinti4net)](https://packagist.org/packages/erilshk/vinti4net) [![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://php.net) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) [![Build Status](https://img.shields.io/github/actions/workflow/status/erilshackle/vinti4net-php/ci.yml?branch=main&logo=github&label=CI)](https://github.com/erilshackle/vinti4net-php/actions) 
 
 
 ## 📦 Instalação
@@ -166,7 +166,7 @@ try {
 
 ## 🧪 Testes
 
-[![Coverage Status](https://img.shields.io/codecov/c/github/erilshackle/vinti4net-php/main?logo=codecov)](https://codecov.io/gh/erilshackle/vinti4net-php) [![Quality Score](https://img.shields.io/scrutinizer/g/erilshackle/vinti4net-php.svg?logo=scrutinizer&label=Quality)](https://scrutinizer-ci.com/g/erilshackle/vinti4net-php/) 
+[![Maintenance](https://img.shields.io/maintenance/yes/2025.svg)]() [![Coverage Status](https://img.shields.io/codecov/c/github/erilshackle/vinti4net-php/main?logo=codecov)](https://codecov.io/gh/erilshackle/vinti4net-php)
 
 ```bash
 # Executar testes
@@ -209,7 +209,7 @@ Contribuições são bem-vindas! Por favor, leia [CONTRIBUTING.md](CONTRIBUTING.
 
 **Desenvolvido com ❤️ para Cabo Verde**
 
-[![GitHub followers](https://img.shields.io/github/followers/erilshackle?label=Follow&style=social)](https://github.com/erilshackle) [![Stars](https://img.shields.io/github/stars/erilshackle/vinti4net-php.svg)](https://github.com/erilshackle/vinti4net-php/stargazers) [![Contributors](https://img.shields.io/github/contributors/erilshackle/vinti4net-php.svg)](https://github.com/erilshackle/vinti4net-php/graphs/contributors) [![Maintenance](https://img.shields.io/maintenance/yes/2025.svg)]() [![Issues](https://img.shields.io/github/issues/erilshackle/vinti4net-php)](https://github.com/erilshackle/vinti4net-php/issues)
+[![GitHub followers](https://img.shields.io/github/followers/erilshackle?label=Follow&style=social)](https://github.com/erilshackle) [![Stars](https://img.shields.io/github/stars/erilshackle/vinti4net-php.svg)](https://github.com/erilshackle/vinti4net-php/stargazers) [![Contributors](https://img.shields.io/github/contributors/erilshackle/vinti4net-php.svg)](https://github.com/erilshackle/vinti4net-php/graphs/contributors)  [![Issues](https://img.shields.io/github/issues/erilshackle/vinti4net-php)](https://github.com/erilshackle/vinti4net-php/issues)
 
 
 
