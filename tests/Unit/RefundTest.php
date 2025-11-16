@@ -7,11 +7,11 @@ use PHPUnit\Framework\TestCase;
 
 class RefundTest extends TestCase
 {
-    private Refund $refund;
+    private RefundException $refund;
 
     protected function setUp(): void
     {
-        $this->refund = new Refund('TEST_POS_123', 'TEST_AUTH_456');
+        $this->refund = new RefundException('TEST_POS_123', 'TEST_AUTH_456');
     }
 
     public function testPrepareRefundPayment()
@@ -83,7 +83,7 @@ class RefundTest extends TestCase
 }
 
 // Adicionar método para teste
-class Refund extends Vinti4Refund
+class RefundException extends Vinti4Refund
 {
     public function fingerprintRequest(array $data): string { return parent::fingerprintRequest($data); }
     public function fingerprintResponse(array $data): string { return parent::fingerprintResponse($data); }
