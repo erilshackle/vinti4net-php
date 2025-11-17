@@ -11,26 +11,43 @@ use Exception;
 /**
  * Main SDK facade for Vinti4Net Payments (SISP - Cabo Verde).
  *
- * This class provides a high-level interface for creating and processing
- * Vinti4Net payment and refund transactions. Internally it delegates
- * operations to the Payment and Refund core classes.
+ * This class provides a high-level API for preparing, submitting
+ * and processing Vinti4Net payment and refund transactions.
  * 
- * @author Eril TS Carvalho erilandocarvalho@gmail.com
+ * It acts as a unified interface over the internal Payment and Refund
+ * processing engines, simplifying all merchant-side operations.
+ *
+ * Supported operations:
+ * - Purchase (3DS)
+ * - Service payment (entity + reference)
+ * - Recharge payment (entity + phone/account)
+ * - Refund
+ *
+ * @author  Eril TS Carvalho <erilandocarvalho@gmail.com>
  * @version 1.0.0
+ *
+ * @package Erilshk\Vinti4Net
  */
 class Vinti4Net
 {
+    /** @var Payment */
     private Payment $payment;
+
+    /** @var Refund */
     private Refund $refund;
+
+    /** @var array<string,mixed> */
     private array $request = [];
+
+    /** @var bool */
     private bool $prepared = false;
 
     /**
-     * Constructor for Vinti4Net facade.
+     * Constructor for the Vinti4Net facade.
      *
      * @param string      $posID        POS identifier provided by SISP.
      * @param string      $posAuthCode  POS authorization key.
-     * @param string|null $endpoint     Optional custom SISP endpoint.
+     * @param string|null $endpoint     Optional custom SISP endpoint URL.
      */
     public function __construct(
         string $posID,
