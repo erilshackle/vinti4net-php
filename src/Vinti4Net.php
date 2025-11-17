@@ -9,10 +9,14 @@ use InvalidArgumentException;
 use Exception;
 
 /**
- * Classe principal do SDK Vinti4Net
+ * Main SDK facade for Vinti4Net Payments (SISP - Cabo Verde).
  *
- * É a fachada (interface principal) para operações com o SISP Cabo Verde.
- * Internamente utiliza as classes Payment e Refund.
+ * This class provides a high-level interface for creating and processing
+ * Vinti4Net payment and refund transactions. Internally it delegates
+ * operations to the Payment and Refund core classes.
+ * 
+ * @author Eril TS Carvalho erilandocarvalho@gmail.com
+ * @version 1.0.0
  */
 class Vinti4Net
 {
@@ -21,6 +25,13 @@ class Vinti4Net
     private array $request = [];
     private bool $prepared = false;
 
+    /**
+     * Constructor for Vinti4Net facade.
+     *
+     * @param string      $posID        POS identifier provided by SISP.
+     * @param string      $posAuthCode  POS authorization key.
+     * @param string|null $endpoint     Optional custom SISP endpoint.
+     */
     public function __construct(
         string $posID,
         string $posAuthCode,
@@ -33,6 +44,54 @@ class Vinti4Net
     // ------------------------------------------------------------------
     //  ✅ SET PARAMS
     // ------------------------------------------------------------------
+
+    /**
+     * Sets additional optional request parameters for the next transaction.
+     *
+     * Only the keys listed below are allowed:
+     *
+     * - **merchantRef**        Merchant reference for identifying the transaction.
+     * - **merchantSession**    Unique session identifier for the merchant.
+     * - **languageMessages**   Language code for SISP UI messages (e.g. "pt", "en").
+     * - **entityCode**         Entity code for service or recharge payments.
+     * - **referenceNumber**    Reference number for service or recharge.
+     * - **timeStamp**          Optional timestamp override.
+     * - **billing**            Billing section (3DS 2.x fields).
+     * - **currency**           ISO currency or SISP numeric currency code.
+     * - **acctID**             3DS2: Cardholder account ID.
+     * - **acctInfo**           3DS2: Account info JSON block.
+     * - **addrMatch**          3DS2: Indicates if billing/shipping match ("Y" or "N").
+     * - **billAddrCountry**    3DS2 billing country (ISO 3166-1 alpha-2).
+     * - **billAddrCity**       3DS2 billing city.
+     * - **billAddrLine1**      3DS2 billing address line 1.
+     * - **billAddrPostCode**   3DS2 billing postal code.
+     * - **email**              Customer email.
+     * - **clearingPeriod**     Required for refund operations.
+     *
+     * @param array{
+     *     merchantRef?: string,
+     *     merchantSession?: string,
+     *     languageMessages?: string,
+     *     entityCode?: int|string,
+     *     referenceNumber?: string,
+     *     timeStamp?: string,
+     *     billing?: array,
+     *     currency?: string|int,
+     *     acctID?: string,
+     *     acctInfo?: array,
+     *     addrMatch?: string,
+     *     billAddrCountry?: string,
+     *     billAddrCity?: string,
+     *     billAddrLine1?: string,
+     *     billAddrPostCode?: string,
+     *     email?: string,
+     *     clearingPeriod?: string
+     * } $params
+     *
+     * @return self
+     *
+     * @throws InvalidArgumentException If a disallowed parameter is included.
+     */
     public function setRequestParams(array $params): self
     {
         $allowed = [
@@ -68,6 +127,16 @@ class Vinti4Net
     // ------------------------------------------------------------------
     //  💳 PURCHASE PAYMENT (3DS)
     // ------------------------------------------------------------------
+
+    /**
+     * Prepares a standard **purchase (3D Secure)** payment request.
+     *
+     * @param float|string $amount   Transaction amount.
+     * @param array        $billing  Customer billing data.
+     * @param string       $currency ISO currency (default: CVE).
+     *
+     * @return static
+     */
     public function preparePurchasePayment(float|string $amount, array $billing, string $currency = 'CVE'): static
     {
         $this->prepared = true;
@@ -86,6 +155,16 @@ class Vinti4Net
     // ------------------------------------------------------------------
     //  🧾 SERVICE PAYMENT
     // ------------------------------------------------------------------
+
+    /**
+     * Prepares a **service payment** request (entity + reference number).
+     *
+     * @param float|string $amount Amount to pay.
+     * @param int          $entity Service entity code (SISP).
+     * @param string       $number Reference number.
+     *
+     * @return static
+     */
     public function prepareServicePayment(float|string $amount, int $entity, string $number): static
     {
         $this->prepared = true;
@@ -104,6 +183,16 @@ class Vinti4Net
     // ------------------------------------------------------------------
     //  🔄 RECHARGE PAYMENT
     // ------------------------------------------------------------------
+
+    /**
+     * Prepares a **recharge payment** request (entity + phone/account number).
+     *
+     * @param float|string $amount Amount to pay.
+     * @param int          $entity Recharge entity code.
+     * @param string       $number Target account/phone number.
+     *
+     * @return static
+     */
     public function prepareRechargePayment(float|string $amount, int $entity, string $number): static
     {
         $this->prepared = true;
@@ -122,6 +211,18 @@ class Vinti4Net
     // ------------------------------------------------------------------
     //  💰 REFUND PAYMENT
     // ------------------------------------------------------------------
+
+    /**
+     * Prepares a **refund** request.
+     *
+     * @param float|string $amount          Refund amount.
+     * @param string       $merchantRef     Original merchant reference.
+     * @param string       $merchantSession Original merchant session.
+     * @param string       $transactionID   Original SISP transaction ID.
+     * @param string       $clearingPeriod  Clearing period required by SISP.
+     *
+     * @return static
+     */
     public function prepareRefundPayment(
         float|string $amount,
         string $merchantRef,
@@ -147,23 +248,32 @@ class Vinti4Net
     // ------------------------------------------------------------------
     //  🧾 CREATE FORM (auto-submissão)
     // ------------------------------------------------------------------
+
+    /**
+     * Generates an auto-submitting HTML form to send the transaction
+     * request to the Vinti4Net gateway.
+     *
+     * @param string      $responseUrl URL where SISP will POST the transaction result.
+     * @param string|null $merchantRef Optional override of merchant reference.
+     *
+     * @return string HTML form with auto-submit enabled.
+     *
+     * @throws Exception If no payment has been prepared or data is invalid.
+     */
     public function createPaymentForm(string $responseUrl, ?string $merchantRef = null): string
     {
         if (!$this->prepared) {
             throw new Exception("Nenhum pagamento preparado.");
         }
 
-        // 1) Junta todos os parâmetros acumulados
         $params = $this->request;
 
-        // 2) Insere parâmetros finais obrigatórios
         $params['urlMerchantResponse'] = $responseUrl;
 
         if ($merchantRef !== null) {
             $params['merchantRef'] = $merchantRef;
         }
 
-        // 3) Agora prepara a requisição REAL
         $tc = $params['transactionCode'] ?? null;
 
         if ($tc === Sisp::TRANSACTION_TYPE_REFUND) {
@@ -172,7 +282,6 @@ class Vinti4Net
             $this->request = $this->payment->preparePayment($params);
         }
 
-        // 4) Obtém os campos e URL gerados pelo preparePayment
         $fields = $this->request['fields'] ?? [];
         $postUrl = $this->request['postUrl'] ?? '';
 
@@ -180,14 +289,12 @@ class Vinti4Net
             throw new Exception("Dados de pagamento inválidos.");
         }
 
-        // 5) Gera os campos HTML
         $html = '';
         foreach ($fields as $key => $value) {
             if (is_array($value)) continue;
             $html .= "<input type='hidden' name='{$key}' value='" . htmlspecialchars((string)$value) . "'>\n";
         }
 
-        // 6) HTML final
         return "
     <html>
         <head><title>Pagamento Vinti4Net</title></head>
@@ -204,6 +311,16 @@ class Vinti4Net
     // ------------------------------------------------------------------
     //  📥 PROCESS RESPONSE (Simplificado)
     // ------------------------------------------------------------------
+
+    /**
+     * Processes the POST response sent by SISP after a payment or refund.
+     *
+     * Internally selects either Payment or Refund processor.
+     *
+     * @param array $postData Raw POST data received from SISP.
+     *
+     * @return Vinti4Response Standardized response object.
+     */
     public function processResponse(array $postData): Vinti4Response
     {
         $type = ($postData['transactionCode'] ?? '') === '4' ? 'refund' : 'payment';
@@ -212,12 +329,13 @@ class Vinti4Net
             ? $this->refund->processResponse($postData)
             : $this->payment->processResponse($postData);
 
-        // Usa o construtor inteligente
         return Vinti4Response::fromProcessorResult($result);
     }
 
     /**
-     * Obtém dados da requisição atual (para debug)
+     * Returns the currently prepared request data (for debugging).
+     *
+     * @return array
      */
     public function getRequest(): array
     {
