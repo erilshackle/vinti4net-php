@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0] - 2025-11-18
+
+### Added
+- Update .gitignore to include additional files and directories for exclusion
+- Add initial search index, sitemap, and tags configuration files
+- Update .gitattributes to exclude additional directories and files from Composer package
+- Enhance Billing class to support additional fields and improve data mapping in fill method
+- Add detailed documentation and enhance Billing class with new features and improvements
+- Add comprehensive documentation and assets for Vinti4Net PHP SDK
+
+### Changed
+- Replace favicon with new icon and remove unused image asset
+- Refactor Vinti4Net class documentation for clarity and completeness
+- Enhance Billing and Vinti4Response classes with detailed PHPDoc comments for better code documentation and clarity
+- update Vinti4Net.php
+- Delete Vinti4NetLegacy.php
+- update Vinti4NetLegacy.php
+- Merge branch 'main' of https://github.com/erilshackle/vinti4net-php
+- chore: edit gitattributes and cgangelog
+
 ## [Unreleased] - 2025-11-16
 
 ### Added
@@ -31,7 +51,7 @@ All notable changes to this project will be documented in this file.
 - edit: rename namespace for ValidatorParamTrait
 - Refactor Payment and Refund classes for SISP integration
 
-## [1.0.0] - 2025-11-13
+## [Start] - 2025-11-13
 
 ### Added
 - feat: initial commit - Vinti4Net PHP SDK
