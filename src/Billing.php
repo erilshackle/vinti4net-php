@@ -53,13 +53,63 @@ final class Billing
 
     public function fill(array $data): self
     {
+        $map = [
+            'email' => 'email',
+            'country' => 'billAddrCountry',
+            'billAddrCountry' => 'billAddrCountry',
+            'city' => 'billAddrCity',
+            'billAddrCity' => 'billAddrCity',
+            'address' => 'billAddrLine1',
+            'billAddrLine1' => 'billAddrLine1',
+            'address2' => 'billAddrLine2',
+            'billAddrLine2' => 'billAddrLine2',
+            'address3' => 'billAddrLine3',
+            'billAddrLine3' => 'billAddrLine3',
+            'postalCode' => 'billAddrPostCode',
+            'billAddrPostCode' => 'billAddrPostCode',
+            'state' => 'billAddrState',
+            'billAddrState' => 'billAddrState',
+            'shipCountry' => 'shipAddrCountry',
+            'shipAddrCountry' => 'shipAddrCountry',
+            'shipCity' => 'shipAddrCity',
+            'shipAddrCity' => 'shipAddrCity',
+            'shipAddress' => 'shipAddrLine1',
+            'shipAddrLine1' => 'shipAddrLine1',
+            'shipPostalCode' => 'shipAddrPostCode',
+            'shipAddrPostCode' => 'shipAddrPostCode',
+            'shipState' => 'shipAddrState',
+            'shipAddrState' => 'shipAddrState',
+            'addrMatch' => 'addrMatch',
+            'mobilePhone' => 'mobilePhone',
+            'phone' => 'mobilePhone',
+            'workPhone' => 'workPhone',
+            'acctID' => 'acctID',
+            'acctInfo' => 'acctInfo',
+            'suspicious' => 'suspicious',
+        ];
+
         foreach ($data as $k => $v) {
-            if (property_exists($this, $k)) {
-                $this->data[$k] = $v;
+            if (!isset($map[$k])) {
+                continue; // ignora campos desconhecidos
+            }
+
+            $field = $map[$k];
+
+            if (in_array($field, ['mobilePhone', 'workPhone']) && is_string($v)) {
+                // Suporta string simples para telefone (apenas subscriber)
+                $this->data[$field] = ['cc' => '238', 'subscriber' => preg_replace('/\D+/', '', $v)];
+            } elseif ($field === 'acctInfo' && is_array($v)) {
+                $this->acctInfo($v); // garante defaults
+            } elseif ($field === 'addrMatch' && is_bool($v)) {
+                $this->addrMatch($v);
+            } else {
+                $this->data[$field] = $v;
             }
         }
+
         return $this;
     }
+
 
     /* ------------------ Fluent Setters ------------------ */
 
