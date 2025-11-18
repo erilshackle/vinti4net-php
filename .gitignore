@@ -6,6 +6,9 @@
 /cache/
 /.phpunit.result.cache
 
+#Docs
+mkdocs.yml
+
 # IDE
 /.vscode/
 /.idea/
