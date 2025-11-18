@@ -20,13 +20,7 @@ $vinti4->prepareRefundPayment(
 
 ```mermaid
 graph LR
-    style A fill:#fef3c7,stroke:#78350f,stroke-width:2px
-    style B fill:#ede9fe,stroke:#6b21a8,stroke-width:2px
-    style C fill:#d1fae5,stroke:#065f46,stroke-width:2px
-    style D fill:#fff7ed,stroke:#c2410c,stroke-width:2px
-    style E fill:#fef2f2,stroke:#b91c1c,stroke-width:2px
-    style F fill:#dbeafe,stroke:#1e40af,stroke-width:2px
-
+   
     A["Merchant"] --> B["prepareRefundPayment()"]
     B --> C["createPaymentForm()"]
     C --> D["SISP"]

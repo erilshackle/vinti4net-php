@@ -20,8 +20,8 @@ theme:
         name: Mudar para tema escuro
 
     - scheme: slate
-      primary: indigo
-      accent: indigo
+      primary: orange
+      accent: teal
       toggle:
         icon: material/weather-sunny
         name: Mudar para tema claro
@@ -89,3 +89,4 @@ nav:
   - Faturação (3DS): billing.md
   - Respostas: responses.md
   - Arquitetura: architecture.md
+  - Sobre: about.md

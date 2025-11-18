@@ -15,43 +15,35 @@ namespace Erilshk\Vinti4Net;
  */
 final class Billing
 {
-    
     private array $data = [
-        'email' => '',
-        'billAddrCountry' => '132',
-        'billAddrCity' => '',
-        'billAddrLine1' => '',
-        'billAddrLine2' => '',
-        'billAddrLine3' => '',
+        'email'            => '',
+        'billAddrCountry'  => '132',
+        'billAddrCity'     => '',
+        'billAddrLine1'    => '',
+        'billAddrLine2'    => '',
+        'billAddrLine3'    => '',
         'billAddrPostCode' => '',
-        'mobilePhone' => '',
-        'workPhone' => '',
-        'acctID' => '',
-        'acctInfo' => [],
-        'suspicious' => false,
+        'billAddrState'    => '',
+        'shipAddrCountry'  => '',
+        'shipAddrCity'     => '',
+        'shipAddrLine1'    => '',
+        'shipAddrPostCode' => '',
+        'shipAddrState'    => '',
+        'mobilePhone'      => null,
+        'workPhone'        => null,
+        'acctID'           => '',
+        'acctInfo'         => [],
+        'suspicious'       => false,
+        'addrMatch'        => null,
     ];
 
-     /**
-     * Private constructor to enforce the builder pattern.
-     */
     private function __construct() {}
 
-    /**
-     * Creates a new empty Billing instance.
-     *
-     * @return self
-     */
     public static function make(): self
     {
         return new self();
     }
 
-    /**
-     * Creates billing data from an input array and returns the normalized array.
-     *
-     * @param array $data Input billing fields using mixed naming formats.
-     * @return array Normalized billing data ready for SISP.
-     */
     public static function create(array $data): array
     {
         return self::make()
@@ -59,144 +51,98 @@ final class Billing
             ->toArray();
     }
 
-    /**
-     * Fills the billing data using a key-mapping table that supports
-     * multiple user-friendly field names.
-     *
-     * @param array $data Input values using flexible naming (e.g., "city", "billAddrCity", etc.).
-     * @return self
-     */
     public function fill(array $data): self
     {
-        $map = [
-            'email' => 'email',
-            'country' => 'billAddrCountry',
-            'billAddrCountry' => 'billAddrCountry',
-            'city' => 'billAddrCity',
-            'billAddrCity' => 'billAddrCity',
-            'address' => 'billAddrLine1',
-            'billAddrLine1' => 'billAddrLine1',
-            'address2' => 'billAddrLine2',
-            'billAddrLine2' => 'billAddrLine2',
-            'address3' => 'billAddrLine3',
-            'billAddrLine3' => 'billAddrLine3',
-            'postalCode' => 'billAddrPostCode',
-            'billAddrPostCode' => 'billAddrPostCode',
-            'mobilePhone' => 'mobilePhone',
-            'phone' => 'mobilePhone',
-            'workPhone' => 'workPhone',
-            'acctID' => 'acctID',
-            'acctInfo' => 'acctInfo',
-            'suspicious' => 'suspicious',
-        ];
-
         foreach ($data as $k => $v) {
-            if (!isset($map[$k])) continue;
-            $this->data[$map[$k]] = $v;
+            if (property_exists($this, $k)) {
+                $this->data[$k] = $v;
+            }
         }
-
         return $this;
     }
 
-    /**
-     * Sets the customer email.
-     *
-     * @param string $v
-     * @return self
-     */
+    /* ------------------ Fluent Setters ------------------ */
+
     public function email(string $v): self { $this->data['email'] = $v; return $this; }
-     /**
-     * Sets the billing country code (ISO numeric or SISP-specific).
-     *
-     * @param string $v
-     * @return self
-     */
-    public function country(string $v): self
+    public function country(string $v): self { $this->data['billAddrCountry'] = $v; return $this; }
+    public function city(string $v): self { $this->data['billAddrCity'] = $v; return $this; }
+    public function address(string $v): self { $this->data['billAddrLine1'] = $v; return $this; }
+    public function address2(string $v): self { $this->data['billAddrLine2'] = $v; return $this; }
+    public function address3(string $v): self { $this->data['billAddrLine3'] = $v; return $this; }
+    public function postalCode(string $v): self { $this->data['billAddrPostCode'] = $v; return $this; }
+    public function state(string $v): self { $this->data['billAddrState'] = $v; return $this; }
+    public function shipCountry(string $v): self { $this->data['shipAddrCountry'] = $v; return $this; }
+    public function shipCity(string $v): self { $this->data['shipAddrCity'] = $v; return $this; }
+    public function shipAddress(string $v): self { $this->data['shipAddrLine1'] = $v; return $this; }
+    public function shipPostalCode(string $v): self { $this->data['shipAddrPostCode'] = $v; return $this; }
+    public function shipState(string $v): self { $this->data['shipAddrState'] = $v; return $this; }
+    public function addrMatch(bool $v): self { $this->data['addrMatch'] = $v ? 'Y' : 'N'; return $this; }
+
+    public function mobilePhone(string $cc, string $subscriber): self
     {
-        $this->data['billAddrCountry'] = $v;
+        $this->data['mobilePhone'] = [
+            'cc' => $cc,
+            'subscriber' => preg_replace('/\D+/', '', $subscriber)
+        ];
         return $this;
     }
 
-    /**
-     * Sets the billing city.
-     *
-     * @param string $v
-     * @return self
-     */
-    public function city(string $v): self
+    public function workPhone(string $cc, string $subscriber): self
     {
-        $this->data['billAddrCity'] = $v;
+        $this->data['workPhone'] = [
+            'cc' => $cc,
+            'subscriber' => preg_replace('/\D+/', '', $subscriber)
+        ];
         return $this;
     }
 
-    /**
-     * Sets the primary address line.
-     *
-     * @param string $v
-     * @return self
-     */
-    public function address(string $v): self
+    public function acctID(string $v): self { $this->data['acctID'] = $v; return $this; }
+
+    public function acctInfo(array $info): self
     {
-        $this->data['billAddrLine1'] = $v;
+        $defaults = [
+            'chAccAgeInd'           => '01',
+            'chAccChange'           => '',
+            'chAccDate'             => '',
+            'chAccPwChange'         => '',
+            'chAccPwChangeInd'      => '01',
+            'suspiciousAccActivity' => '01',
+        ];
+        $this->data['acctInfo'] = array_merge($defaults, $info);
         return $this;
     }
 
-    /**
-     * Sets the secondary address line.
-     *
-     * @param string $v
-     * @return self
-     */
-    public function address2(string $v): self
-    {
-        $this->data['billAddrLine2'] = $v;
-        return $this;
-    }
+    public function suspicious(bool $v = true): self { $this->data['suspicious'] = $v; return $this; }
 
-    /**
-     * Sets the postal code.
-     *
-     * @param string $v
-     * @return self
-     */
-    public function postalCode(string $v): self
-    {
-        $this->data['billAddrPostCode'] = $v;
-        return $this;
-    }
-
-    /**
-     * Sets the mobile phone number.
-     * Non-digit characters are automatically stripped.
-     *
-     * @param string $v
-     * @return self
-     */
-    public function mobilePhone(string $v): self
-    {
-        $this->data['mobilePhone'] = $this->cleanPhone($v);
-        return $this;
-    }
-
-    /**
-     * Removes non-numeric characters from a phone number.
-     *
-     * @param string|null $phone
-     * @return string Clean numeric phone value.
-     */
-    private function cleanPhone(?string $phone): string
-    {
-        if (!$phone) return '';
-        return preg_replace('/\D+/', '', $phone);
-    }
-
-    /**
-     * Returns the normalized billing data as an array.
-     *
-     * @return array
-     */
+    /* ------------------ Final Output ------------------ */
     public function toArray(): array
     {
-        return $this->data;
+        return array_filter($this->data, fn($v) => $v !== null && $v !== '');
+    }
+
+    /* ------------------ Helpers ------------------ */
+    public static function fromUser(array $user): self
+    {
+        return self::make()
+            ->email($user['email'] ?? '')
+            ->country($user['country'] ?? '132')
+            ->city($user['city'] ?? '')
+            ->address($user['address'] ?? '')
+            ->address2($user['address2'] ?? '')
+            ->address3($user['address3'] ?? '')
+            ->postalCode($user['postCode'] ?? '')
+            ->state($user['state'] ?? '')
+            ->mobilePhone($user['mobilePhoneCC'] ?? '238', $user['mobilePhone'] ?? '')
+            ->workPhone($user['workPhoneCC'] ?? '238', $user['workPhone'] ?? '')
+            ->acctID($user['id'] ?? '')
+            ->acctInfo([
+                'chAccAgeInd' => $user['chAccAgeInd'] ?? '05',
+                'chAccChange' => isset($user['updated_at']) ? date('Ymd', strtotime($user['updated_at'])) : '',
+                'chAccDate' => isset($user['created_at']) ? date('Ymd', strtotime($user['created_at'])) : '',
+                'chAccPwChange' => isset($user['updated_at']) ? date('Ymd', strtotime($user['updated_at'])) : '',
+                'chAccPwChangeInd' => $user['chAccPwInd'] ?? '05',
+                'suspiciousAccActivity' => isset($user['suspicious']) ? ($user['suspicious'] ? '02' : '01') : '01',
+            ])
+            ->suspicious($user['suspicious'] ?? false);
     }
 }
