@@ -8,6 +8,7 @@
 
 #Docs
 mkdocs.yml
+/mkdocs/
 
 # IDE
 /.vscode/
