@@ -2,6 +2,8 @@
 /docs export-ignore
 /tests export-ignore
 /.github export-ignore
+/docs export-ignore
+/.cache export-ignore
 
 # Excluir arquivos extras
 /.gitignore export-ignore
@@ -10,3 +12,4 @@
 /.phpunit.result.cache export-ignore
 /phpunit.xml export-ignore
 /CONTRIBUTING.md export-ignore
+/mkdocs export-ignore
