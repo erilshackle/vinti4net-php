@@ -1,6 +1,6 @@
 <?php
 
-namespace Erilshk\Vinti4Net\Core;
+namespace Erilshk\Sisp\Core;
 
 use Erilshk\Vinti4Net\Traits\ParamsValidatorTrait;
 use InvalidArgumentException;

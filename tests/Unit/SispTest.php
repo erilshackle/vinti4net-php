@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use Erilshk\Vinti4Net\Core\Sisp;
+use Erilshk\Sisp\Core\Sisp;
 use PHPUnit\Framework\TestCase;
 
 // Classe concreta para testar Sisp abstrato

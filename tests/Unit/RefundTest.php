@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use Erilshk\Vinti4Net\Core\Refund as Vinti4Refund;
+use Erilshk\Sisp\Core\Refund as Vinti4Refund;
 use PHPUnit\Framework\TestCase;
 
 class RefundTest extends TestCase

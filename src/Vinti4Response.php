@@ -1,9 +1,9 @@
 <?php
 
-namespace Erilshk\Vinti4Net;
+namespace Erilshk\Sisp;
 
-use Erilshk\Vinti4Net\Core\Sisp;
-use Erilshk\Vinti4Net\Traits\ReceiptRenderer;
+use Erilshk\Sisp\Core\Sisp;
+use Erilshk\Sisp\Traits\ReceiptRenderer;
 
 /**
  * Smart wrapper class that represents and interprets a SISP response.

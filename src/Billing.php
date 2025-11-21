@@ -1,6 +1,6 @@
 <?php
 
-namespace Erilshk\Vinti4Net;
+namespace Erilshk\Sisp;
 
 /**
  * Represents billing information to be sent to the Vinti4/SISP gateway.

@@ -1,10 +1,10 @@
 <?php
 
-namespace Erilshk\Vinti4Net\Tests\Unit;
+namespace Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
-use Erilshk\Vinti4Net\Traits\ReceiptRenderer;
-use Erilshk\Vinti4Net\Core\Sisp;
+use Erilshk\Sisp\Traits\ReceiptRenderer;
+use Erilshk\Sisp\Core\Sisp;
 
 final class ReceiptRendererTest extends TestCase
 {

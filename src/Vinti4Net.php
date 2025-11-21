@@ -1,10 +1,10 @@
 <?php
 
-namespace Erilshk\Vinti4Net;
+namespace Erilshk\Sisp;
 
-use Erilshk\Vinti4Net\Core\Payment;
-use Erilshk\Vinti4Net\Core\Refund;
-use Erilshk\Vinti4Net\Core\Sisp;
+use Erilshk\Sisp\Core\Payment;
+use Erilshk\Sisp\Core\Refund;
+use Erilshk\Sisp\Core\Sisp;
 use InvalidArgumentException;
 use Exception;
 

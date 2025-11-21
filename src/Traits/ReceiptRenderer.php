@@ -1,8 +1,8 @@
 <?php
 
-namespace Erilshk\Vinti4Net\Traits;
+namespace Erilshk\Sisp\Traits;
 
-use Erilshk\Vinti4Net\Core\Sisp;
+use Erilshk\Sisp\Core\Sisp;
 
 /**
  * Trait para renderização de recibos HTML
@@ -14,11 +14,11 @@ trait ReceiptRenderer
     /**
      * Gera um recibo HTML básico baseado nos dados da transação
      */
-    public function generateReceiptHtml(?string $companyName = null, bool $simple = false): string
+    public function generateReceiptHtml(?string $companyName = null, bool $text = false): string
     {
         $data = $this->data;
         $transactionCode = $data['transactionCode'] ?? '';
-        $this->renderWithStyle = !$simple;
+        $this->renderWithStyle = !$text;
         
         return match($transactionCode) {
             Sisp::TRANSACTION_TYPE_PURCHASE => $this->renderPurchaseReceipt($companyName),

@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use Erilshk\Vinti4Net\Billing;
+use Erilshk\Sisp\Billing;
 use PHPUnit\Framework\TestCase;
 
 class BillingTest extends TestCase

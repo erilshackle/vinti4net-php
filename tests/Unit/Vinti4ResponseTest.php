@@ -2,8 +2,8 @@
 
 namespace Tests\Unit;
 
-use Erilshk\Vinti4Net\Core\Sisp;
-use Erilshk\Vinti4Net\Vinti4Response;
+use Erilshk\Sisp\Core\Sisp;
+use Erilshk\Sisp\Vinti4Response;
 use PHPUnit\Framework\TestCase;
 
 class Vinti4ResponseTest extends TestCase
