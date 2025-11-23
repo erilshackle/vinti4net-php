@@ -12,6 +12,7 @@
         "pagamento web cv",
         "sdk-payment"
     ],
+    "readme": "README.md",
     "type": "library",
     "license": "MIT",
     "require": {
