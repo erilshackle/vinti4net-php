@@ -1,6 +1,6 @@
 # Vinti4Net PHP SDK
 
-SDK PHP para integração com o sistema de pagamentos **Vinti4Net** (SISP Cabo Verde, Serviço MOP021).
+SDK PHP para integração com o sistema de pagamentos **Vinti4Net** ([SISP](https://www.sisp.cv/vinti4.aspx) Cabo Verde, Serviço MOP021).
 
 [![Packagist Version](https://img.shields.io/packagist/v/erilshk/vinti4net)](https://packagist.org/packages/erilshk/vinti4net) [![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://php.net) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) [![Build Status](https://img.shields.io/github/actions/workflow/status/erilshackle/vinti4net-php/ci.yml?branch=main&logo=github&label=CI)](https://github.com/erilshackle/vinti4net-php/actions) 
 
@@ -192,7 +192,8 @@ src/
 
 ## 🔗 Links Úteis
 
-- [Documentação SISP](https://sisp.cv)
+- [Documentação]([https://sisp.cv](https://erilshackle.github.io/vinti4net-php/about/))
+- [Sisp](https://www.sisp.cv)
 - [Vinti4Net](https://vinti4net.cv)
 - [Exemplos completos](examples/)
 
