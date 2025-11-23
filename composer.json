@@ -1,6 +1,16 @@
 {
     "name": "erilshk/vinti4net",
-    "description": "SDK PHP para integração de pagamento via Vinti4Net (SISP, Cabo Verde)",
+    "description": "SDK PHP de integração com a RedeVinti4 (SISP, Cabo Verde) para pagamentos online completo e seguro",
+    "keywords": [
+        "vinti4net",
+        "sisp",
+        "vinti4",
+        "sisp-php",
+        "cabo verde",
+        "vinti4pay",
+        "payment-3ds",
+        "pagamento online"
+    ],
     "type": "library",
     "license": "MIT",
     "require": {

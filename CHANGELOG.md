@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.1] - 2025-11-23
+
+### Removed
+
+- removed param **merchantRef** from `prepareRefund`, once it's not required at all and can be set througth `setMerchant` method
+
+### Added
+- chore: update changelog for version 2.0.0 and 1.1.1, add enhancements and changes
+- Add language option to payment form example
+
+### Fixed
+- chore: update changelog and fix payment example and tests for refund method
+- Fix documentation link in README.md
+- Fix method call in error handling example
+
+### Changed
+- Correct link formatting in README.md
+- Enhance README with hyperlinks for SISP and documentation
+- Update transaction methods and database reference
+- Update namespace import in README.md
+- update docs
+- Update Documentation to reflect recent changes in project structure
+- Refactor payment methods in README.md
+
 ## [2.0.0] - 2025-11-23
 
 ### Changed

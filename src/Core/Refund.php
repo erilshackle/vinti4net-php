@@ -129,7 +129,7 @@ class Refund extends Sisp
             'transactionID' => $params['transactionID'],
         ];
 
-        // Validar params usando trait ou método existente
+        // Validar params usando método existente
         if ($error = $this->validateParams($request)) {
             throw new InvalidArgumentException($error);
         }
