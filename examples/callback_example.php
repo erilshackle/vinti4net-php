@@ -9,8 +9,8 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use Erilshk\Vinti4Net\Vinti4Net;
-use Erilshk\Vinti4Net\Vinti4Response;
+use Erilshk\Sisp\Vinti4Net;
+use Erilshk\Sisp\Vinti4Response;
 
 // =============================================================================
 // 1. CONFIGURAÇÃO (mesma do pagamento)

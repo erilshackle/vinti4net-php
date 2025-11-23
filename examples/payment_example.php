@@ -8,7 +8,8 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use Erilshk\Vinti4Net\Vinti4Net;
+use Erilshk\Sisp\Billing;
+use Erilshk\Sisp\Vinti4Net;
 
 // =============================================================================
 // 1. CONFIGURAÇÃO INICIAL
@@ -26,7 +27,7 @@ $vinti4 = new Vinti4Net(
 
 try {
     // PAGAMENTO COM 3DS (COMPRA)
-    $vinti4->preparePurchasePayment(
+    $vinti4->preparePurchase(
         amount: 2500.00,
         billing: [
             'email' => 'cliente@exemplo.cv',
@@ -50,7 +51,7 @@ try {
     // );
 
     // RECARGA DE TELEMÓVEL
-    // $vinti4->prepareRechargePayment(
+    // $vinti4->prepareRecharge(
     //     amount: 1000.00,
     //     entity: 10021,           // CVMóvel
     //     number: '9912345'        // Número de telefone
@@ -61,9 +62,9 @@ try {
     // =========================================================================
 
     $callbackUrl = 'https://seusite.com/pagamento/callback.php';
-    $merchantRef = 'PEDIDO_' . date('YmdHis'); // Referência única
+    $merchantRef = 'P' . date('YmdHis'); // Referência única
     
-    $paymentForm = $vinti4->createPaymentForm($callbackUrl, $merchantRef);
+    $paymentForm = $vinti4->createPaymentForm(responseUrl: $callbackUrl, lang: 'en');
 
     // =========================================================================
     // 4. EXIBIR FORMULÁRIO (auto-submissão)

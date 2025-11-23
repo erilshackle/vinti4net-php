@@ -54,7 +54,7 @@ class Vinti4NetTest extends TestCase
             'billAddrPostCode' => '7600'
         ];
 
-        $result = $this->vinti4net->preparePurchasePayment(1500, $billing, 'CVE');
+        $result = $this->vinti4net->preparePurchase(1500, $billing, 'CVE');
 
         $this->assertSame($this->vinti4net, $result);
         $this->assertNotEmpty($this->vinti4net->getRequest());
@@ -69,19 +69,18 @@ class Vinti4NetTest extends TestCase
 
     public function testPrepareRechargePayment()
     {
-        $result = $this->vinti4net->prepareRechargePayment(500, 10021, '9912345');
+        $result = $this->vinti4net->prepareRecharge(500, 10021, '9912345');
 
         $this->assertSame($this->vinti4net, $result);
     }
 
     public function testPrepareRefundPayment()
     {
-        $result = $this->vinti4net->prepareRefundPayment(
+        $result = $this->vinti4net->prepareRefund(
             1500,
             'REF123',
-            'SESS456',
             'TXN789',
-            '2024-11'
+            '2024'
         );
 
         $this->assertSame($this->vinti4net, $result);
@@ -89,7 +88,7 @@ class Vinti4NetTest extends TestCase
 
     public function testCreatePaymentForm()
     {
-        $this->vinti4net->preparePurchasePayment(1500, [
+        $this->vinti4net->preparePurchase(1500, [
             'email' => 'test@example.com',
             'billAddrCountry' => '132',
             'billAddrCity' => 'Praia',

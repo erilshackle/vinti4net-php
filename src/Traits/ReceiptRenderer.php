@@ -295,7 +295,7 @@ trait ReceiptRenderer
                 
                 <div class=\"amount-section\">
                     <div class=\"amount\">{$this->formatCurrency($amount, $currency)}</div>
-                    <div class=\"description\">{$this->GetAdditionalErrorMessage()}</div>
+                    <div class=\"description\">{$this->getAditionalMessage()}</div>
                     </div>
                 </div>
                     
@@ -397,6 +397,11 @@ trait ReceiptRenderer
     private function getCurrentTimestamp(): string
     {
         return date('d/m/Y H:i:s');
+    }
+
+    private function getAditionalMessage(): string
+    {
+        return $this->data['merchantRespAdditionalErrorMessage'] ?? '';
     }
 
     private function maskPan(?string $pan): string

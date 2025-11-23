@@ -141,44 +141,6 @@ class Vinti4Net
         return $this;
     }
 
-
-    
-    /**
-     * Set billing parameters for the next transaction.
-     *
-     * @param string $email      Customer email address.
-     * @param string $country    Billing country (ISO 3166-1 numeric preferred).
-     * @param string $address    Billing address line 1.
-     * @param string $city       Billing city.
-     * @param string $postalCode Billing postal / ZIP code.
-     * @param array  $add        Optional additional billing fields to merge (associative array).
-     *  -   billAddrLine2/3
-     *  -   billAddrState
-     *  -   shipAddr*
-     *  -   mobilePhone
-     *  -   workPhone
-     *  -   acctID
-     *  -   acctInfo
-     *  -   addrMatch (Y/N)
-     * @return self
-     */
-    public function setBillingParams($email, $country, $address, $city, $postalCode, array $add = []): self
-    {
-
-        $billing = array_merge(Billing::create([
-            'email' => $email,
-            'country' => $country,
-            'address' => $address,
-            'postalCode' => $postalCode,
-            'city' => $city,
-        ]), Billing::create($add));
-
-
-        return $this->setRequestParams([
-            'billing' => $billing
-        ]);
-    }
-
     
     /**
      * Set the merchant reference and session. (15 chars max)
@@ -205,9 +167,13 @@ class Vinti4Net
      *
      * @param float|string  $amount   Transaction amount.
      * @param array|Billing $billing  Customer billing data.
+     *  > __Required Params__:     
+     *  -   **email**             - Customer email 
+     *  -   **billAddrCountry**   - Country ISO 3166-1  (eg. 132)
+     *  -   **billAddrCity**      - City (eg. Praia)
+     *  -   **billAddrLine1**     - Address (eg. Avenida Cidade da Praia, 45)
+     *  -   **billAddrPostCode**  - Postal Code (eg. 7600)
      * @param string        $currency ISO currency (default: CVE).
-     *
-     * @todo billing param will be removed use method {@see setBillingParam()}
      * 
      * @return static
      */
