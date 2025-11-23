@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - refactor: change project namespace from Erilshk\Vinti4Net to Erilshk\Sisp;
+- chore: update changelog for version 2.0.0 and 1.1.1 changes
 - changelog
 
 ## [1.1.1] - 2025-11-23
@@ -14,7 +15,6 @@ All notable changes to this project will be documented in this file.
 - Enhance receipt generation with additional transaction types
 
 ### Changed
-- chore: update changelog for version 2.0.0 and 1.1.1 changes
 - Delete examples/teste.php
 - Refactor fingerprint methods and update payment params
 - Update export-ignore rules in .gitattributes

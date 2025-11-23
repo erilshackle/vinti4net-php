@@ -78,7 +78,6 @@ class Vinti4NetTest extends TestCase
     {
         $result = $this->vinti4net->prepareRefund(
             1500,
-            'REF123',
             'TXN789',
             '2024'
         );

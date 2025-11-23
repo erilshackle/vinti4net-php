@@ -1,5 +1,4 @@
 <?php
-
 namespace Erilshk\Sisp;
 
 use Erilshk\Sisp\Core\Payment;
@@ -265,7 +264,6 @@ class Vinti4Net
      */
     public function prepareRefund(
         float|string $amount,
-        string $merchantRef,
         string $transactionID,
         string $clearingPeriod
     ): static {
@@ -274,7 +272,6 @@ class Vinti4Net
         $this->request = [
             'transactionCode' => Sisp::TRANSACTION_TYPE_REFUND,
             'amount' => $amount,
-            'merchantRef' => $merchantRef,
             'transactionID' => $transactionID,
             'clearingPeriod' => $clearingPeriod,
         ];

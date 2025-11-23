@@ -28,7 +28,7 @@ $vinti4 = new Vinti4Net(
 try {
     // PAGAMENTO COM 3DS (COMPRA)
     $vinti4->preparePurchase(
-        amount: 2500.00,
+        amount: 2500,
         billing: [
             'email' => 'cliente@exemplo.cv',
             'billAddrCountry' => '132',    // Cabo Verde
@@ -57,13 +57,22 @@ try {
     //     number: '9912345'        // Número de telefone
     // );
 
+    // ESTORNO
+    // $vinti4->prepareRefund(
+    //     amount:          2500,
+    //     transactionID:  '10021',     
+    //     clearingPeriod: '2511'
+    // );
+
     // =========================================================================
     // 3. GERAR FORMULÁRIO DE PAGAMENTO
     // =========================================================================
 
     $callbackUrl = 'https://seusite.com/pagamento/callback.php';
-    $merchantRef = 'P' . date('YmdHis'); // Referência única
-    
+    $merchantRef = 'R' . date('YmdHis'); // Referência única
+
+    $vinti4->setMerchant(reference: $merchantRef);
+
     $paymentForm = $vinti4->createPaymentForm(responseUrl: $callbackUrl, lang: 'en');
 
     // =========================================================================
