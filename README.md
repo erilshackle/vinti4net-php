@@ -83,7 +83,7 @@ if ($response->isSuccess()) {
     $transactionId = $response->getTransactionId();
     $amount = $response->getAmount();
     
-    // Atualizar banco de dados
+    // Atualizar DB
     // Liberar produto/serviço
     
 } elseif ($response->isCancelled()) {
@@ -105,10 +105,10 @@ if ($response->isSuccess()) {
 
 | Tipo | Método | Descrição |
 |------|--------|-----------|
-| 💳 Compra 3DS | `preparePurchasePayment()` | Compras com autenticação 3D Secure |
+| 💳 Compra 3DS | `preparePurchase()` | Compras com autenticação 3D Secure |
 | 🧾 Serviço | `prepareServicePayment()` | Pagamento de entidades (água, luz, etc.) |
-| 📱 Recarga | `prepareRechargePayment()` | Recarga de telemóvel |
-| 💰 Reembolso | `prepareRefundPayment()` | Estorno de transação |
+| 📱 Recarga | `prepareRecharge()` | Recarga de telemóvel |
+| 💰 Reembolso | `prepareRefund()` | Estorno de transação |
 
 ## 🧾 Gerar Recibo
 
@@ -141,7 +141,7 @@ $vinti4->setRequestParams([
 ```php
 $vinti4->prepareRefund(
     amount: 1500.00,
-    merchantRef: 'PEDIDO_ORIGINAL',
+    merchantRef: 'E_REFERENCE',
     transactionID: 'TXN78901',
     clearingPeriod: '2411'
 );
