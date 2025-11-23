@@ -20,7 +20,7 @@ composer require erilshk/vinti4net
 
 require_once 'vendor/autoload.php';
 
-use Erilshk\Vinti4Net\Vinti4Net;
+use Erilshk\Sisp\Vinti4Net;
 
 // Configuração
 $vinti4 = new Vinti4Net(
