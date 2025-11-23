@@ -267,10 +267,20 @@ class Vinti4Response
 
     /**
      * Returns the transaction ID if available.
+     * [merchantRespTid]
      */
     public function getTransactionId(): ?string
     {
         return $this->data['merchantRespTid'] ?? null;
+    }
+
+    /**
+     * Returns the Clearing Period if available.
+     * [merchantRespCP]
+     */
+    public function getClearingPeriod(): ?string
+    {
+        return $this->data['merchantRespCP'] ?? null;
     }
 
     /**
@@ -291,11 +301,19 @@ class Vinti4Response
             : null;
     }
 
+
     /**
      * Returns the transaction currency code (e.g., CVE, USD).
      */
     public function getCurrency(): ?string
     {
         return $this->data['merchantRespCurrency'] ?? null;
+    }
+
+    /**
+     * Summary of GetAdditionalErrorMessage
+     */
+    public function GetAdditionalErrorMessage(){
+        return $this->data['merchantRespAdditionalErrorMessage'] ?? '';
     }
 }
