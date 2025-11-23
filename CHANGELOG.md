@@ -2,7 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-## [2.0.1] - 2025-11-23
+## [v2.0.1] - 2025-11-23
+
+### Changed
+- chore: update changelog for version 2.0.1, enhance README, and refactor Refund class validation
+- Delete .github/FUNDING.yml
+- Update funding options in FUNDING.yml
+- Update funding sources in FUNDING.yml
+- Update issue templates
+
+## [v2.0.1] - 2025-11-23
 
 ### Removed
 
@@ -26,14 +35,14 @@ All notable changes to this project will be documented in this file.
 - Update Documentation to reflect recent changes in project structure
 - Refactor payment methods in README.md
 
-## [2.0.0] - 2025-11-23
+## [v2.0.0] - 2025-11-23
 
 ### Changed
 - refactor: change project namespace from Erilshk\Vinti4Net to Erilshk\Sisp;
 - chore: update changelog for version 2.0.0 and 1.1.1 changes
 - changelog
 
-## [1.1.1] - 2025-11-23
+## [v1.1.1] - 2025-11-23
 
 ### Added
 - Enhance receipt generation with additional transaction types
@@ -44,7 +53,7 @@ All notable changes to this project will be documented in this file.
 - Update export-ignore rules in .gitattributes
 - Update .gitattributes to include mkdocs and teste.php
 
-## [1.1.1] - 2025-11-23
+## [v1.1.1] - 2025-11-23
 
 ### Added
 - feat: add billing parameters and improve receipt rendering logic
@@ -54,7 +63,7 @@ All notable changes to this project will be documented in this file.
 - refactor: update namespace and method names for consistency; remove deprecated billing parameters
 - delete: teste.php from examples
 - 
-## [1.0.0] - 2025-11-18
+## [v1.0.0] - 2025-11-18
 
 ### Added
 - Update .gitignore to include additional files and directories for exclusion

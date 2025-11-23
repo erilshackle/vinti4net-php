@@ -8,8 +8,9 @@
         "sisp-php",
         "cabo verde",
         "vinti4pay",
-        "payment-3ds",
-        "pagamento online"
+        "pagamentos vinti4",
+        "pagamento web cv",
+        "sdk-payment"
     ],
     "type": "library",
     "license": "MIT",
@@ -32,7 +33,9 @@
     "authors": [
         {
             "name": "Eril Shackle",
-            "email": "erilandocarvalho@gmail.com"
+            "email": "erilandocarvalho@gmail.com",
+            "role": "developer",
+            "homepage": "https://github.com/erilshackle"
         }
     ],
     "scripts": {
