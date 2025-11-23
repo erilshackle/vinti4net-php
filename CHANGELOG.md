@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+
+## [2.0.0] - 2025-11-21
+
+### Changed
+- refactor: change project namespace from Erilshk\Vinti4Net to Erilshk\Sisp;
+- changelog
+
+## [1.1.1] - 2025-11-23
+
+### Added
+- feat: add billing parameters and improve receipt rendering logic
+- refactor: enhance Refund and Vinti4Response classes with additional fields and validation
+
+### Changed
+- refactor: update namespace and method names for consistency; remove deprecated billing parameters
+- delete: teste.php from examples
+- 
 ## [1.0.0] - 2025-11-18
 
 ### Added
