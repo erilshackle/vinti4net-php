@@ -13,24 +13,26 @@ class Refund extends Sisp
      * Gera o fingerprint da requisição de refund.
      * Segue a lógica SISP: apenas campos obrigatórios do estorno.
      */
-    protected function fingerprintRequest(array $data): string
+   protected function fingerprintRequest(array $data): string
     {
-        $encoded = base64_encode(hash('sha512', $this->posAuthCode, true));
+        $amount = (float)($data['amount'] ?? 0);;
+        $amountLong = (int) bcmul($amount, '1000', 0);
 
-        // Amount deve ser inteiro, sem casas decimais
-        $amount = (string)($data['amount'] ?? '');
-        if (!preg_match('/^\d+$/', $amount)) {
-            throw new InvalidArgumentException("Amount deve ser inteiro, sem casas decimais.");
-        }
+        $entity = !empty($data['entityCode']) ? (int)$data['entityCode'] : '';
+        $reference = !empty($data['referenceNumber']) ? (int)$data['referenceNumber'] : '';
 
-        $toHash = $encoded .
-            ($data['posID'] ?? '') .
+        $encodedPOSAuthCode = base64_encode(hash('sha512', $this->posAuthCode, true));
+
+        $toHash = $encodedPOSAuthCode .
+            ($data['timeStamp'] ?? '') .
+            $amountLong .
             ($data['merchantRef'] ?? '') .
             ($data['merchantSession'] ?? '') .
-            $amount .
+            ($data['posID'] ?? '') .
             ($data['currency'] ?? '') .
             ($data['transactionCode'] ?? '') .
-            ($data['reversal'] ?? ''); // 'R' para estorno
+            $entity .
+            $reference;
 
         return base64_encode(hash('sha512', $toHash, true));
     }
@@ -38,22 +40,29 @@ class Refund extends Sisp
     /**
      * Gera o fingerprint esperado na resposta de refund.
      */
-    protected function fingerprintResponse(array $data): string
+     protected function fingerprintResponse(array $data): string
     {
-        $encoded = base64_encode(hash('sha512', $this->posAuthCode, true));
+        $amount = (float)($data["merchantRespPurchaseAmount"] ?? 0);
+        $amountLong = (int) bcmul($amount, '1000', 0);
 
-        $amount = (int)($data['merchantRespPurchaseAmount'] ?? 0);
+        $encodedPOSAuthCode = base64_encode(hash('sha512', $this->posAuthCode, true));
 
-        $toHash = $encoded .
-            ($data['messageType'] ?? '') .
-            ($data['merchantRespClearingPeriod'] ?? '') .
-            ($data['merchantRespTransactionID'] ?? '') .
-            ($data['merchantRespMerchantRef'] ?? '') .
-            ($data['merchantRespMerchantSession'] ?? '') .
-            $amount .
-            ($data['merchantRespMessageID'] ?? '') .
-            ($data['merchantResp'] ?? '') .
-            ($data['merchantRespTimeStamp'] ?? '');
+        $toHash = $encodedPOSAuthCode .
+            ($data["messageType"] ?? '') .
+            ($data["merchantRespCP"] ?? '') .
+            ($data["merchantRespTid"] ?? '') .
+            ($data["merchantRespMerchantRef"] ?? '') .
+            ($data["merchantRespMerchantSession"] ?? '') .
+            $amountLong .
+            ($data["merchantRespMessageID"] ?? '') .
+            ($data["merchantRespPan"] ?? '') .
+            ($data["merchantResp"] ?? '') .
+            ($data["merchantRespTimeStamp"] ?? '') .
+            (!empty($data['merchantRespReferenceNumber']) ? (int)$data['merchantRespReferenceNumber'] : '') .
+            (!empty($data['merchantRespEntityCode']) ? (int)$data['merchantRespEntityCode'] : '') .
+            ($data["merchantRespClientReceipt"] ?? '') .
+            trim($data["merchantRespAdditionalErrorMessage"] ?? '') .
+            ($data["merchantRespReloadCode"] ?? '');
 
         return base64_encode(hash('sha512', $toHash, true));
     }
@@ -85,7 +94,7 @@ class Refund extends Sisp
     public function preparePayment(array $params): array
     {
         // Validar campos obrigatórios
-        foreach (['amount','merchantRef','merchantSession','urlMerchantResponse','clearingPeriod','transactionID'] as $field) {
+        foreach (['amount', 'merchantRef', 'urlMerchantResponse', 'clearingPeriod', 'transactionID'] as $field) {
             if (empty($params[$field])) {
                 throw new InvalidArgumentException("Campo obrigatório faltando: $field");
             }
@@ -104,15 +113,18 @@ class Refund extends Sisp
         $request = [
             'posID' => $this->posID,
             'merchantRef' => $params['merchantRef'],
-            'merchantSession' => $params['merchantSession'],
+            'merchantSession' => $params['merchantSession'] ?? "S" . date('YmdHms'),
             'amount' => (int)$params['amount'],
-            'currency' => $params['currency'] ?? self::CURRENCY_CVE,
+            'currency' => self::CURRENCY_CVE,
+            'is3DSec' => 1,
             'transactionCode' => self::TRANSACTION_TYPE_REFUND,
-            'reversal' => 'R', // identifica estorno
             'urlMerchantResponse' => $params['urlMerchantResponse'],
             'languageMessages' => $params['languageMessages'] ?? 'pt',
             'timeStamp' => date('Y-m-d H:i:s'),
             'fingerprintversion' => '1',
+            'entityCode' => '',
+            'referenceNumber' => '',
+            'reversal' => 'R', // identifica estorno
             'clearingPeriod' => $params['clearingPeriod'],
             'transactionID' => $params['transactionID'],
         ];
