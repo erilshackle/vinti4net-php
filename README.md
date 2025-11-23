@@ -151,7 +151,7 @@ $vinti4->prepareRefund(
 
 ```php
 try {
-    $vinti4->preparePurchasePayment(1500, $billing);
+    $vinti4->preparePurchase(1500, $billing);
     $form = $vinti4->createPaymentForm('https://callback.com');
     echo $form;
     
