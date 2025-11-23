@@ -66,7 +66,7 @@ $vinti4->prepareRechargePayment(
 ```php
 $htmlForm = $vinti4->createPaymentForm(
     responseUrl: 'https://seusite.com/pagamento/callback',
-    merchantRef: 'PEDIDO_12345' // Opcional: referência interna
+    lang: 'pt' // Opcional: languageMessages
 );
 
 echo $htmlForm; // Formulário auto-submissível
