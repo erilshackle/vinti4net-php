@@ -34,7 +34,7 @@ $vinti4 = new Vinti4Net(
 
 ```php
 // Pagamento com 3DS (Compra)
-$vinti4->preparePurchasePayment(
+$vinti4->preparePurchase(
     amount: 1500.00,
     billing: [
         'email' => 'cliente@email.com',
@@ -54,7 +54,7 @@ $vinti4->prepareServicePayment(
 );
 
 // Ou recarga de telemóvel
-$vinti4->prepareRechargePayment(
+$vinti4->prepareRecharge(
     amount: 500.00,
     entity: 10021,        // Código da operadora (ex: CVMóvel)
     number: '9912345'     // Número de telefone
@@ -139,10 +139,9 @@ $vinti4->setRequestParams([
 ### Reembolso
 
 ```php
-$vinti4->prepareRefundPayment(
+$vinti4->prepareRefund(
     amount: 1500.00,
     merchantRef: 'PEDIDO_ORIGINAL',
-    merchantSession: 'SESSAO_ORIGINAL',
     transactionID: 'TXN78901',
     clearingPeriod: '2411'
 );
