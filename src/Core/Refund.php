@@ -13,7 +13,7 @@ class Refund extends Sisp
      * Gera o fingerprint da requisição de refund.
      * Segue a lógica SISP: apenas campos obrigatórios do estorno.
      */
-    protected function fingerprintRequest(array $data): string
+   protected function fingerprintRequest(array $data): string
     {
         $amount = (float)($data['amount'] ?? 0);;
         $amountLong = (int) bcmul($amount, '1000', 0);
@@ -40,7 +40,7 @@ class Refund extends Sisp
     /**
      * Gera o fingerprint esperado na resposta de refund.
      */
-    protected function fingerprintResponse(array $data): string
+     protected function fingerprintResponse(array $data): string
     {
         $amount = (float)($data["merchantRespPurchaseAmount"] ?? 0);
         $amountLong = (int) bcmul($amount, '1000', 0);
