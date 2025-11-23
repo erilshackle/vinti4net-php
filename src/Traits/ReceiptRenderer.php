@@ -17,14 +17,14 @@ trait ReceiptRenderer
     public function generateReceiptHtml(?string $companyName = null, bool $simple = false): string
     {
         $data = $this->data;
-        $transactionCode = $data['transactionCode'] ?? '';
+        $transactionCode = $data['transactionCode'] ?? $data['messageType'] ?? '';
         $this->renderWithStyle = !$simple;
         
         return match($transactionCode) {
-            Sisp::TRANSACTION_TYPE_PURCHASE => $this->renderPurchaseReceipt($companyName),
-            Sisp::TRANSACTION_TYPE_SERVICE => $this->renderServiceReceipt($companyName),
-            Sisp::TRANSACTION_TYPE_RECHARGE => $this->renderRechargeReceipt($companyName),
-            Sisp::TRANSACTION_TYPE_REFUND => $this->renderRefundReceipt($companyName),
+            Sisp::TRANSACTION_TYPE_PURCHASE, '8' => $this->renderPurchaseReceipt($companyName),
+            Sisp::TRANSACTION_TYPE_SERVICE, 'P' => $this->renderServiceReceipt($companyName),
+            Sisp::TRANSACTION_TYPE_RECHARGE, 'M' => $this->renderRechargeReceipt($companyName),
+            Sisp::TRANSACTION_TYPE_REFUND, '10' => $this->renderRefundReceipt($companyName),
             default => $this->renderGenericReceipt($companyName)
         };
     }
