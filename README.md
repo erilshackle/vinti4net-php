@@ -1,6 +1,6 @@
 # Vinti4Net PHP SDK
 
-SDK PHP para integração com o sistema de pagamentos **Vinti4Net** (SISP Cabo Verde, Serviço MOP021).
+SDK PHP para integração com o sistema de pagamentos **Vinti4Net** ([SISP](https://www.sisp.cv/vinti4.aspx) Cabo Verde, Serviço MOP021).
 
 [![Packagist Version](https://img.shields.io/packagist/v/erilshk/vinti4net)](https://packagist.org/packages/erilshk/vinti4net) [![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://php.net) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) [![Build Status](https://img.shields.io/github/actions/workflow/status/erilshackle/vinti4net-php/ci.yml?branch=main&logo=github&label=CI)](https://github.com/erilshackle/vinti4net-php/actions) 
 
@@ -20,7 +20,7 @@ composer require erilshk/vinti4net
 
 require_once 'vendor/autoload.php';
 
-use Erilshk\Vinti4Net\Vinti4Net;
+use Erilshk\Sisp\Vinti4Net;
 
 // Configuração
 $vinti4 = new Vinti4Net(
@@ -83,7 +83,7 @@ if ($response->isSuccess()) {
     $transactionId = $response->getTransactionId();
     $amount = $response->getAmount();
     
-    // Atualizar banco de dados
+    // Atualizar DB
     // Liberar produto/serviço
     
 } elseif ($response->isCancelled()) {
@@ -105,10 +105,10 @@ if ($response->isSuccess()) {
 
 | Tipo | Método | Descrição |
 |------|--------|-----------|
-| 💳 Compra 3DS | `preparePurchasePayment()` | Compras com autenticação 3D Secure |
+| 💳 Compra 3DS | `preparePurchase()` | Compras com autenticação 3D Secure |
 | 🧾 Serviço | `prepareServicePayment()` | Pagamento de entidades (água, luz, etc.) |
-| 📱 Recarga | `prepareRechargePayment()` | Recarga de telemóvel |
-| 💰 Reembolso | `prepareRefundPayment()` | Estorno de transação |
+| 📱 Recarga | `prepareRecharge()` | Recarga de telemóvel |
+| 💰 Reembolso | `prepareRefund()` | Estorno de transação |
 
 ## 🧾 Gerar Recibo
 
@@ -141,7 +141,7 @@ $vinti4->setRequestParams([
 ```php
 $vinti4->prepareRefund(
     amount: 1500.00,
-    merchantRef: 'PEDIDO_ORIGINAL',
+    merchantRef: 'E_REFERENCE',
     transactionID: 'TXN78901',
     clearingPeriod: '2411'
 );
@@ -151,7 +151,7 @@ $vinti4->prepareRefund(
 
 ```php
 try {
-    $vinti4->preparePurchasePayment(1500, $billing);
+    $vinti4->preparePurchase(1500, $billing);
     $form = $vinti4->createPaymentForm('https://callback.com');
     echo $form;
     
@@ -192,7 +192,8 @@ src/
 
 ## 🔗 Links Úteis
 
-- [Documentação SISP](https://sisp.cv)
+- [Documentação](https://erilshackle.github.io/vinti4net-php/about/)
+- [Sisp](https://www.sisp.cv)
 - [Vinti4Net](https://vinti4net.cv)
 - [Exemplos completos](examples/)
 
