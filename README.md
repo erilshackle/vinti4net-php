@@ -5,7 +5,7 @@ SDK PHP para integração com o sistema de pagamentos **Vinti4Net** ([SISP](http
 [![Packagist Version](https://img.shields.io/packagist/v/erilshk/vinti4net)](https://packagist.org/packages/erilshk/vinti4net) [![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://php.net) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) [![Build Status](https://img.shields.io/github/actions/workflow/status/erilshackle/vinti4net-php/ci.yml?branch=main&logo=github&label=CI)](https://github.com/erilshackle/vinti4net-php/actions) 
 
 
-## 📦 Instalação
+## 📦 [Instalação](https://packagist.org/packages/erilshk/vinti4net)
 
 ```bash
 composer require erilshk/vinti4net

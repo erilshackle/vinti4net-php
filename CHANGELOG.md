@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v2.0.0] - 2025-11-23
+
+### Added
+- chore: add readme field to composer.json
+
+### Changed
+- chore: update changelog versioning and enhance composer.json keywords
+
 ## [v2.0.1] - 2025-11-23
 
 ### Changed
