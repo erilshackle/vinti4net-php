@@ -17,14 +17,14 @@ trait ReceiptRenderer
     public function generateReceiptHtml(?string $companyName = null, bool $text = false): string
     {
         $data = $this->data;
-        $transactionCode = $data['transactionCode'] ?? '';
+        $transactionCode = $data['transactionCode'] ?? $data['messageType'] ?? '';
         $this->renderWithStyle = !$text;
         
         return match($transactionCode) {
-            Sisp::TRANSACTION_TYPE_PURCHASE => $this->renderPurchaseReceipt($companyName),
-            Sisp::TRANSACTION_TYPE_SERVICE => $this->renderServiceReceipt($companyName),
-            Sisp::TRANSACTION_TYPE_RECHARGE => $this->renderRechargeReceipt($companyName),
-            Sisp::TRANSACTION_TYPE_REFUND => $this->renderRefundReceipt($companyName),
+            '8', Sisp::TRANSACTION_TYPE_PURCHASE => $this->renderPurchaseReceipt($companyName),
+            'P', Sisp::TRANSACTION_TYPE_SERVICE => $this->renderServiceReceipt($companyName),
+            'M', Sisp::TRANSACTION_TYPE_RECHARGE => $this->renderRechargeReceipt($companyName),
+            '10', Sisp::TRANSACTION_TYPE_REFUND => $this->renderRefundReceipt($companyName),
             default => $this->renderGenericReceipt($companyName)
         };
     }
@@ -295,12 +295,12 @@ trait ReceiptRenderer
                 
                 <div class=\"amount-section\">
                     <div class=\"amount\">{$this->formatCurrency($amount, $currency)}</div>
-                    <div class=\"description\">Transação comercial</div>
+                    <div class=\"description\">{$this->GetAdditionalErrorMessage()}</div>
+                    </div>
                 </div>
-            </div>
-            
-            <div class=\"receipt-footer\">
-                <div class=\"status {$this->getStatusClass()}\">{$this->getStatusIcon()} {$this->getStatusText()}</div>
+                    
+                    <div class=\"receipt-footer\">
+                    <div class=\"status {$this->getStatusClass()}\">{$this->getStatusIcon()} {$this->getStatusText()}</div>
                 <div class=\"timestamp\">Emitido em {$this->getCurrentTimestamp()}</div>
             </div>
         </div>

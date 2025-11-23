@@ -141,6 +141,61 @@ class Vinti4Net
         return $this;
     }
 
+
+    
+    /**
+     * Set billing parameters for the next transaction.
+     *
+     * @param string $email      Customer email address.
+     * @param string $country    Billing country (ISO 3166-1 numeric preferred).
+     * @param string $address    Billing address line 1.
+     * @param string $city       Billing city.
+     * @param string $postalCode Billing postal / ZIP code.
+     * @param array  $add        Optional additional billing fields to merge (associative array).
+     *  -   billAddrLine2/3
+     *  -   billAddrState
+     *  -   shipAddr*
+     *  -   mobilePhone
+     *  -   workPhone
+     *  -   acctID
+     *  -   acctInfo
+     *  -   addrMatch (Y/N)
+     * @return self
+     */
+    public function setBillingParams($email, $country, $address, $city, $postalCode, array $add = []): self
+    {
+
+        $billing = array_merge(Billing::create([
+            'email' => $email,
+            'country' => $country,
+            'address' => $address,
+            'postalCode' => $postalCode,
+            'city' => $city,
+        ]), Billing::create($add));
+
+
+        return $this->setRequestParams([
+            'billing' => $billing
+        ]);
+    }
+
+    
+    /**
+     * Set the merchant reference and session. (15 chars max)
+     *
+     * Sets the merchant identifier/reference used by this client
+     *
+     * @param string      $reference Non-empty merchant reference or transaction_id. up to 15 character maximun
+     * @param mixed|null  $session   Optional session information (string). up to 15 character maximun
+     * @return self                  Returns $this to allow method chaining.
+     */
+    public function setMerchant(string $reference, ?string $session = null){
+        return $this->setRequestParams([
+            'merchantRef' => $reference,
+            'merchantSession' => $session ?? "S" . date('YmdHms'),
+        ]);
+    }
+
     // ------------------------------------------------------------------
     //  💳 PURCHASE PAYMENT (3DS)
     // ------------------------------------------------------------------
@@ -148,15 +203,18 @@ class Vinti4Net
     /**
      * Prepares a standard **purchase (3D Secure)** payment request.
      *
-     * @param float|string $amount   Transaction amount.
-     * @param array        $billing  Customer billing data.
-     * @param string       $currency ISO currency (default: CVE).
+     * @param float|string  $amount   Transaction amount.
+     * @param array|Billing $billing  Customer billing data.
+     * @param string        $currency ISO currency (default: CVE).
      *
+     * @todo billing param will be removed use method {@see setBillingParam()}
+     * 
      * @return static
      */
-    public function preparePurchasePayment(float|string $amount, array $billing, string $currency = 'CVE'): static
+    public function preparePurchase(float|string $amount, array|Billing $billing, string $currency = 'CVE'): static
     {
         $this->prepared = true;
+        $billing = (is_object($billing) && $billing instanceof Billing)? $billing->toArray() : $billing;
 
         $this->request = [
             'transactionCode' => Sisp::TRANSACTION_TYPE_PURCHASE,
@@ -210,7 +268,7 @@ class Vinti4Net
      *
      * @return static
      */
-    public function prepareRechargePayment(float|string $amount, int $entity, string $number): static
+    public function prepareRecharge(float|string $amount, int $entity, string $number): static
     {
         $this->prepared = true;
 
@@ -234,16 +292,14 @@ class Vinti4Net
      *
      * @param float|string $amount          Refund amount.
      * @param string       $merchantRef     Original merchant reference.
-     * @param string       $merchantSession Original merchant session.
      * @param string       $transactionID   Original SISP transaction ID.
      * @param string       $clearingPeriod  Clearing period required by SISP.
      *
      * @return static
      */
-    public function prepareRefundPayment(
+    public function prepareRefund(
         float|string $amount,
         string $merchantRef,
-        string $merchantSession,
         string $transactionID,
         string $clearingPeriod
     ): static {
@@ -253,7 +309,6 @@ class Vinti4Net
             'transactionCode' => Sisp::TRANSACTION_TYPE_REFUND,
             'amount' => $amount,
             'merchantRef' => $merchantRef,
-            'merchantSession' => $merchantSession,
             'transactionID' => $transactionID,
             'clearingPeriod' => $clearingPeriod,
         ];
@@ -270,26 +325,26 @@ class Vinti4Net
      * Generates an auto-submitting HTML form to send the transaction
      * request to the Vinti4Net gateway.
      *
-     * @param string      $responseUrl URL where SISP will POST the transaction result.
-     * @param string|null $merchantRef Optional override of merchant reference.
+     * @param string $responseUrl URL where SISP will POST the transaction result.
+     * @param string $lang language Messages (default: pt).
      *
      * @return string HTML form with auto-submit enabled.
      *
      * @throws Exception If no payment has been prepared or data is invalid.
      */
-    public function createPaymentForm(string $responseUrl, ?string $merchantRef = null): string
+    public function createPaymentForm(string $responseUrl, string $lang = 'pt'): string
     {
         if (!$this->prepared) {
             throw new Exception("Nenhum pagamento preparado.");
         }
 
+        $this->setRequestParams([
+            'languageMessages' => $lang
+        ]);
+
         $params = $this->request;
 
         $params['urlMerchantResponse'] = $responseUrl;
-
-        if ($merchantRef !== null) {
-            $params['merchantRef'] = $merchantRef;
-        }
 
         $tc = $params['transactionCode'] ?? null;
 
@@ -312,6 +367,8 @@ class Vinti4Net
             $html .= "<input type='hidden' name='{$key}' value='" . htmlspecialchars((string)$value) . "'>\n";
         }
 
+        $processing = $lang == 'pt' ? 'processando...' : 'processing...';
+
         return "
     <html>
         <head><title>Pagamento Vinti4Net</title></head>
@@ -319,7 +376,7 @@ class Vinti4Net
             <form method=\"post\" action=\"{$postUrl}\">
                 {$html}
             </form>
-            <p>processando...</p>
+            <p>$processing>
         </body>
     </html>";
     }

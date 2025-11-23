@@ -12,6 +12,7 @@ namespace Erilshk\Sisp;
  * `create()` to quickly generate structured arrays.
  *
  * @package Erilshk\Vinti4Net
+ * @link https://erilshackle.github.io/vinti4net-php/billing
  */
 final class Billing
 {
@@ -44,6 +45,34 @@ final class Billing
         return new self();
     }
 
+    /**
+     * returns an Array of Billing Params for PurchaseRequest in Purchase Payment
+     * 
+     * params avaiable:
+     * `email`,
+     * `country`, `billAddrCountry`,
+     * `city`, `billAddrCity`,
+     * `address`, `billAddrLine1`,
+     * `address2`, `billAddrLine2`,
+     * `address3`, `billAddrLine3`,
+     * `postalCode`, `billAddrPostCode`,
+     * `state`, `billAddrState`,
+     * `shipCountry`, `shipAddrCountry`,
+     * `shipCity`, `shipAddrCity`,
+     * `shipAddress`, `shipAddrLine1`,
+     * `shipPostalCode`, `shipAddrPostCode`,
+     * `shipState`, `shipAddrState`,
+     * `addrMatch`,
+     * `mobilePhone`, `phone`,
+     * `workPhone`,
+     * `acctID`,
+     * `acctInfo`,
+     * `suspicious`,
+     * 
+     * @param array $data
+     * @return array
+     * @example https://erilshackle.github.io/vinti4net-php/billing/#exemplo-rapido-usando-billingcreate
+     */
     public static function create(array $data): array
     {
         return self::make()
