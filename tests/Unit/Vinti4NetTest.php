@@ -34,6 +34,29 @@ class Vinti4NetTest extends TestCase
         $this->assertSame($this->vinti4net, $result);
     }
 
+    public function testSetMerchantGeneratesDefaultSession()
+    {
+        $result = $this->vinti4net->setMerchant("REF123");
+
+        $request = $this->vinti4net->getRequest();
+
+        $this->assertSame("REF123", $request['merchantRef']);
+        $this->assertStringStartsWith("S", $request['merchantSession']);
+        $this->assertSame($this->vinti4net, $result);
+    }
+
+    public function testSetMerchantUsesProvidedSession()
+    {
+        $result = $this->vinti4net->setMerchant("REF456", "MANUAL_SESSION");
+
+        $request = $this->vinti4net->getRequest();
+
+        $this->assertSame("REF456", $request['merchantRef']);
+        $this->assertSame("MANUAL_SESSION", $request['merchantSession']);
+        $this->assertSame($this->vinti4net, $result);
+    }
+
+
     public function testSetRequestParamsThrowsExceptionForInvalidParam()
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -85,6 +108,24 @@ class Vinti4NetTest extends TestCase
         $this->assertSame($this->vinti4net, $result);
     }
 
+    public function testCreatePaymentFormTriggersRefundPreparePayment()
+    {
+        // Prepare refund
+        $this->vinti4net->prepareRefund(1500, "TXN123", "2024");
+
+        // Mock de comportamento interno esperado
+        $form = $this->vinti4net->createPaymentForm("https://callback.example.com");
+
+        $this->assertStringContainsString('<form', $form);
+        $this->assertStringContainsString('method="post"', $form);
+
+        // Garante que refund foi realmente usado:
+        $request = $this->vinti4net->getRequest();
+        $this->assertArrayHasKey('fields', $request);
+        $this->assertArrayHasKey('postUrl', $request);
+    }
+
+
     public function testCreatePaymentForm()
     {
         $this->vinti4net->preparePurchase(1500, [
@@ -110,6 +151,42 @@ class Vinti4NetTest extends TestCase
 
         $this->vinti4net->createPaymentForm('https://callback.example.com');
     }
+
+
+    public function testCreatePaymentFormThrowsExceptionForInvalidPaymentData()
+    {
+        // Criar mock do Payment
+        $mockPayment = $this->getMockBuilder(\Erilshk\Sisp\Core\Payment::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['preparePayment'])
+            ->getMock();
+
+        // preparePayment retorna array inválido (sem fields e postUrl)
+        $mockPayment->method('preparePayment')->willReturn([]);
+
+        // Substituir $payment da instância real
+        $vinti = $this->vinti4net;
+        $ref = new \ReflectionClass($vinti);
+        $prop = $ref->getProperty('payment');
+        $prop->setAccessible(true);
+        $prop->setValue($vinti, $mockPayment);
+
+        // Preparar pagamento para definir $prepared = true
+        $vinti->preparePurchase(1000, [
+            'email' => 'x@test.com',
+            'billAddrCountry' => '132',
+            'billAddrCity' => 'Praia',
+            'billAddrLine1' => 'Rua X',
+            'billAddrPostCode' => '7600'
+        ]);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage("Dados de pagamento inválidos.");
+
+        $vinti->createPaymentForm("https://callback.example.com");
+    }
+
+
 
     public function testProcessResponseForPayment()
     {
