@@ -94,7 +94,7 @@ class Refund extends Sisp
     public function preparePayment(array $params): array
     {
         // Validar campos obrigatórios
-        foreach (['amount', 'merchantRef', 'urlMerchantResponse', 'clearingPeriod', 'transactionID'] as $field) {
+        foreach (['amount', 'urlMerchantResponse', 'clearingPeriod', 'transactionID'] as $field) {
             if (empty($params[$field])) {
                 throw new InvalidArgumentException("Campo obrigatório faltando: $field");
             }
@@ -112,7 +112,7 @@ class Refund extends Sisp
 
         $request = [
             'posID' => $this->posID,
-            'merchantRef' => $params['merchantRef'],
+            'merchantRef' => $params['merchantRef'] ?? "R" . date('YmdHms'),
             'merchantSession' => $params['merchantSession'] ?? "S" . date('YmdHms'),
             'amount' => (int)$params['amount'],
             'currency' => self::CURRENCY_CVE,
