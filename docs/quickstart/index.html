@@ -544,6 +544,62 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../requests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Requests
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../receipt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recibos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -638,6 +694,88 @@
   
   
   
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Referências
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Referências
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="../about/" class="md-nav__link">
         
@@ -655,6 +793,14 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -690,7 +836,8 @@
 </code></pre></div>
 <hr />
 <h2 id="2-preparar-pagamento">2. Preparar pagamento<a class="headerlink" href="#2-preparar-pagamento" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="x">$billing = [</span>
+<div class="highlight"><pre><span></span><code><span class="x">// Os dados de Billing são obrigatórios, segundo a documentação da SISP, ela compõe o PurchaseRequest.</span>
+<span class="x">$billing = [</span>
 <span class="x">    &#39;email&#39; =&gt; &#39;cliente@email.com&#39;,</span>
 <span class="x">    &#39;billAddrCountry&#39; =&gt; &#39;132&#39;,</span>
 <span class="x">    &#39;billAddrCity&#39; =&gt; &#39;Cidade&#39;,</span>
@@ -706,7 +853,8 @@
 </code></pre></div>
 <hr />
 <h2 id="4-processar-callback">4. Processar callback<a class="headerlink" href="#4-processar-callback" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="x">$response = $sdk-&gt;processResponse($_POST);</span>
+<div class="highlight"><pre><span></span><code><span class="x">// na página de resposta de retorno:</span>
+<span class="x">$response = $sdk-&gt;processResponse($_POST);</span>
 
 <span class="x">if ($response-&gt;isSuccess()) {</span>
 <span class="x">    // OK</span>

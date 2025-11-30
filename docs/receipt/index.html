@@ -11,10 +11,10 @@
       
       
       
-        <link rel="prev" href="../responses/">
+        <link rel="prev" href="../requests/">
       
       
-        <link rel="next" href="../api/">
+        <link rel="next" href="../billing/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Arquitetura - Vinti4Net PHP SDK</title>
+        <title>Recibos - Vinti4Net PHP SDK</title>
       
     
     
@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#sdk-architecture-overview" class="md-skip">
+        <a href="#api-recibos-html-trait-receiptrenderer" class="md-skip">
           Ir para o conteúdo
         </a>
       
@@ -115,7 +115,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Arquitetura
+              Recibos
             
           </span>
         </div>
@@ -347,8 +347,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -359,13 +361,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
           <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
@@ -386,7 +386,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -485,10 +485,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../receipt/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recibos
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -504,6 +531,98 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#principais-metodos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Principais métodos
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Principais métodos">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#recursos-e-opcoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recursos e opções
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exemplo-de-uso" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exemplo de uso
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exemplo-de-output-sucesso-compra-3ds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exemplo de output – Sucesso (compra 3DS)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exemplo-de-output-erro-recibo-indisponivel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exemplo de output – Erro (Recibo Indisponível)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exemplo-output-recibo-sem-estilo-texto-puro" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exemplo Output - Recibo Sem estilo (texto puro)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -574,19 +693,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
         
   
   
@@ -602,7 +712,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -744,112 +853,316 @@
   
 
 
-<h1 id="sdk-architecture-overview">🏗️ SDK Architecture Overview<a class="headerlink" href="#sdk-architecture-overview" title="Permanent link">&para;</a></h1>
-<p>O diagrama abaixo apresenta <strong>as classes principais do SDK</strong> e suas dependências:</p>
-<pre class="mermaid"><code>classDiagram
-    class Vinti4Net {
-        - Payment payment
-        - Refund refund
-        - array request
-        - bool prepared
-        + setRequestParams()
-        + setMerchant()
-        + preparePurchasePayment()
-        + prepareServicePayment()
-        + prepareRechargePayment()
-        + prepareRefundPayment()
-        + createPaymentForm()
-        + processResponse()
-        + getRequest()
-    }
-
-    class Payment {
-        +preparePayment()
-        +processResponse()
-    }
-
-    class Refund {
-        +preparePayment()
-        +processResponse()
-    }
-
-    class Billing {
-        +make()
-        +create()
-        +fill()
-        +toArray()
-    }
-
-    class Vinti4Response {
-        +status
-        +message
-        +success
-        +data
-        +dcc
-        +debug
-        +detail
-        +isSuccess()
-        +isCancelled()
-        +hasInvalidFingerprint()
-        +getTransactionId()
-        +getMerchantRef()
-        +getAmount()
-        +getCurrency()
-        +generateReceiptHtml()
-        +toArray()
-        +toJson()
-    }
-
-    Vinti4Net --&gt; Payment
-    Vinti4Net --&gt; Refund
-    Vinti4Net --&gt; Billing
-    Vinti4Net --&gt; Vinti4Response</code></pre>
+<h1 id="api-recibos-html-trait-receiptrenderer">API – Recibos HTML (Trait <code>ReceiptRenderer</code>)<a class="headerlink" href="#api-recibos-html-trait-receiptrenderer" title="Permanent link">&para;</a></h1>
+<p>O <strong><code>ReceiptRenderer</code></strong> é um <strong>trait</strong> utilizado na classe <code>Vinti4Response</code> para gerar <strong>recibos HTML</strong> de transações processadas pelo SISP. Ele suporta compras, serviços, recargas e reembolsos, além de casos genéricos.</p>
 <hr />
-<h1 id="flow-of-a-payment">🔹 Flow of a Payment<a class="headerlink" href="#flow-of-a-payment" title="Permanent link">&para;</a></h1>
-<p>O fluxo completo de <strong>uma transação</strong> no SDK:</p>
-<pre class="mermaid"><code>sequenceDiagram
-    participant Merchant
-    participant SDK as Vinti4Net SDK
-    participant SISP
-    participant User
-
-    Merchant-&gt;&gt;SDK: preparePurchasePayment() / prepareServicePayment() / prepareRechargePayment()
-    Merchant-&gt;&gt;SDK: createPaymentForm()
-    SDK-&gt;&gt;Merchant: HTML Auto-submit Form
-
-    Merchant-&gt;&gt;User: Redirect to Payment Page
-    User-&gt;&gt;SISP: Complete Payment
-    SISP--&gt;&gt;Merchant: POST Callback
-
-    Merchant-&gt;&gt;SDK: processResponse()
-    SDK--&gt;&gt;Merchant: Vinti4Response</code></pre>
+<h2 id="principais-metodos">Principais métodos<a class="headerlink" href="#principais-metodos" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Método</th>
+<th>Parâmetros</th>
+<th>Retorno</th>
+<th>Descrição</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>generateReceiptHtml(?string $companyName = null, bool $text = false)</code></td>
+<td><code>$companyName</code> – Nome da empresa<br><code>$text</code> – Gera recibo sem estilo se <code>true</code></td>
+<td><code>string</code></td>
+<td>Gera o HTML completo do recibo, escolhendo automaticamente o tipo de transação.</td>
+</tr>
+<tr>
+<td><code>renderPurchaseReceipt(?string $companyName = null)</code></td>
+<td><code>$companyName</code></td>
+<td><code>string</code></td>
+<td>Recibo de compra 3DS.</td>
+</tr>
+<tr>
+<td><code>renderServiceReceipt(?string $companyName = null)</code></td>
+<td><code>$companyName</code></td>
+<td><code>string</code></td>
+<td>Recibo para serviços públicos (água, luz, etc.).</td>
+</tr>
+<tr>
+<td><code>renderRechargeReceipt(?string $companyName = null)</code></td>
+<td><code>$companyName</code></td>
+<td><code>string</code></td>
+<td>Recibo para recargas de telemóvel.</td>
+</tr>
+<tr>
+<td><code>renderRefundReceipt(?string $companyName = null)</code></td>
+<td><code>$companyName</code></td>
+<td><code>string</code></td>
+<td>Recibo para reembolsos.</td>
+</tr>
+<tr>
+<td><code>renderGenericReceipt(?string $companyName = null)</code></td>
+<td><code>$companyName</code></td>
+<td><code>string</code></td>
+<td>Recibo para casos genéricos ou tipos não especificados.</td>
+</tr>
+</tbody>
+</table>
 <hr />
-<h3 id="observacoes">🔹 Observações<a class="headerlink" href="#observacoes" title="Permanent link">&para;</a></h3>
-<ol>
-<li><code>Vinti4Net</code> é a <strong>fachada principal</strong>; todas as operações passam por ela.  </li>
-<li><code>Payment</code> e <code>Refund</code> cuidam da <strong>lógica de criação e processamento</strong> das transações.  </li>
-<li><code>Billing</code> simplifica a preparação dos campos <strong>3DS</strong>.  </li>
-<li><code>Vinti4Response</code> encapsula todas as respostas do SISP, padronizando <strong>status, mensagens e dados adicionais</strong>.  </li>
-<li>O <strong>sequence diagram</strong> mostra o fluxo típico: do <code>preparePayment</code> até o retorno de <code>Vinti4Response</code>.  </li>
-</ol>
+<h3 id="recursos-e-opcoes">Recursos e opções<a class="headerlink" href="#recursos-e-opcoes" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Suporte a <strong>DCC</strong> (Dynamic Currency Conversion) em compras.</li>
+<li>Máscara de cartão (<code>PAN</code>) para segurança.</li>
+<li>Formatação automática de <strong>moeda</strong> e <strong>timestamp</strong>.</li>
+<li>
+<p>Diferentes cores e ícones para status:</p>
+</li>
+<li>
+<p>✅ <code>SUCCESS</code> – Transação aprovada</p>
+</li>
+<li>⏹ <code>CANCELLED</code> – Transação cancelada</li>
+<li>⚠ <code>INVALID_FINGERPRINT</code> – Erro de segurança</li>
+<li>❌ Outros erros</li>
+<li>Estilo CSS interno ou texto puro (via <code>$text = true</code>).</li>
+</ul>
 <hr />
-<h1 id="fluxo-oficial-do-processamento-das-transacoes-sisp-mpi">📌 Fluxo Oficial do Processamento das Transações (SISP / MPI)<a class="headerlink" href="#fluxo-oficial-do-processamento-das-transacoes-sisp-mpi" title="Permanent link">&para;</a></h1>
-<pre class="mermaid"><code>sequenceDiagram
-    autonumber
+<h3 id="exemplo-de-uso">Exemplo de uso<a class="headerlink" href="#exemplo-de-uso" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="x">$response = $vinti-&gt;processResponse($_POST);</span>
 
-    participant C as Cliente
-    participant M as Comerciante&lt;br/&gt;(Seu Sistema)
-    participant SDK as Vinti4Net SDK
-    participant S as SISP&lt;br/&gt;MPI / 3DSServer
+<span class="x">// Gera recibo com estilo padrão</span>
+<span class="x">echo $response-&gt;generateReceiptHtml(&quot;Minha Empresa&quot;);</span>
 
-    C-&gt;&gt;M: a. Faz checkout do produto/serviço
-    M-&gt;&gt;SDK: b. Adiciona dados do pagamento + dados do comerciante
-    SDK-&gt;&gt;S: b. Envia POST (request) para o URL SISP
-    S-&gt;&gt;M: c. Autentica comerciante&lt;br/&gt;c.1 Em caso de falha → devolve erro
-    S-&gt;&gt;C: d. Página SISP para recolha dos dados do cartão
-    C-&gt;&gt;S: e. Autentica transação (3DS)
-    S-&gt;&gt;S: f. Processamento da autorização
-    S-&gt;&gt;M: g. Envia POST de resposta (response)&lt;br/&gt;indica sucesso ou falha</code></pre>
+<span class="x">// Gera recibo texto puro (sem CSS)</span>
+<span class="x">echo $response-&gt;generateReceiptHtml(&quot;Minha Empresa&quot;, true);</span>
+</code></pre></div>
+<hr />
+<h3 id="exemplo-de-output-sucesso-compra-3ds">Exemplo de output – Sucesso (compra 3DS)<a class="headerlink" href="#exemplo-de-output-sucesso-compra-3ds" title="Permanent link">&para;</a></h3>
+<div class="vinti4-receipt">
+  <div class="receipt-header">
+    <h2>COMPROVATIVO DE PAGAMENTO</h2>
+    <div class="merchant">Minha Empresa</div>
+  </div>
+  <div class="receipt-body">
+    <div class="transaction-info">
+      <div class="row"><span class="label">Referência:</span><span class="value">REF12345</span></div>
+      <div class="row"><span class="label">Data/Hora:</span><span class="value">30/11/2025 14:32:10</span></div>
+      <div class="row"><span class="label">Transação ID:</span><span class="value">TID987654321</span></div>
+    </div>
+    <div class="amount-section">
+      <div class="amount">100,50 CVE</div>
+      <div class="description">Pagamento de serviços</div>
+    </div>
+    <div class="card-info">
+      <div class="row"><span class="label">Cartão:</span><span class="value">123456••••7890</span></div>
+      <div class="row"><span class="label">Autorização:</span><span class="value">AUTH001</span></div>
+    </div>
+  </div>
+  <div class="receipt-footer">
+    <div class="status success">✓ TRANSAÇÃO APROVADA</div>
+    <div class="timestamp">Emitido em 30/11/2025 14:32:12</div>
+  </div>
+</div>
+
+<hr />
+<h3 id="exemplo-de-output-erro-recibo-indisponivel">Exemplo de output – Erro (Recibo Indisponível)<a class="headerlink" href="#exemplo-de-output-erro-recibo-indisponivel" title="Permanent link">&para;</a></h3>
+<div class="vinti4-receipt-error unavailable">
+        <div class="receipt-header">
+            <h2>RECIBO INDISPONÍVEL</h2>
+        </div>
+        <div class="receipt-body">
+            <p>Sistema Temporariamente Indisponível</p>
+            <p></p>
+        </div>
+        <div class="receipt-footer">
+            <div class="status-error error">⚠ TRANSAÇÃO NÃO CONCLUÍDA</div>
+            <div class="timestamp">Emitido em 30/11/2025 14:32:12</div>
+        </div>
+    </div>
+
+<style>
+        .vinti4-receipt-error.unavailable { 
+            font-family: Arial, sans-serif; 
+            text-align: center;
+            max-width: 400px; 
+            margin: 20px auto; 
+            border: 2px solid #f5c6cb; 
+            border-radius: 8px; 
+            padding: 20px; 
+            background: #f8d7da; 
+            color: #721c24;
+        }
+        .status-error.error { 
+            font-weight: bold; 
+            padding: 8px 12px; 
+            border-radius: 4px; 
+            background: #f5c6cb; 
+            color: #721c24; 
+            display: inline-block; 
+        }
+</style>
+
+<h3 id="exemplo-output-recibo-sem-estilo-texto-puro">Exemplo Output - Recibo Sem estilo (texto puro)<a class="headerlink" href="#exemplo-output-recibo-sem-estilo-texto-puro" title="Permanent link">&para;</a></h3>
+<style>
+    body {
+        font-family: monospace;
+    }
+    pre {
+        /* background: #fff; */
+        border: 1px solid #333;
+        border-radius: 6px;
+        padding: 20px;
+        max-width: 600px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+</style>
+
+<h2>Transação de Sucesso</h2>
+<pre>
+==== RECIBO DE TRANSAÇÃO ====
+Empresa: Loja ABC
+Data/Hora: 30/11/2025 15:42:10
+Status: APROVADA
+Mensagem: Transação válida.
+
+Transação ID: 123456789
+Referência: REF-20251130-001
+Tipo de Transação: 8
+Valor: 10.000,00 CVE
+Cartão: 123456••••7890
+Autorização: AUTH-987654
+
+===========================
+</pre>
+
+<h2>Transação com Erro</h2>
+<pre>
+==== RECIBO DE TRANSAÇÃO ====
+Empresa: Loja ABC
+Data/Hora: 30/11/2025 15:45:30
+Status: NÃO CONCLUÍDA
+Mensagem: Erro de processamento.
+
+Transação ID: N/A
+Referência: REF-20251130-002
+Tipo de Transação: 8
+Valor: 5.000,00 CVE
+Cartão: 123456••••1234
+
+=== DETALHES DE ERRO ===
+Erro: Saldo insuficiente
+Mensagem adicional: Falha ao processar pagamento
+
+===========================
+</pre>
+
+<hr />
+<style>
+    .vinti4-receipt {
+            font-family: 'Arial', sans-serif;
+            max-width: 400px;
+            margin: 20px auto;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .receipt-header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .receipt-header h2 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .merchant {
+            font-weight: bold;
+            color: #666;
+        }
+        .receipt-body {
+            margin-bottom: 20px;
+        }
+        .row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 4px 0;
+        }
+        .label {
+            font-weight: bold;
+            color: #666;
+        }
+        .value {
+            color: #333;
+        }
+        .amount-section {
+            text-align: center;
+            margin: 25px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #007bff;
+        }
+        .amount-section.refund {
+            border-left-color: #dc3545;
+        }
+        .amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .description {
+            color: #666;
+            font-style: italic;
+        }
+        .dcc-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 12px;
+            margin: 15px 0;
+        }
+        .dcc-notice {
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 8px;
+        }
+        .receipt-footer {
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+            text-align: center;
+        }
+        .status {
+            font-weight: bold;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.cancelled {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .timestamp, .contact, .note {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+        }" : ".vinti4-receipt {font-family: courier, monospace;}
+</style>
 
 
 
