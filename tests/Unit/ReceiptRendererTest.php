@@ -8,9 +8,6 @@ use Erilshk\Sisp\Core\Sisp;
 
 final class ReceiptRendererTest extends TestCase
 {
-    /**
-     * Classe de teste que usa a trait
-     */
     private $renderer;
 
     protected function setUp(): void
@@ -21,12 +18,13 @@ final class ReceiptRendererTest extends TestCase
             public $data = [];
             public $status = 'SUCCESS';
             public $dcc = [];
+            public $success = true;
 
-            // mocks para métodos privados acessados na trait
             public function getAmount()
             {
                 return $this->data['amount'] ?? 123.45;
             }
+
             public function getCurrency()
             {
                 return $this->data['currency'] ?? 'CVE';
@@ -34,9 +32,14 @@ final class ReceiptRendererTest extends TestCase
         };
     }
 
+    // ===========================
+    // HTML Receipts
+    // ===========================
+
     public function testGenerateReceiptHtmlPurchase(): void
     {
-        $this->renderer->data = ['transactionCode' => Sisp::TRANSACTION_TYPE_PURCHASE];
+        $this->renderer->success = true;
+        $this->renderer->data = ['messageType' => '8', 'merchantRespMerchantRef' => 'REF001'];
         $html = $this->renderer->generateReceiptHtml('Minha Loja');
         $this->assertStringContainsString('COMPROVATIVO DE PAGAMENTO', $html);
         $this->assertStringContainsString('Minha Loja', $html);
@@ -44,10 +47,11 @@ final class ReceiptRendererTest extends TestCase
 
     public function testGenerateReceiptHtmlService(): void
     {
+        $this->renderer->success = true;
         $this->renderer->data = [
-            'transactionCode' => Sisp::TRANSACTION_TYPE_SERVICE,
+            'messageType' => 'P',
             'entityCode' => '10001',
-            'referenceNumber' => '1234'
+            'merchantRespReferenceNumber' => '1234'
         ];
         $html = $this->renderer->generateReceiptHtml();
         $this->assertStringContainsString('ELECTRA', $html);
@@ -56,10 +60,11 @@ final class ReceiptRendererTest extends TestCase
 
     public function testGenerateReceiptHtmlRecharge(): void
     {
+        $this->renderer->success = true;
         $this->renderer->data = [
-            'transactionCode' => Sisp::TRANSACTION_TYPE_RECHARGE,
+            'messageType' => 'M',
             'entityCode' => '10021',
-            'referenceNumber' => '9912345'
+            'merchantRespReferenceNumber' => '9912345'
         ];
         $html = $this->renderer->generateReceiptHtml();
         $this->assertStringContainsString('CVMÓVEL', $html);
@@ -68,7 +73,8 @@ final class ReceiptRendererTest extends TestCase
 
     public function testGenerateReceiptHtmlRefund(): void
     {
-        $this->renderer->data = ['transactionCode' => Sisp::TRANSACTION_TYPE_REFUND];
+        $this->renderer->success = true;
+        $this->renderer->data = ['messageType' => '10', 'amount' => 123.45];
         $html = $this->renderer->generateReceiptHtml();
         $this->assertStringContainsString('COMPROVATIVO DE REEMBOLSO', $html);
         $this->assertStringContainsString('-123,45 CVE', $html);
@@ -76,15 +82,35 @@ final class ReceiptRendererTest extends TestCase
 
     public function testGenerateReceiptHtmlGeneric(): void
     {
-        $this->renderer->data = ['transactionCode' => 'UNKNOWN_CODE'];
+        $this->renderer->success = true;
+        $this->renderer->data = ['messageType' => 'UNKNOWN_CODE'];
         $html = $this->renderer->generateReceiptHtml();
-        $this->assertStringContainsString('COMPROVATIVO DE TRANSAÇÃO', $html);
+        $this->assertStringContainsString('RECIBO INDISPONÍVEL', $html);
+    }
+
+    public function testGenerateReceiptHtmlFailsForUnsuccessfulTransaction(): void
+    {
+        $this->renderer->success = false;
+        $this->renderer->data = ['messageType' => '8'];
+        $html = $this->renderer->generateReceiptHtml('Minha Loja');
+        $this->assertStringContainsString('RECIBO INDISPONÍVEL', $html);
+        $this->assertStringContainsString('Transação não concluída com sucesso', $html);
+    }
+
+    public function testGenerateReceiptHtmlFailsForUnknownType(): void
+    {
+        $this->renderer->success = true;
+        $this->renderer->data = ['messageType' => 'UNKNOWN_TYPE'];
+        $html = $this->renderer->generateReceiptHtml('Minha Loja');
+        $this->assertStringContainsString('RECIBO INDISPONÍVEL', $html);
+        $this->assertStringContainsString('Recibo indisponível para este tipo de transação', $html);
     }
 
     public function testGenerateReceiptHtmlWithSimpleStyle(): void
     {
-        $this->renderer->data = ['transactionCode' => Sisp::TRANSACTION_TYPE_PURCHASE];
-        $html = $this->renderer->generateReceiptHtml(null, true);
+        $this->renderer->success = true;
+        $this->renderer->data = ['messageType' => '8'];
+        $html = $this->renderer->generateReceiptHtml(null, false);
         $this->assertStringContainsString('font-family: courier, monospace', $html);
     }
 
@@ -97,7 +123,8 @@ final class ReceiptRendererTest extends TestCase
             'amount' => 100,
             'markup' => 5
         ];
-        $this->renderer->data['transactionCode'] = Sisp::TRANSACTION_TYPE_PURCHASE;
+        $this->renderer->success = true;
+        $this->renderer->data['messageType'] = '8';
         $html = $this->renderer->generateReceiptHtml();
         $this->assertStringContainsString('Pagamento em moeda estrangeira', $html);
         $this->assertStringContainsString('1 USD = 1.2 CVE', $html);
@@ -107,29 +134,96 @@ final class ReceiptRendererTest extends TestCase
     {
         foreach (['SUCCESS', 'CANCELLED', 'INVALID_FINGERPRINT', 'UNKNOWN'] as $status) {
             $this->renderer->status = $status;
+            $this->renderer->success = true;
+            $this->renderer->data['messageType'] = '8';
             $html = $this->renderer->generateReceiptHtml();
             $this->assertNotEmpty($html);
         }
     }
+
+    // ===========================
+    // Text Receipts
+    // ===========================
+
+    public function testGenerateReceiptTextSuccess(): void
+    {
+        $this->renderer->success = true;
+        $this->renderer->data = [
+            'messageType' => '8',
+            'merchantRespTid' => '123456',
+            'merchantRespMerchantRef' => 'REF123',
+            'merchantRespTimeStamp' => '2025-11-30 12:00:00',
+            'merchantRespPan' => '1234567890123456',
+            'merchantRespMessageID' => 'AUTH001'
+        ];
+
+        $text = $this->renderer->generateReceiptText('Minha Loja');
+        $this->assertStringContainsString('==== RECIBO DE TRANSAÇÃO ====', $text);
+        $this->assertStringContainsString('Minha Loja', $text);
+        $this->assertStringContainsString('APROVADA', $text);
+        $this->assertStringContainsString('Compra', $text);
+        $this->assertStringContainsString('123456', $text);
+        $this->assertStringContainsString('REF123', $text);
+        $this->assertStringContainsString('••••3456', $text);
+    }
+
+    public function testGenerateReceiptTextFailure(): void
+    {
+        $this->renderer->success = false;
+        $this->renderer->data = [
+            'messageType' => '8',
+            'merchantRespTid' => '123456',
+            'merchantRespMerchantRef' => 'REF123',
+            'merchantRespAdditionalErrorMessage' => 'Saldo insuficiente',
+            'merchantRespTimeStamp' => '2025-11-30 12:00:00'
+        ];
+
+        $text = $this->renderer->generateReceiptText('Minha Loja');
+        $this->assertStringContainsString('NÃO CONCLUÍDA', $text);
+        $this->assertStringContainsString('Saldo insuficiente', $text);
+    }
+
+    public function testGenerateReceiptTextWithDcc(): void
+    {
+        $this->renderer->success = true;
+        $this->renderer->dcc = [
+            'enabled' => true,
+            'currency' => 'USD',
+            'rate' => 1.2,
+            'amount' => 100,
+            'markup' => 5
+        ];
+        $this->renderer->data = [
+            'messageType' => '8',
+            'merchantRespTid' => 'TID001',
+            'merchantRespMerchantRef' => 'REF001',
+        ];
+
+        $text = $this->renderer->generateReceiptText('Minha Loja');
+        $this->assertStringContainsString('=== DCC (Moeda Estrangeira) ===', $text);
+        $this->assertStringContainsString('1.2', $text);
+        $this->assertStringContainsString('USD', $text);
+        $this->assertStringContainsString('5%', $text);
+    }
+
+    // ===========================
+    // Misc / Private Methods
+    // ===========================
 
     public function testFormatCurrencyEURAndDefault(): void
     {
         $method = new \ReflectionMethod($this->renderer, 'formatCurrency');
         $method->setAccessible(true);
 
-        // EUR
         $result = $method->invoke($this->renderer, 100, 'EUR');
         $this->assertStringContainsString('EUR', $result);
 
-        // Default (qualquer outro valor)
         $result = $method->invoke($this->renderer, 100, 'XYZ');
         $this->assertStringContainsString('XYZ', $result);
     }
 
-
     public function testFormatTimestampCatch(): void
     {
-        // Timestamp inválido dispara catch
         $method = new \ReflectionMethod($this->renderer, 'formatTimestamp');
         $method->setAccessible(true);
         $result = $method->invoke($this->renderer, 'INVALID_TIMESTAMP');
@@ -141,16 +235,13 @@ final class ReceiptRendererTest extends TestCase
         $method = new \ReflectionMethod($this->renderer, 'formatPhoneNumber');
         $method->setAccessible(true);
 
-        // Número 7 dígitos
         $phone = '9912345';
         $formatted = $method->invoke($this->renderer, $phone);
         $this->assertStringContainsString('+238', $formatted);
 
-        // Número vazio retorna N/A
         $formatted = $method->invoke($this->renderer, '');
         $this->assertEquals('N/A', $formatted);
 
-        // Número qualquer retorna o mesmo valor
         $formatted = $method->invoke($this->renderer, '+1234567890');
         $this->assertEquals('+1234567890', $formatted);
     }
