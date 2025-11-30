@@ -194,7 +194,7 @@ trait ReceiptRenderer
                 
                 <div class=\"amount-section\">
                     <div class=\"amount\">{$this->formatCurrency($amount,$currency)}</div>
-                    <div class=\"description\">Pagamento de serviços</div>
+                    <div class=\"description\">Compra</div>
                 </div>
                 
                 <div class=\"card-info\">
@@ -342,6 +342,7 @@ trait ReceiptRenderer
         $data = $this->data;
         $amount = $this->getAmount();
         $currency = $this->getCurrency();
+        $formatedAmount = '-' . trim($this->formatCurrency($amount,$currency), '-');
 
         return "
         <div class=\"vinti4-receipt\">
@@ -367,7 +368,7 @@ trait ReceiptRenderer
                 </div>
                 
                 <div class=\"amount-section refund\">
-                    <div class=\"amount\">-{$this->formatCurrency($amount,$currency)}</div>
+                    <div class=\"amount\">{$formatedAmount}</div>
                     <div class=\"description\">Reembolso de pagamento</div>
                 </div>
                 

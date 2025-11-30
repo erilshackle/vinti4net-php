@@ -167,6 +167,22 @@ final class ReceiptRendererTest extends TestCase
         $this->assertStringContainsString('••••3456', $text);
     }
 
+    public function testGenerateReceiptTextIncludesEntityAndReference(): void
+    {
+        $this->renderer->success = true;
+        $this->renderer->data = [
+            'messageType' => 'P',
+            'merchantRespEntityCode' => '10001', // ELECTRA
+            'merchantRespReferenceNumber' => '556677',
+        ];
+
+        $text = $this->renderer->generateReceiptText('Minha Loja');
+
+        $this->assertStringContainsString('Entidade: ELECTRA', $text);
+        $this->assertStringContainsString('Referência Serviço: 556677', $text);
+    }
+
+
     public function testGenerateReceiptTextFailure(): void
     {
         $this->renderer->success = false;
@@ -205,6 +221,24 @@ final class ReceiptRendererTest extends TestCase
         $this->assertStringContainsString('USD', $text);
         $this->assertStringContainsString('5%', $text);
     }
+
+    public function testGetTransactionTypeText(): void
+    {
+        $method = new \ReflectionMethod($this->renderer, 'getTransactionTypeText');
+        $method->setAccessible(true);
+
+        $this->assertEquals('Pagamento de Serviço', $method->invoke($this->renderer, 'P'));
+        $this->assertEquals('Service Payment', $method->invoke($this->renderer, 'P', false));
+
+        $this->assertEquals('Recarga', $method->invoke($this->renderer, 'M'));
+        $this->assertEquals('Recharge', $method->invoke($this->renderer, 'M', false));
+
+        $this->assertEquals('Estorno', $method->invoke($this->renderer, '10'));
+        $this->assertEquals('Refund', $method->invoke($this->renderer, '10', false));
+
+        $this->assertEquals('N/A', $method->invoke($this->renderer, 'XYZ'));
+    }
+
 
     // ===========================
     // Misc / Private Methods
