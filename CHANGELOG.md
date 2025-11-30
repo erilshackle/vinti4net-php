@@ -2,32 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
-## [v2.0.0] - 2025-11-23
+## [2.1.0] - 2025-11-30
 
 ### Added
+- test(unit): add validation and formatting test cases
+- test(vinti4net): add coverage for setMerchant and createPaymentForm
+- fix(refund): add default value for merchantRef
 - chore: add readme field to composer.json
-
-### Changed
-- chore: update changelog versioning and enhance composer.json keywords
-
-## [v2.0.1] - 2025-11-23
-
-### Changed
-- chore: update changelog for version 2.0.1, enhance README, and refactor Refund class validation
-- Delete .github/FUNDING.yml
-- Update funding options in FUNDING.yml
-- Update funding sources in FUNDING.yml
-- Update issue templates
-
-## [v2.0.1] - 2025-11-23
-
-### Removed
-
-- removed param **merchantRef** from `prepareRefund`, once it's not required at all and can be set througth `setMerchant` method
-
-### Added
 - chore: update changelog for version 2.0.0 and 1.1.1, add enhancements and changes
 - Add language option to payment form example
+- Enhance receipt generation with additional transaction types
+- feat: add billing parameters and improve receipt rendering logic
+- refactor: enhance Refund and Vinti4Response classes with additional fields and validation
+- Update .gitignore to include additional files and directories for exclusion
+- Add initial search index, sitemap, and tags configuration files
+- Update .gitattributes to exclude additional directories and files from Composer package
+- Enhance Billing class to support additional fields and improve data mapping in fill method
+- Add detailed documentation and enhance Billing class with new features and improvements
+- Add comprehensive documentation and assets for Vinti4Net PHP SDK
+- chore(ci/docs): rename workflow to ci.yml, update composer name and add README badges
+- Add ParamsValidatorTrait and refactor SISP validation
+- feat: add PHP 8+ support and refactor payment core
+- feat: initial commit - Vinti4Net PHP SDK
 
 ### Fixed
 - chore: update changelog and fix payment example and tests for refund method
@@ -35,53 +31,36 @@ All notable changes to this project will be documented in this file.
 - Fix method call in error handling example
 
 ### Changed
+- docs(readme): refine content and update badges
+- test: enhance unit test coverage for core logic
+- style(billing): apply standard code formatting
+- chore: update changelog for version 2.0.0 and modify installation section in README
+- chore: update changelog versioning and enhance composer.json keywords
+- Merge branch 'main' of https://github.com/erilshackle/vinti4net-php
+- chore: update changelog for version 2.0.1, enhance README, and refactor Refund class validation
+- Delete .github/FUNDING.yml
+- Update funding options in FUNDING.yml
+- Update funding sources in FUNDING.yml
+- Update issue templates
+- Merge branch 'main' of https://github.com/erilshackle/vinti4net-php
 - Correct link formatting in README.md
 - Enhance README with hyperlinks for SISP and documentation
 - Update transaction methods and database reference
 - Update namespace import in README.md
 - update docs
 - Update Documentation to reflect recent changes in project structure
+- Merge branch 'main' of https://github.com/erilshackle/vinti4net-php
 - Refactor payment methods in README.md
-
-## [v2.0.0] - 2025-11-23
-
-### Changed
-- refactor: change project namespace from Erilshk\Vinti4Net to Erilshk\Sisp;
+- Merge branch 'main' of https://github.com/erilshackle/vinti4net-php
 - chore: update changelog for version 2.0.0 and 1.1.1 changes
-- changelog
-
-## [v1.1.1] - 2025-11-23
-
-### Added
-- Enhance receipt generation with additional transaction types
-
-### Changed
 - Delete examples/teste.php
 - Refactor fingerprint methods and update payment params
-- Update export-ignore rules in .gitattributes
-- Update .gitattributes to include mkdocs and teste.php
-
-## [v1.1.1] - 2025-11-23
-
-### Added
-- feat: add billing parameters and improve receipt rendering logic
-- refactor: enhance Refund and Vinti4Response classes with additional fields and validation
-
-### Changed
 - refactor: update namespace and method names for consistency; remove deprecated billing parameters
 - delete: teste.php from examples
-- 
-## [v1.0.0] - 2025-11-18
-
-### Added
-- Update .gitignore to include additional files and directories for exclusion
-- Add initial search index, sitemap, and tags configuration files
-- Update .gitattributes to exclude additional directories and files from Composer package
-- Enhance Billing class to support additional fields and improve data mapping in fill method
-- Add detailed documentation and enhance Billing class with new features and improvements
-- Add comprehensive documentation and assets for Vinti4Net PHP SDK
-
-### Changed
+- Update export-ignore rules in .gitattributes
+- Update .gitattributes to include mkdocs and teste.php
+- refactor: change project namespace from Erilshk\Vinti4Net to Erilshk\Sisp;
+- changelog
 - Replace favicon with new icon and remove unused image asset
 - Refactor Vinti4Net class documentation for clarity and completeness
 - Enhance Billing and Vinti4Response classes with detailed PHPDoc comments for better code documentation and clarity
@@ -90,15 +69,9 @@ All notable changes to this project will be documented in this file.
 - update Vinti4NetLegacy.php
 - Merge branch 'main' of https://github.com/erilshackle/vinti4net-php
 - chore: edit gitattributes and cgangelog
-
-## [Unreleased] - 2025-11-16
-
-### Added
-- chore(ci/docs): rename workflow to ci.yml, update composer name and add README badges
-- Add ParamsValidatorTrait and refactor SISP validation
-- feat: add PHP 8+ support and refactor payment core
-
-### Changed
+- Update README.md
+- Update README.md
+- Update README.md
 - Update project to PHP version ^8.1
 - Update project, composer to 8.0 and Refator Vinti4Response class removing readonly
 - RefundException Test
