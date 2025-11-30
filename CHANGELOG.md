@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+
+## [v2.1.0] - 2025-11-30
+
+### Added
+- feat(receipts): improve rendering logic and add comprehensive tests
+- docs: update documentation pages and add new API & receipt sections
+
+### Changed
+- test(vinti4): update response test data to use messageType
+- docs(changelog): prepare v2.1.0 release notes
+
 ## [2.1.0] - 2025-11-30
 
 ### Added
