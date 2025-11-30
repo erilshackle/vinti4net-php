@@ -144,13 +144,13 @@ class Vinti4ResponseTest extends TestCase
             'Transação válida.',
             true,
             [
-                'transactionCode' => '1',
+                'messageType' => '8',
                 'merchantRespMerchantRef' => 'REF123',
                 'merchantRespTimeStamp' => '2024-01-01 12:00:00',
                 'merchantRespTid' => 'TXN456',
                 'merchantRespPurchaseAmount' => 1500.00,
                 'merchantRespCurrency' => 'CVE',
-                'merchantRespPan' => '1234567890123456'
+                'merchantRespPan' => '1234567890123456',
             ]
         );
 
