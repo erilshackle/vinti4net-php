@@ -21,13 +21,11 @@ class RefundExceptionTest extends TestCase
     public function testPreparePaymentMissingRequiredField()
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Campo obrigatório faltando: merchantRef");
+        $this->expectExceptionMessage("Campo obrigatório faltando: transactionID");
 
         $this->refund->preparePayment([
             'amount' => 1500,
-            // 'merchantRef' => 'REF123', // intencionalmente ausente
-            'merchantSession' => 'SESS456',
-            'transactionID' => 'TXN789',
+            // 'transactionID' => 'TXN789', // intencionalmente ausente
             'clearingPeriod' => '2411',
             'urlMerchantResponse' => 'https://callback.example.com'
         ]);

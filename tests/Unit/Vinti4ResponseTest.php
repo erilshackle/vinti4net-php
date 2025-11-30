@@ -121,7 +121,7 @@ class Vinti4ResponseTest extends TestCase
         );
 
         $array = $response->toArray();
-        
+
         $this->assertEquals('SUCCESS', $array['status']);
         $this->assertEquals('Test message', $array['message']);
         $this->assertTrue($array['success']);
@@ -132,7 +132,7 @@ class Vinti4ResponseTest extends TestCase
 
         $json = $response->toJson();
         $this->assertJson($json);
-        
+
         $decoded = json_decode($json, true);
         $this->assertEquals('SUCCESS', $decoded['status']);
     }
@@ -197,6 +197,43 @@ class Vinti4ResponseTest extends TestCase
         $this->assertFalse($response->dcc['enabled']);
         $this->assertEquals('DCC inválido ou mal formatado', $response->dcc['error']);
     }
+
+    public function testGetClearingPeriodAndAdditionalErrorMessage()
+    {
+        $data = [
+            'merchantRespCP' => '2024',
+            'merchantRespAdditionalErrorMessage' => 'Erro adicional'
+        ];
+
+        $response = new Vinti4Response(
+            'ERROR',
+            'Transação falhou',
+            false,
+            $data
+        );
+
+        // Cobrir getClearingPeriod
+        $this->assertEquals('2024', $response->getClearingPeriod());
+
+        // Cobrir GetAdditionalErrorMessage
+        $this->assertEquals('Erro adicional', $response->GetAdditionalErrorMessage());
+    }
+
+    public function testGetClearingPeriodAndAdditionalErrorMessageWithMissingData()
+    {
+        // Sem dados
+        $response = new Vinti4Response(
+            'ERROR',
+            'Transação falhou',
+            false,
+            []
+        );
+
+        // Métodos devem retornar null ou string vazia
+        $this->assertNull($response->getClearingPeriod());
+        $this->assertEquals('', $response->GetAdditionalErrorMessage());
+    }
+
 
     public function testGetMerchantRefAndTransactionIdWithMissingData()
     {

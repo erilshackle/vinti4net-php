@@ -82,6 +82,8 @@ class SispTest extends TestCase
         $this->assertEquals(978, $this->sisp->currencyToCode('EUR'));
         $this->assertEquals(986, $this->sisp->currencyToCode('BRL'));
         $this->assertEquals(132, $this->sisp->currencyToCode('132'));
+        $this->assertEquals(826, $this->sisp->currencyToCode('GBP'));
+        $this->assertEquals(392, $this->sisp->currencyToCode('JPY'));
     }
 
     public function testCurrencyToCodeThrowsExceptionForInvalidCurrency()
@@ -137,6 +139,23 @@ class SispTest extends TestCase
         $this->assertTrue($result['fingerprint_valid']);
     }
 
+    public function testGeneratePurchaseRequestThrowsExceptionForInvalidJson()
+    {
+        // Simular billing que gera JSON inválido usando um recurso não serializável
+        $billing = [
+            'email' => 'test@example.com',
+            'billAddrCountry' => '132',
+            'billAddrCity' => 'Praia',
+            'billAddrLine1' => tmpfile(), // recurso não serializável
+            'billAddrPostCode' => '7600'
+        ];
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Erro ao gerar JSON de billing.');
+
+        $this->sisp->generatePurchaseRequest($billing);
+    }
+
     public function testNormalizeBilling()
     {
         $billing = [
@@ -159,6 +178,53 @@ class SispTest extends TestCase
         $this->assertEquals('Rua Teste 123', $normalized['billAddrLine1']);
         $this->assertArrayHasKey('mobilePhone', $normalized);
     }
+
+    public function testValidateParamsCurrencyForRefund()
+    {
+        $params = [
+            'transactionCode' => '4',
+            'currency' => '840', // USD errado
+        ];
+
+        $method = new \ReflectionMethod($this->sisp, 'validateParams');
+        $method->setAccessible(true);
+
+        $error = $method->invoke($this->sisp, $params);
+
+        $this->assertEquals("Currency para estorno deve ser '132' (CVE).", $error);
+    }
+
+    public function testValidateParamsEntityCodeRequired()
+    {
+        $params = [
+            'transactionCode' => '2',
+            'entityCode' => ''
+        ];
+
+        $method = new \ReflectionMethod($this->sisp, 'validateParams');
+        $method->setAccessible(true);
+
+        $error = $method->invoke($this->sisp, $params);
+
+        $this->assertEquals("EntityCode é obrigatório para transactionCode 2 e 3.", $error);
+    }
+
+    public function testValidateParamsReturnsFirstError()
+    {
+        $params = [
+            'transactionCode' => '5', // inválido
+            'merchantRef' => str_repeat('X', 16) // inválido também
+        ];
+
+        $method = new \ReflectionMethod($this->sisp, 'validateParams');
+        $method->setAccessible(true);
+
+        $error = $method->invoke($this->sisp, $params);
+
+        // Deve retornar o primeiro erro encontrado
+        $this->assertEquals("TransactionCode inválido. Valores permitidos: 1,2,3,4.", $error);
+    }
+
 
     public function testGeneratePurchaseRequest()
     {
