@@ -5,9 +5,21 @@ All notable changes to this project will be documented in this file.
 ## [2.1.0] - 2025-11-30
 
 ### Added
+- feat(receipt): add plain text receipt and handle failures
+- docs(composer): add feature details to package description
 - test(unit): add validation and formatting test cases
 - test(vinti4net): add coverage for setMerchant and createPaymentForm
 - fix(refund): add default value for merchantRef
+
+### Changed
+- docs(changelog): update and consolidate for v2.1.0 release
+- docs(readme): refine content and update badges
+- test: enhance unit test coverage for core logic
+- style(billing): apply standard code formatting
+
+## [2.0.0] - 2025-11-30
+
+### Added
 - chore: add readme field to composer.json
 - chore: update changelog for version 2.0.0 and 1.1.1, add enhancements and changes
 - Add language option to payment form example
@@ -31,9 +43,6 @@ All notable changes to this project will be documented in this file.
 - Fix method call in error handling example
 
 ### Changed
-- docs(readme): refine content and update badges
-- test: enhance unit test coverage for core logic
-- style(billing): apply standard code formatting
 - chore: update changelog for version 2.0.0 and modify installation section in README
 - chore: update changelog versioning and enhance composer.json keywords
 - Merge branch 'main' of https://github.com/erilshackle/vinti4net-php
