@@ -23,8 +23,14 @@ final class ReceiptRendererTest extends TestCase
             public $dcc = [];
 
             // mocks para métodos privados acessados na trait
-            public function getAmount() { return $this->data['amount'] ?? 123.45; }
-            public function getCurrency() { return $this->data['currency'] ?? 'CVE'; }
+            public function getAmount()
+            {
+                return $this->data['amount'] ?? 123.45;
+            }
+            public function getCurrency()
+            {
+                return $this->data['currency'] ?? 'CVE';
+            }
         };
     }
 
@@ -105,5 +111,69 @@ final class ReceiptRendererTest extends TestCase
             $this->assertNotEmpty($html);
         }
     }
-}
 
+    public function testFormatCurrencyEURAndDefault(): void
+    {
+        $method = new \ReflectionMethod($this->renderer, 'formatCurrency');
+        $method->setAccessible(true);
+
+        // EUR
+        $result = $method->invoke($this->renderer, 100, 'EUR');
+        $this->assertStringContainsString('EUR', $result);
+
+        // Default (qualquer outro valor)
+        $result = $method->invoke($this->renderer, 100, 'XYZ');
+        $this->assertStringContainsString('XYZ', $result);
+    }
+
+
+    public function testFormatTimestampCatch(): void
+    {
+        // Timestamp inválido dispara catch
+        $method = new \ReflectionMethod($this->renderer, 'formatTimestamp');
+        $method->setAccessible(true);
+        $result = $method->invoke($this->renderer, 'INVALID_TIMESTAMP');
+        $this->assertEquals('N/A', $result);
+    }
+
+    public function testFormatPhoneNumber(): void
+    {
+        $method = new \ReflectionMethod($this->renderer, 'formatPhoneNumber');
+        $method->setAccessible(true);
+
+        // Número 7 dígitos
+        $phone = '9912345';
+        $formatted = $method->invoke($this->renderer, $phone);
+        $this->assertStringContainsString('+238', $formatted);
+
+        // Número vazio retorna N/A
+        $formatted = $method->invoke($this->renderer, '');
+        $this->assertEquals('N/A', $formatted);
+
+        // Número qualquer retorna o mesmo valor
+        $formatted = $method->invoke($this->renderer, '+1234567890');
+        $this->assertEquals('+1234567890', $formatted);
+    }
+
+    public function testGetEntityName(): void
+    {
+        $method = new \ReflectionMethod($this->renderer, 'getEntityName');
+        $method->setAccessible(true);
+
+        $this->assertEquals('ÁGUAS DE CABO VERDE', $method->invoke($this->renderer, '10002'));
+        $this->assertEquals('UNITEL T+', $method->invoke($this->renderer, '10022'));
+        $this->assertEquals('Entidade', $method->invoke($this->renderer, '99999'));
+    }
+
+    public function testGetEntityContact(): void
+    {
+        $method = new \ReflectionMethod($this->renderer, 'getEntityContact');
+        $method->setAccessible(true);
+
+        $this->assertEquals('Contacto: 262 30 60', $method->invoke($this->renderer, '10001'));
+        $this->assertEquals('Contacto: 800 20 20', $method->invoke($this->renderer, '10002'));
+        $this->assertEquals('Contacto: 111', $method->invoke($this->renderer, '10021'));
+        $this->assertEquals('Contacto: 101', $method->invoke($this->renderer, '10022'));
+        $this->assertEquals('', $method->invoke($this->renderer, '99999'));
+    }
+}

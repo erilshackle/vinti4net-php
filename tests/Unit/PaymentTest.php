@@ -35,7 +35,7 @@ class PaymentTest extends TestCase
         $this->assertArrayHasKey('postUrl', $result);
         $this->assertArrayHasKey('fields', $result);
         $this->assertStringContainsString($this->payment->getBaseUrl(), $result['postUrl']);
-        
+
         $fields = $result['fields'];
         $this->assertEquals('TEST_POS_123', $fields['posID']);
         $this->assertEquals(1500, $fields['amount']);
@@ -77,6 +77,47 @@ class PaymentTest extends TestCase
         $this->assertEquals(10021, $fields['entityCode']);
         $this->assertEquals('9912345', $fields['referenceNumber']);
     }
+
+    public function testPreparePaymentThrowsExceptionForMissingTransactionCode()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("transactionCode é obrigatório.");
+
+        $this->payment->preparePayment([
+            'amount' => 1000,
+            'currency' => 'CVE',
+            'urlMerchantResponse' => 'https://callback.example.com'
+            // transactionCode ausente
+        ]);
+    }
+
+    public function testPreparePaymentThrowsExceptionForInvalidParams()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("Currency para estorno deve ser '132' (CVE).");
+
+        $this->payment->preparePayment([
+            'transactionCode' => '4', // Estorno
+            'amount' => 500,
+            'currency' => '840',      // USD inválido para estorno
+            'urlMerchantResponse' => 'https://callback.example.com'
+        ]);
+    }
+
+    public function testPreparePaymentThrowsExceptionForMissingEntityCode()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("EntityCode é obrigatório para transactionCode 2 e 3.");
+
+        $this->payment->preparePayment([
+            'transactionCode' => '2', // Serviço
+            'amount' => 1500,
+            'currency' => '132',
+            'urlMerchantResponse' => 'https://callback.example.com'
+            // entityCode ausente
+        ]);
+    }
+
 
     public function testFingerprintRequestForPurchase()
     {
@@ -144,10 +185,20 @@ class PaymentTest extends TestCase
     }
 }
 
+
 // Adicionar método para teste
 class Payment extends Vinti4Payment
 {
-    public function fingerprintRequest(array $data): string { return parent::fingerprintRequest($data); }
-    public function fingerprintResponse(array $data): string { return parent::fingerprintResponse($data); }
-    public function getBaseUrl(): string { return $this->baseUrl; }
+    public function fingerprintRequest(array $data): string
+    {
+        return parent::fingerprintRequest($data);
+    }
+    public function fingerprintResponse(array $data): string
+    {
+        return parent::fingerprintResponse($data);
+    }
+    public function getBaseUrl(): string
+    {
+        return $this->baseUrl;
+    }
 }
