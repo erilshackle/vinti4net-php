@@ -1,4 +1,5 @@
 <?php
+
 namespace Erilshk\Sisp;
 
 use Erilshk\Sisp\Core\Payment;
@@ -140,7 +141,7 @@ class Vinti4Net
         return $this;
     }
 
-    
+
     /**
      * Set the merchant reference and session. (15 chars max)
      *
@@ -150,7 +151,8 @@ class Vinti4Net
      * @param mixed|null  $session   Optional session information (string). up to 15 character maximun
      * @return self                  Returns $this to allow method chaining.
      */
-    public function setMerchant(string $reference, ?string $session = null){
+    public function setMerchant(string $reference, ?string $session = null)
+    {
         return $this->setRequestParams([
             'merchantRef' => $reference,
             'merchantSession' => $session ?? "S" . date('YmdHms'),
@@ -179,7 +181,7 @@ class Vinti4Net
     public function preparePurchase(float|string $amount, array|Billing $billing, string $currency = 'CVE'): static
     {
         $this->prepared = true;
-        $billing = (is_object($billing) && $billing instanceof Billing)? $billing->toArray() : $billing;
+        $billing = (is_object($billing) && $billing instanceof Billing) ? $billing->toArray() : $billing;
 
         $this->request = [
             'transactionCode' => Sisp::TRANSACTION_TYPE_PURCHASE,
@@ -378,6 +380,14 @@ class Vinti4Net
     {
         $request = $this->request;
         $request['urlMerchantResponse'] = 'http://localhost/callback.php/';
-        return array_merge($request, $this->payment->preparePayment($request));
+        $data = [];
+        if ($tc = $tcrequest['transactionCode'] ?? false) {
+            if ($tc  === Sisp::TRANSACTION_TYPE_REFUND) {
+                $data = $this->refund->preparePayment($request);
+            } else {
+                $data = $this->payment->preparePayment($request);
+            }
+        }
+        return array_merge($request, $data);
     }
 }
