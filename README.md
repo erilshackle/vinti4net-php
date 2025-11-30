@@ -3,6 +3,8 @@
 SDK PHP para integração com o sistema de pagamentos **Vinti4Net** ([SISP](https://www.sisp.cv/vinti4.aspx) Cabo Verde, Serviço MOP021).
 
 [![Packagist Version](https://img.shields.io/packagist/v/erilshk/vinti4net)](https://packagist.org/packages/erilshk/vinti4net) [![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://php.net) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) [![Build Status](https://img.shields.io/github/actions/workflow/status/erilshackle/vinti4net-php/ci.yml?branch=main&logo=github&label=CI)](https://github.com/erilshackle/vinti4net-php/actions) 
+[![cobertura](https://codecov.io/gh/erilshackle/vinti4net-php/graph/badge.svg?token=P93P8MGA67)](https://codecov.io/gh/erilshackle/vinti4net-php)
+
 
 
 ## 📦 [Instalação](https://packagist.org/packages/erilshk/vinti4net)
@@ -165,7 +167,7 @@ try {
 
 ## 🧪 Testes
 
-[![Maintenance](https://img.shields.io/maintenance/yes/2025.svg)]() [![Coverage Status](https://img.shields.io/codecov/c/github/erilshackle/vinti4net-php/main?logo=codecov)](https://codecov.io/gh/erilshackle/vinti4net-php)
+[![Maintenance](https://img.shields.io/maintenance/yes/2025.svg)]() [![Coverage Status](https://img.shields.io/codecov/c/github/erilshackle/vinti4net-php/main?logo=codecov)](https://app.codecov.io/gh/erilshackle/vinti4net-php/tree/main/src)
 
 ```bash
 # Executar testes
@@ -175,20 +177,7 @@ composer test
 composer test-coverage
 ```
 
-## 📁 Estrutura do Projeto
-
-```
-src/
-├── Core/
-│   ├── Sisp.php          # Classe base abstrata
-│   ├── Payment.php       # Operações de pagamento
-│   └── Refund.php        # Operações de reembolso
-├── Traits/
-│   └── ReceiptRenderer.php # Geração de recibos
-├── Vinti4Net.php         # Classe principal
-├── Billing.php           # Classe para montar Billing
-└── Vinti4Response.php    # Resposta processada
-```
+[![codecov](https://codecov.io/gh/erilshackle/vinti4net-php/graphs/icicle.svg?token=P93P8MGA67)](https://app.codecov.io/gh/erilshackle/vinti4net-php/flags)
 
 ## 🔗 Links Úteis
 
@@ -203,7 +192,7 @@ MIT License - veja [LICENSE](LICENSE) para detalhes.
 
 ## 🤝 Contribuições
 
-Contribuições são bem-vindas! Por favor, leia [CONTRIBUTING.md](CONTRIBUTING.md) antes de enviar *Pull Requests*.
+Contribuições são bem-vindas! Por favor, leia [CONTRIBUTING](CONTRIBUTING.md) antes de enviar *Pull Requests*.
 
 ---
 
