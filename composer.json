@@ -1,6 +1,6 @@
 {
     "name": "erilshk/vinti4net",
-    "description": "SDK PHP de integração com a RedeVinti4 (SISP, Cabo Verde) para pagamentos online completo e seguro",
+    "description": "SDK PHP de integração com a RedeVinti4 (SISP, Cabo Verde) para pagamentos online completo e seguro. Compra 3DS, Pagamento de Serviço, Recargas, Reembolsos e Recibos",
     "keywords": [
         "vinti4net",
         "sisp",
