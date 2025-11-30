@@ -142,20 +142,76 @@ final class Billing
 
     /* ------------------ Fluent Setters ------------------ */
 
-    public function email(string $v): self { $this->data['email'] = $v; return $this; }
-    public function country(string $v): self { $this->data['billAddrCountry'] = $v; return $this; }
-    public function city(string $v): self { $this->data['billAddrCity'] = $v; return $this; }
-    public function address(string $v): self { $this->data['billAddrLine1'] = $v; return $this; }
-    public function address2(string $v): self { $this->data['billAddrLine2'] = $v; return $this; }
-    public function address3(string $v): self { $this->data['billAddrLine3'] = $v; return $this; }
-    public function postalCode(string $v): self { $this->data['billAddrPostCode'] = $v; return $this; }
-    public function state(string $v): self { $this->data['billAddrState'] = $v; return $this; }
-    public function shipCountry(string $v): self { $this->data['shipAddrCountry'] = $v; return $this; }
-    public function shipCity(string $v): self { $this->data['shipAddrCity'] = $v; return $this; }
-    public function shipAddress(string $v): self { $this->data['shipAddrLine1'] = $v; return $this; }
-    public function shipPostalCode(string $v): self { $this->data['shipAddrPostCode'] = $v; return $this; }
-    public function shipState(string $v): self { $this->data['shipAddrState'] = $v; return $this; }
-    public function addrMatch(bool $v): self { $this->data['addrMatch'] = $v ? 'Y' : 'N'; return $this; }
+    public function email(string $v): self
+    {
+        $this->data['email'] = $v;
+        return $this;
+    }
+    public function country(string $v): self
+    {
+        $this->data['billAddrCountry'] = $v;
+        return $this;
+    }
+    public function city(string $v): self
+    {
+        $this->data['billAddrCity'] = $v;
+        return $this;
+    }
+    public function address(string $v): self
+    {
+        $this->data['billAddrLine1'] = $v;
+        return $this;
+    }
+    public function address2(string $v): self
+    {
+        $this->data['billAddrLine2'] = $v;
+        return $this;
+    }
+    public function address3(string $v): self
+    {
+        $this->data['billAddrLine3'] = $v;
+        return $this;
+    }
+    public function postalCode(string $v): self
+    {
+        $this->data['billAddrPostCode'] = $v;
+        return $this;
+    }
+    public function state(string $v): self
+    {
+        $this->data['billAddrState'] = $v;
+        return $this;
+    }
+    public function shipCountry(string $v): self
+    {
+        $this->data['shipAddrCountry'] = $v;
+        return $this;
+    }
+    public function shipCity(string $v): self
+    {
+        $this->data['shipAddrCity'] = $v;
+        return $this;
+    }
+    public function shipAddress(string $v): self
+    {
+        $this->data['shipAddrLine1'] = $v;
+        return $this;
+    }
+    public function shipPostalCode(string $v): self
+    {
+        $this->data['shipAddrPostCode'] = $v;
+        return $this;
+    }
+    public function shipState(string $v): self
+    {
+        $this->data['shipAddrState'] = $v;
+        return $this;
+    }
+    public function addrMatch(bool $v): self
+    {
+        $this->data['addrMatch'] = $v ? 'Y' : 'N';
+        return $this;
+    }
 
     public function mobilePhone(string $cc, string $subscriber): self
     {
@@ -175,7 +231,11 @@ final class Billing
         return $this;
     }
 
-    public function acctID(string $v): self { $this->data['acctID'] = $v; return $this; }
+    public function acctID(string $v): self
+    {
+        $this->data['acctID'] = $v;
+        return $this;
+    }
 
     public function acctInfo(array $info): self
     {
@@ -191,13 +251,21 @@ final class Billing
         return $this;
     }
 
-    public function suspicious(bool $v = true): self { $this->data['suspicious'] = $v; return $this; }
+    public function suspicious(bool $v = true): self
+    {
+        $this->data['suspicious'] = $v;
+        return $this;
+    }
 
     /* ------------------ Final Output ------------------ */
     public function toArray(): array
     {
-        return array_filter($this->data, fn($v) => $v !== null && $v !== '');
+        return array_filter(
+            $this->data,
+            fn($v) => !($v === null || $v === '')
+        );
     }
+
 
     /* ------------------ Helpers ------------------ */
     public static function fromUser(array $user): self

@@ -47,8 +47,8 @@ class BillingTest extends TestCase
         $this->assertEquals('7600', $billing['billAddrPostCode']);
         $this->assertEquals('SV', $billing['billAddrState']);
         $this->assertEquals('Y', $billing['addrMatch']);
-        $this->assertEquals(['cc'=>'238','subscriber'=>'99112233'], $billing['mobilePhone']);
-        $this->assertEquals(['cc'=>'238','subscriber'=>'99113344'], $billing['workPhone']);
+        $this->assertEquals(['cc' => '238', 'subscriber' => '99112233'], $billing['mobilePhone']);
+        $this->assertEquals(['cc' => '238', 'subscriber' => '99113344'], $billing['workPhone']);
         $this->assertEquals('12345', $billing['acctID']);
         $this->assertEquals('02', $billing['acctInfo']['suspiciousAccActivity']);
         $this->assertTrue($billing['suspicious']);
@@ -74,7 +74,7 @@ class BillingTest extends TestCase
             ->mobilePhone('1', '(555) 123-4567')
             ->workPhone('1', '555-987-6543')
             ->acctID('abc123')
-            ->acctInfo(['chAccAgeInd'=>'05'])
+            ->acctInfo(['chAccAgeInd' => '05'])
             ->suspicious(true)
             ->toArray();
 
@@ -98,6 +98,25 @@ class BillingTest extends TestCase
         $billing = Billing::make()->workPhone('238', '(238) 912-2233')->toArray();
         $this->assertEquals('2389122233', $billing['workPhone']['subscriber']);
     }
+
+    public function testFillAssignsStringPhoneToInternalArray()
+    {
+        $billing = Billing::create([
+            'mobilePhone' => '9911-2233', // string → ativa linha 129
+            'workPhone'   => '(238) 991-3344', // também ativa linha 129
+        ]);
+
+        $this->assertEquals(
+            ['cc' => '238', 'subscriber' => '99112233'],
+            $billing['mobilePhone']
+        );
+
+        $this->assertEquals(
+            ['cc' => '238', 'subscriber' => '2389913344'],
+            $billing['workPhone']
+        );
+    }
+
 
     public function testFromUserPopulatesAllFields()
     {
