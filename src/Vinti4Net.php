@@ -376,6 +376,8 @@ class Vinti4Net
      */
     public function getRequest(): array
     {
-        return $this->request;
+        $request = $this->request;
+        $request['urlMerchantResponse'] = 'http://localhost/callback.php/';
+        return array_merge($request, $this->payment->preparePayment($request));
     }
 }
