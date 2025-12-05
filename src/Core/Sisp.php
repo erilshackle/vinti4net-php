@@ -2,7 +2,6 @@
 
 namespace Erilshk\Sisp\Core;
 
-use Erilshk\Vinti4Net\Traits\ParamsValidatorTrait;
 use InvalidArgumentException;
 
 /**
@@ -12,14 +11,14 @@ use InvalidArgumentException;
 abstract class Sisp
 {
     // ---------------------------------------------------------------------
-    // 🔧 Atributos comuns
+    // Atributos comuns
     // ---------------------------------------------------------------------
     protected string $posID;
     protected string $posAuthCode;
     protected string $baseUrl;
 
     // ---------------------------------------------------------------------
-    // ⚙️ Constantes
+    // Constantes
     // ---------------------------------------------------------------------
     public const DEFAULT_BASE_URL = "https://mc.vinti4net.cv/BizMPIOnUsSisp/CardPayment";
 
@@ -32,14 +31,14 @@ abstract class Sisp
     public const SUCCESS_MESSAGE_TYPES = ['8', '10', 'P', 'M'];
 
     // ---------------------------------------------------------------------
-    // 🧩 Métodos abstratos
+    // Métodos abstratos
     // ---------------------------------------------------------------------
     abstract protected function fingerprintRequest(array $data): string;
     abstract protected function fingerprintResponse(array $data): string;
     abstract public function preparePayment(array $params): array;
 
     // ---------------------------------------------------------------------
-    // 🔨 Construtor
+    // Construtor
     // ---------------------------------------------------------------------
     public function __construct(string $posID, string $posAuthCode, ?string $endpoint = null)
     {
@@ -49,7 +48,7 @@ abstract class Sisp
     }
 
     // ---------------------------------------------------------------------
-    // 💱 Conversão de moeda
+    // Conversão de moeda
     // ---------------------------------------------------------------------
     protected function currencyToCode(string $currency): int
     {
@@ -68,7 +67,7 @@ abstract class Sisp
     }
 
     // ---------------------------------------------------------------------
-    // 📥 PROCESS RESPONSE (Simplificado)
+    // PROCESS RESPONSE (Simplificado)
     // ---------------------------------------------------------------------
     public function processResponse(array $postData): array
     {
@@ -239,7 +238,7 @@ abstract class Sisp
 
             // ID da transação original (até 8 dígitos)
             'transactionID' => fn($v) => preg_match('/^\w{1,8}$/', (string)$v) ? null : "TransactionID deve ter até 8 dígitos numéricos.",
-            // 'transactionID' => fn($v) => preg_match('/^\d{1,8}$/', (string)$v) ? null : "TransactionID deve ter até 8 dígitos numéricos.",
+            # 'transactionID' => fn($v) => preg_match('/^\d{1,8}$/', (string)$v) ? null : "TransactionID deve ter até 8 dígitos numéricos.",
 
             // Identificador da conta do titular do cartão (até 64 caracteres)
             'acctID' => fn($v) => strlen($v) <= 64 ? null : "AcctID deve ter no máximo 64 caracteres.",

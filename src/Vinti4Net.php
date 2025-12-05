@@ -24,9 +24,10 @@ use Exception;
  * - Refund
  *
  * @author  Eril TS Carvalho <erilandocarvalho@gmail.com>
- * @version 1.0.0
- *
- * @package Erilshk\Vinti4Net
+ * @version 2.2.0
+ * 
+ * @package Erilshk\Sisp
+ * @link https://erilshackle.github.io/vinti4net-php Documentation
  */
 class Vinti4Net
 {
@@ -59,7 +60,7 @@ class Vinti4Net
     }
 
     // ------------------------------------------------------------------
-    //  ✅ SET PARAMS
+    //  SET PARAMS
     // ------------------------------------------------------------------
 
     /**
@@ -160,7 +161,7 @@ class Vinti4Net
     }
 
     // ------------------------------------------------------------------
-    //  💳 PURCHASE PAYMENT (3DS)
+    //  PURCHASE PAYMENT (3DS)
     // ------------------------------------------------------------------
 
     /**
@@ -195,7 +196,7 @@ class Vinti4Net
 
 
     // ------------------------------------------------------------------
-    //  🧾 SERVICE PAYMENT
+    //  SERVICE PAYMENT
     // ------------------------------------------------------------------
 
     /**
@@ -223,7 +224,7 @@ class Vinti4Net
 
 
     // ------------------------------------------------------------------
-    //  🔄 RECHARGE PAYMENT
+    //  RECHARGE PAYMENT
     // ------------------------------------------------------------------
 
     /**
@@ -251,7 +252,7 @@ class Vinti4Net
 
 
     // ------------------------------------------------------------------
-    //  💰 REFUND PAYMENT
+    //  REFUND PAYMENT
     // ------------------------------------------------------------------
 
     /**
@@ -283,7 +284,7 @@ class Vinti4Net
 
 
     // ------------------------------------------------------------------
-    //  🧾 CREATE FORM (auto-submissão)
+    //  CREATE FORM (auto-submissão)
     // ------------------------------------------------------------------
 
     /**
@@ -348,7 +349,7 @@ class Vinti4Net
 
 
     // ------------------------------------------------------------------
-    //  📥 PROCESS RESPONSE (Simplificado)
+    //  PROCESS RESPONSE
     // ------------------------------------------------------------------
 
     /**
@@ -379,7 +380,7 @@ class Vinti4Net
     public function getRequest(): array
     {
         $request = $this->request;
-        $request['urlMerchantResponse'] = 'http://localhost/callback.php/';
+        $request['urlMerchantResponse'] = 'http://localhost:8000/examples/callback_example.php/';
         $data = [];
         if ($tc = $tcrequest['transactionCode'] ?? false) {
             if ($tc  === Sisp::TRANSACTION_TYPE_REFUND) {

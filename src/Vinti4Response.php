@@ -175,7 +175,7 @@ class Vinti4Response
     }
 
     // ------------------------------------------------------------------
-    // 📊 Helper Methods
+    // Helper Methods
     // ------------------------------------------------------------------
 
     /**
@@ -316,4 +316,8 @@ class Vinti4Response
     public function GetAdditionalErrorMessage(){
         return $this->data['merchantRespAdditionalErrorMessage'] ?? '';
     }
+
+    // public function receipt(?string $companyName = null){
+    //     return new Receipt($this, $companyName);
+    // }
 }

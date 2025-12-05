@@ -11,7 +11,7 @@ namespace Erilshk\Sisp;
  * It can be instantiated using `make()` or used statically via
  * `create()` to quickly generate structured arrays.
  *
- * @package Erilshk\Vinti4Net
+ * @package Erilshk\Sisp
  * @link https://erilshackle.github.io/vinti4net-php/billing
  */
 final class Billing

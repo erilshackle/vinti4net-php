@@ -2,17 +2,15 @@
 
 namespace Erilshk\Sisp\Traits;
 
-use Erilshk\Sisp\Core\Sisp;
-
 /**
- * Trait para renderização de recibos HTML
+ * Trait for HTML Receipt rendering
  */
 trait ReceiptRenderer
 {
     private bool $renderWithStyle = true;
 
     /**
-     * Gera um recibo HTML básico baseado nos dados da transação
+     * Generates a basic HTML receipt based on transaction response data
      */
     public function generateReceiptHtml(?string $companyName = null, bool $styled = true): string
     {
@@ -39,8 +37,8 @@ trait ReceiptRenderer
     }
 
     /**
-     * Gera um resumo textual da transação (recibo em texto puro)
-     * Pode ser usado para BD, arquivo ou email.
+     * Renders a pure text summary recpeit
+     * Useful to be used for DB, file or email.
      */
     public function generateReceiptText(?string $companyName = null): string
     {

@@ -266,6 +266,22 @@ class Vinti4ResponseTest extends TestCase
         $this->assertEquals('TXN456', $response->getTransactionId());
     }
 
+    // public function testRecpeitInstantiation()
+    // {
+    //     $data = [
+    //         'merchantRespMerchantRef' => 'REF123',
+    //         'merchantRespTid' => 'TXN456'
+    //     ];
+    //     $response = Vinti4Response::success(
+    //         'SUCCESS',
+    //         $data
+    //     );
+
+    //     $recepit = $response->receipt('My COmpany');
+
+    //     // $this->assertInstanceOf(Erilshk\Sisp\Receipt::class, $recepit);
+    // }
+
     public function testStaticConstructors()
     {
         $success = Vinti4Response::success('Custom message');
