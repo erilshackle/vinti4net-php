@@ -16,6 +16,7 @@ composer require erilshk/vinti4net
 ## 🚀 Começo Rápido
 
 ### 1. Configuração Básica
+> Esta parte do código deve estar presente em ambos os arquivos de processamento e resposta
 
 ```php
 <?php
