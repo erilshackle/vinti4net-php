@@ -22,55 +22,40 @@ $vinti4 = new Vinti4Net(
 );
 
 // =============================================================================
-// 2. LOG DE DEPURAÇÃO (útil para desenvolvimento)
-// =============================================================================
-
-$logData = [
-    'timestamp' => date('Y-m-d H:i:s'),
-    'post_data' => $_POST,
-    'server_data' => [
-        'REMOTE_ADDR' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
-        'HTTP_USER_AGENT' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
-    ]
-];
-
-file_put_contents('callback_log.json', json_encode($logData, JSON_PRETTY_PRINT), FILE_APPEND);
-
-// =============================================================================
-// 3. PROCESSAR RESPOSTA DO SISP
+// 2. PROCESSAR RESPOSTA DO SISP
 // =============================================================================
 
 try {
     $response = $vinti4->processResponse($_POST);
     
     // =========================================================================
-    // 4. TRATAR RESULTADO
+    // 3. TRATAR RESULTADO
     // =========================================================================
     
     if ($response->isSuccess()) {
-        // ✅ PAGAMENTO APROVADO
+        // PAGAMENTO APROVADO
         handleSuccessfulPayment($response);
         
     } elseif ($response->isCancelled()) {
-        // ⏹️ PAGAMENTO CANCELADO
+        // PAGAMENTO CANCELADO
         handleCancelledPayment($response);
         
     } elseif ($response->hasInvalidFingerprint()) {
-        // ⚠️ ERRO DE SEGURANÇA
+        // ERRO DE SEGURANÇA
         handleSecurityError($response);
         
     } else {
-        // ❌ ERRO NO PAGAMENTO
+        // ERRO NO PAGAMENTO
         handleFailedPayment($response);
     }
 
 } catch (Exception $e) {
-    // 🚨 ERRO NO PROCESSAMENTO
+    // ERRO NO PROCESSAMENTO
     handleProcessingError($e);
 }
 
 // =============================================================================
-// 5. FUNÇÕES DE TRATAMENTO
+// 4. FUNÇÕES DE TRATAMENTO
 // =============================================================================
 
 function handleSuccessfulPayment(Vinti4Response $response) {
@@ -80,25 +65,25 @@ function handleSuccessfulPayment(Vinti4Response $response) {
     $amount = $response->getAmount();
     $currency = $response->getCurrency();
     
-    // 📝 EXEMPLO: Atualizar banco de dados
+    // EXEMPLO: Atualizar banco de dados
     // updateOrderStatus($merchantRef, 'paid', $transactionId);
     
-    // 💰 EXEMPLO: Processar DCC (Dynamic Currency Conversion)
+    // EXEMPLO: Processar DCC (Dynamic Currency Conversion)
     if ($response->dcc['enabled'] ?? false) {
         processDcc($response->dcc);
     }
     
-    // 📧 EXEMPLO: Enviar email de confirmação
+    // EXEMPLO: Enviar email de confirmação
     // sendConfirmationEmail($merchantRef, $amount, $currency);
     
-    // 🧾 Gerar e exibir recibo
+    // Gerar e exibir recibo
     displayReceipt($response, 'Pagamento Aprovado');
 }
 
 function handleCancelledPayment(Vinti4Response $response) {
     $merchantRef = $response->getMerchantRef();
     
-    // 📝 EXEMPLO: Atualizar status no banco
+    // EXEMPLO: Atualizar status no banco
     // updateOrderStatus($merchantRef, 'cancelled');
     
     displayReceipt($response, 'Pagamento Cancelado');
@@ -109,14 +94,14 @@ function handleFailedPayment(Vinti4Response $response) {
     $errorMessage = $response->message;
     $errorDetail = $response->detail;
     
-    // 📝 EXEMPLO: Registrar erro no banco
+    // EXEMPLO: Registrar erro no banco
     // logPaymentError($merchantRef, $errorMessage, $errorDetail);
     
     displayReceipt($response, 'Pagamento Recusado');
 }
 
 function handleSecurityError(Vinti4Response $response) {
-    // 🚨 ERRO CRÍTICO: Fingerprint inválido
+    // ERRO CRÍTICO: Fingerprint inválido
     error_log("ERRO DE SEGURANÇA: " . json_encode([
         'debug' => $response->debug,
         'data' => $response->data
