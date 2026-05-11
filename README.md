@@ -16,7 +16,7 @@ composer require erilshk/vinti4net
 ## 🚀 Começo Rápido
 
 ### 1. Configuração Básica
-> Esta parte do código deve estar presente em ambos os arquivos de [processamento](#2-criar-pagamento) e [resposta](4-processar-resposta-(callback))
+> Esta parte do código deve estar presente em ambos os arquivos de [processamento](#2-criar-pagamento) e [resposta](4-processar-resposta-callback)
 
 ```php
 <?php
