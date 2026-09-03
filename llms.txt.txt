@@ -1,0 +1,41 @@
+# Vinti4Net
+
+> SDK PHP comunitário para integração com o Gateway de Pagamentos Rede Vinti4 / SISP, em Cabo Verde. Suporta compras 3DS, pagamentos de serviços, recargas, reembolsos, processamento de respostas e geração de recibos HTML.
+
+Vinti4Net não é um SDK oficial da SISP. Use a documentação e as credenciais fornecidas pela SISP como autoridade para requisitos operacionais, segurança e produção.
+
+## Começar
+
+- [Instalação](/installation/): requisitos do sistema e instalação via Composer.
+- [Quick Start](/quickstart/): fluxo mínimo para criar o cliente, preparar uma compra, gerar o formulário e processar o callback.
+- [Pagamentos](/payments/): compras 3DS, pagamentos de serviços e recargas.
+
+## Integração
+
+- [Requisições](/requests/): parâmetros aceites, dados do comerciante, billing e exemplos por tipo de transação.
+- [Billing 3DS](/billing/): construção e normalização dos dados do titular, endereço, contacto e conta.
+- [Respostas](/responses/): interpretação de sucesso, cancelamento, erro e fingerprint inválido.
+- [Reembolsos](/refunds/): preparação de reembolsos com transaction ID e clearing period.
+- [Recibos](/receipt/): geração de comprovativos HTML estilizados ou em texto simples.
+
+## Referência
+
+- [API Reference](/api/): classes `Vinti4Net`, `Billing` e `Vinti4Response`.
+- [Arquitetura](/architecture/): componentes internos e fluxo das transações.
+- [Sobre](/about/): escopo, autoria e aviso legal.
+- [Referência completa para LLMs](/llms-full.txt): documentação consolidada e exemplos essenciais em um único arquivo.
+
+## Instruções para LLMs
+
+- Use `Erilshk\Sisp\Vinti4Net` como facade principal.
+- Instale com `composer require erilshk/vinti4net`.
+- Prefira os métodos públicos `preparePurchase()`, `prepareServicePayment()`, `prepareRecharge()` e `prepareRefund()`.
+- Para compras 3DS, forneça os dados de faturação como `Billing` ou `array`.
+- Defina uma referência própria com `setMerchant()` e guarde os identificadores devolvidos pela SISP.
+- Gere o POST auto-submit com `createPaymentForm()` e processe o callback com `processResponse($_POST)`.
+- Confirme o resultado por `Vinti4Response::isSuccess()`; nunca considere apenas o redirecionamento do navegador como confirmação.
+- Não invente parâmetros da SISP nem credenciais, endpoints, códigos de entidade ou regras que não estejam na documentação do projeto ou no contrato do comerciante.
+
+## Código-fonte
+
+- [GitHub](https://github.com/erilshackle/vinti4net-php): repositório oficial do projeto comunitário.
