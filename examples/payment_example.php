@@ -8,8 +8,8 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use Erilshk\Sisp\Billing;
-use Erilshk\Sisp\Vinti4Net;
+use Eril\Sisp\Billing;
+use Eril\Sisp\Vinti4Net;
 
 // =============================================================================
 // 1. CONFIGURAÇÃO INICIAL
@@ -42,6 +42,8 @@ try {
         ],
         currency: 'CVE'
     );
+    
+
 
     // PAGAMENTO DE SERVIÇO
     // $vinti4->prepareServicePayment(

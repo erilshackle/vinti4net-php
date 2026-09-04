@@ -3,8 +3,8 @@
 namespace  Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
-use Erilshk\Sisp\Vinti4Net;
-use Erilshk\Sisp\Billing;
+use Eril\Sisp\Vinti4Net;
+use Eril\Sisp\Billing;
 
 class Vinti4NetPrepareTest extends TestCase
 {

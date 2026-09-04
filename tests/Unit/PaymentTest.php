@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use Erilshk\Sisp\Core\Payment as Vinti4Payment;
+use Eril\Sisp\Core\Payment as Vinti4Payment;
 use PHPUnit\Framework\TestCase;
 
 class PaymentTest extends TestCase

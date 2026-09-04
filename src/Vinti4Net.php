@@ -1,394 +1,170 @@
 <?php
 
-namespace Erilshk\Sisp;
+declare(strict_types=1);
 
-use Erilshk\Sisp\Core\Payment;
-use Erilshk\Sisp\Core\Refund;
-use Erilshk\Sisp\Core\Sisp;
-use InvalidArgumentException;
-use Exception;
+namespace Eril\Sisp;
 
-/**
- * Main SDK facade for Vinti4Net Payments (SISP - Cabo Verde).
- *
- * This class provides a high-level API for preparing, submitting
- * and processing Vinti4Net payment and refund transactions.
- * 
- * It acts as a unified interface over the internal Payment and Refund
- * processing engines, simplifying all merchant-side operations.
- *
- * Supported operations:
- * - Purchase (3DS)
- * - Service payment (entity + reference)
- * - Recharge payment (entity + phone/account)
- * - Refund
- *
- * @author  Eril TS Carvalho <erilandocarvalho@gmail.com>
- * @version 2.2.0
- * 
- * @package Erilshk\Sisp
- * @link https://erilshackle.github.io/vinti4net-php Documentation
- */
-class Vinti4Net
+use Eril\Sisp\Core\Payment;
+use Eril\Sisp\Core\Refund;
+use Eril\Sisp\Core\Sisp;
+use Eril\Sisp\Exception\InvalidConfigurationException;
+use Eril\Sisp\Exception\InvalidResponseException;
+
+final class Vinti4Net
 {
-    /** @var Payment */
     private Payment $payment;
-
-    /** @var Refund */
     private Refund $refund;
 
-    /** @var array<string,mixed> */
-    private array $request = [];
-
-    /** @var bool */
-    private bool $prepared = false;
-
     /**
-     * Constructor for the Vinti4Net facade.
+     * Create a Vinti4Net client.
      *
-     * @param string      $posID        POS identifier provided by SISP.
-     * @param string      $posAuthCode  POS authorization key.
-     * @param string|null $endpoint     Optional custom SISP endpoint URL.
+     * @throws InvalidConfigurationException
      */
     public function __construct(
-        string $posID,
-        string $posAuthCode,
-        ?string $endpoint = null
+        string $posId,
+        string $authCode,
+        ?string $endpoint = null,
     ) {
-        $this->payment = new Payment($posID, $posAuthCode, $endpoint);
-        $this->refund = new Refund($posID, $posAuthCode, $endpoint);
-    }
+        $posId = trim($posId);
+        $authCode = trim($authCode);
 
-    // ------------------------------------------------------------------
-    //  SET PARAMS
-    // ------------------------------------------------------------------
-
-    /**
-     * Sets additional optional request parameters for the next transaction.
-     *
-     * Only the keys listed below are allowed:
-     *
-     * - **merchantRef**        Merchant reference for identifying the transaction.
-     * - **merchantSession**    Unique session identifier for the merchant.
-     * - **languageMessages**   Language code for SISP UI messages (e.g. "pt", "en").
-     * - **entityCode**         Entity code for service or recharge payments.
-     * - **referenceNumber**    Reference number for service or recharge.
-     * - **timeStamp**          Optional timestamp override.
-     * - **billing**            Billing section (3DS 2.x fields).
-     * - **currency**           ISO currency or SISP numeric currency code.
-     * - **acctID**             3DS2: Cardholder account ID.
-     * - **acctInfo**           3DS2: Account info JSON block.
-     * - **addrMatch**          3DS2: Indicates if billing/shipping match ("Y" or "N").
-     * - **billAddrCountry**    3DS2 billing country (ISO 3166-1 alpha-2).
-     * - **billAddrCity**       3DS2 billing city.
-     * - **billAddrLine1**      3DS2 billing address line 1.
-     * - **billAddrPostCode**   3DS2 billing postal code.
-     * - **email**              Customer email.
-     * - **clearingPeriod**     Required for refund operations.
-     *
-     * @param array{
-     *     merchantRef?: string,
-     *     merchantSession?: string,
-     *     languageMessages?: string,
-     *     entityCode?: int|string,
-     *     referenceNumber?: string,
-     *     timeStamp?: string,
-     *     billing?: array,
-     *     currency?: string|int,
-     *     acctID?: string,
-     *     acctInfo?: array,
-     *     addrMatch?: string,
-     *     billAddrCountry?: string,
-     *     billAddrCity?: string,
-     *     billAddrLine1?: string,
-     *     billAddrPostCode?: string,
-     *     email?: string,
-     *     clearingPeriod?: string
-     * } $params
-     *
-     * @return self
-     *
-     * @throws InvalidArgumentException If a disallowed parameter is included.
-     */
-    public function setRequestParams(array $params): self
-    {
-        $allowed = [
-            'merchantRef',
-            'merchantSession',
-            'languageMessages',
-            'entityCode',
-            'referenceNumber',
-            'timeStamp',
-            'billing',
-            'currency',
-            'acctID',
-            'acctInfo',
-            'addrMatch',
-            'billAddrCountry',
-            'billAddrCity',
-            'billAddrLine1',
-            'billAddrPostCode',
-            'email',
-            'clearingPeriod'
-        ];
-
-        foreach ($params as $key => $value) {
-            if (!in_array($key, $allowed, true)) {
-                throw new InvalidArgumentException("Parâmetro não permitido: {$key}");
-            }
-            $this->request[$key] = $value;
+        if ($posId === '') {
+            throw new InvalidConfigurationException('O POS ID não pode estar vazio.');
         }
 
-        return $this;
+        if ($authCode === '') {
+            throw new InvalidConfigurationException('O código de autenticação não pode estar vazio.');
+        }
+
+        if ($endpoint !== null && filter_var($endpoint, FILTER_VALIDATE_URL) === false) {
+            throw new InvalidConfigurationException('O endpoint da SISP deve ser uma URL válida.');
+        }
+
+        $this->payment = new Payment($posId, $authCode, $endpoint);
+        $this->refund = new Refund($posId, $authCode, $endpoint);
     }
 
-
     /**
-     * Set the merchant reference and session. (15 chars max)
+     * Create a purchase transaction.
      *
-     * Sets the merchant identifier/reference used by this client
-     *
-     * @param string      $reference Non-empty merchant reference or transaction_id. up to 15 character maximun
-     * @param mixed|null  $session   Optional session information (string). up to 15 character maximun
-     * @return self                  Returns $this to allow method chaining.
+     * @param array<string, mixed>|Billing $billing
      */
-    public function setMerchant(string $reference, ?string $session = null)
-    {
-        return $this->setRequestParams([
-            'merchantRef' => $reference,
-            'merchantSession' => $session ?? "S" . date('YmdHms'),
-        ]);
-    }
+    public function purchase(
+        int|string $amount,
+        string $reference,
+        array|Billing $billing,
+        string $currency = 'CVE',
+        ?string $session = null,
+    ): TransactionRequest {
+        $billing = $billing instanceof Billing
+            ? $billing->toArray()
+            : Billing::from($billing)->toArray();
 
-    // ------------------------------------------------------------------
-    //  PURCHASE PAYMENT (3DS)
-    // ------------------------------------------------------------------
-
-    /**
-     * Prepares a standard **purchase (3D Secure)** payment request.
-     *
-     * @param float|string  $amount   Transaction amount.
-     * @param array|Billing $billing  Customer billing data.
-     *  > __Required Params__:     
-     *  -   **email**             - Customer email 
-     *  -   **billAddrCountry**   - Country ISO 3166-1  (eg. 132)
-     *  -   **billAddrCity**      - City (eg. Praia)
-     *  -   **billAddrLine1**     - Address (eg. Avenida Cidade da Praia, 45)
-     *  -   **billAddrPostCode**  - Postal Code (eg. 7600)
-     * @param string        $currency ISO currency (default: CVE).
-     * 
-     * @return static
-     */
-    public function preparePurchase(float|string $amount, array|Billing $billing, string $currency = 'CVE'): static
-    {
-        $this->prepared = true;
-        $billing = (is_object($billing) && $billing instanceof Billing) ? $billing->toArray() : $billing;
-
-        $this->request = [
+        return $this->transaction($this->payment, [
             'transactionCode' => Sisp::TRANSACTION_TYPE_PURCHASE,
             'amount' => $amount,
+            'merchantRef' => $reference,
+            'currency' => $currency,
             'billing' => $billing,
-            'currency' => $currency
-        ];
-
-        return $this;
+        ], $session);
     }
 
-
-    // ------------------------------------------------------------------
-    //  SERVICE PAYMENT
-    // ------------------------------------------------------------------
-
     /**
-     * Prepares a **service payment** request (entity + reference number).
-     *
-     * @param float|string $amount Amount to pay.
-     * @param int          $entity Service entity code (SISP).
-     * @param string       $number Reference number.
-     *
-     * @return static
+     * Create a service payment transaction.
      */
-    public function prepareServicePayment(float|string $amount, int $entity, string $number): static
-    {
-        $this->prepared = true;
-
-        $this->request = [
+    public function servicePayment(
+        int|string $amount,
+        int $entity,
+        string $number,
+        string $reference,
+        ?string $session = null,
+    ): TransactionRequest {
+        return $this->transaction($this->payment, [
             'transactionCode' => Sisp::TRANSACTION_TYPE_SERVICE,
             'amount' => $amount,
             'entityCode' => $entity,
             'referenceNumber' => $number,
-        ];
-
-        return $this;
+            'merchantRef' => $reference,
+            'currency' => 'CVE',
+        ], $session);
     }
 
-
-    // ------------------------------------------------------------------
-    //  RECHARGE PAYMENT
-    // ------------------------------------------------------------------
-
     /**
-     * Prepares a **recharge payment** request (entity + phone/account number).
-     *
-     * @param float|string $amount Amount to pay.
-     * @param int          $entity Recharge entity code.
-     * @param string       $number Target account/phone number.
-     *
-     * @return static
+     * Create a mobile recharge transaction.
      */
-    public function prepareRecharge(float|string $amount, int $entity, string $number): static
-    {
-        $this->prepared = true;
-
-        $this->request = [
+    public function recharge(
+        int|string $amount,
+        int $entity,
+        string $number,
+        string $reference,
+        ?string $session = null,
+    ): TransactionRequest {
+        return $this->transaction($this->payment, [
             'transactionCode' => Sisp::TRANSACTION_TYPE_RECHARGE,
             'amount' => $amount,
             'entityCode' => $entity,
             'referenceNumber' => $number,
-        ];
-
-        return $this;
+            'merchantRef' => $reference,
+            'currency' => 'CVE',
+        ], $session);
     }
 
-
-    // ------------------------------------------------------------------
-    //  REFUND PAYMENT
-    // ------------------------------------------------------------------
-
     /**
-     * Prepares a **refund** request.
-     *
-     * @param float|string $amount          Refund amount.
-     * @param string       $merchantRef     Original merchant reference.
-     * @param string       $transactionID   Original SISP transaction ID.
-     * @param string       $clearingPeriod  Clearing period required by SISP.
-     *
-     * @return static
+     * Create a refund transaction.
      */
-    public function prepareRefund(
-        float|string $amount,
-        string $transactionID,
-        string $clearingPeriod
-    ): static {
-        $this->prepared = true;
-
-        $this->request = [
+    public function refund(
+        int|string $amount,
+        string $transactionId,
+        string $clearingPeriod,
+        string $reference,
+        ?string $session = null,
+    ): TransactionRequest {
+        return $this->transaction($this->refund, [
             'transactionCode' => Sisp::TRANSACTION_TYPE_REFUND,
             'amount' => $amount,
-            'transactionID' => $transactionID,
+            'merchantRef' => $reference,
+            'transactionID' => $transactionId,
             'clearingPeriod' => $clearingPeriod,
-        ];
-
-        return $this;
+        ], $session);
     }
 
-
-    // ------------------------------------------------------------------
-    //  CREATE FORM (auto-submissão)
-    // ------------------------------------------------------------------
-
     /**
-     * Generates an auto-submitting HTML form to send the transaction
-     * request to the Vinti4Net gateway.
+     * Process a callback response sent by SISP.
      *
-     * @param string $responseUrl URL where SISP will POST the transaction result.
-     * @param string $lang language Messages (default: pt).
+     * @param array<string, mixed> $data
      *
-     * @return string HTML form with auto-submit enabled.
-     *
-     * @throws Exception If no payment has been prepared or data is invalid.
+     * @throws InvalidResponseException
      */
-    public function createPaymentForm(string $responseUrl, string $lang = 'pt'): string
+    public function processResponse(array $data): Vinti4Response
     {
-        if (!$this->prepared) {
-            throw new Exception("Nenhum pagamento preparado.");
+        if ($data === []) {
+            throw new InvalidResponseException('A resposta da SISP está vazia.');
         }
 
-        $this->setRequestParams([
-            'languageMessages' => $lang
-        ]);
+        $isRefund =
+            ($data['transactionCode'] ?? null) === Sisp::TRANSACTION_TYPE_REFUND ||
+            ($data['messageType'] ?? null) === '10';
 
-        $params = $this->request;
-
-        $params['urlMerchantResponse'] = $responseUrl;
-
-        $tc = $params['transactionCode'] ?? null;
-
-        if ($tc === Sisp::TRANSACTION_TYPE_REFUND) {
-            $this->request = $this->refund->preparePayment($params);
-        } else {
-            $this->request = $this->payment->preparePayment($params);
-        }
-
-        $fields = $this->request['fields'] ?? [];
-        $postUrl = $this->request['postUrl'] ?? '';
-
-        if (empty($fields) || empty($postUrl)) {
-            throw new Exception("Dados de pagamento inválidos.");
-        }
-
-        $html = '';
-        foreach ($fields as $key => $value) {
-            if (is_array($value)) continue;
-            $html .= "<input type='hidden' name='{$key}' value='" . htmlspecialchars((string)$value) . "'>\n";
-        }
-
-        $processing = $lang == 'pt' ? 'processando...' : 'processing...';
-
-        return "
-    <html>
-        <head><title>Pagamento Vinti4Net</title></head>
-        <body onload='document.forms[0].submit()'>
-            <form method=\"post\" action=\"{$postUrl}\">
-                {$html}
-            </form>
-            <p>$processing>
-        </body>
-    </html>";
-    }
-
-
-    // ------------------------------------------------------------------
-    //  PROCESS RESPONSE
-    // ------------------------------------------------------------------
-
-    /**
-     * Processes the POST response sent by SISP after a payment or refund.
-     *
-     * Internally selects either Payment or Refund processor.
-     *
-     * @param array $postData Raw POST data received from SISP.
-     *
-     * @return Vinti4Response Standardized response object.
-     */
-    public function processResponse(array $postData): Vinti4Response
-    {
-        $type = ($postData['transactionCode'] ?? '') === '4' ? 'refund' : 'payment';
-
-        $result = $type === 'refund'
-            ? $this->refund->processResponse($postData)
-            : $this->payment->processResponse($postData);
+        $processor = $isRefund ? $this->refund : $this->payment;
+        $result = $processor->processResponse($data);
 
         return Vinti4Response::fromProcessorResult($result);
     }
 
     /**
-     * Returns the currently prepared request data (for debugging).
+     * Create a transaction request using the selected processor.
      *
-     * @return array
+     * @param array<string, mixed> $params
      */
-    public function getRequest(): array
-    {
-        $request = $this->request;
-        $request['urlMerchantResponse'] = 'http://localhost:8000/examples/callback_example.php/';
-        $data = [];
-        if ($tc = $tcrequest['transactionCode'] ?? false) {
-            if ($tc  === Sisp::TRANSACTION_TYPE_REFUND) {
-                $data = $this->refund->preparePayment($request);
-            } else {
-                $data = $this->payment->preparePayment($request);
-            }
+    private function transaction(
+        Sisp $processor,
+        array $params,
+        ?string $session,
+    ): TransactionRequest {
+        if ($session !== null) {
+            $params['merchantSession'] = $session;
         }
-        return array_merge($request, $data);
+
+        return new TransactionRequest($processor, $params);
     }
 }

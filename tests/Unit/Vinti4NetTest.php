@@ -2,8 +2,8 @@
 
 namespace Tests\Unit;
 
-use Erilshk\Sisp\Vinti4Net;
-use Erilshk\Sisp\Vinti4Response;
+use Eril\Sisp\Vinti4Net;
+use Eril\Sisp\Vinti4Response;
 use PHPUnit\Framework\TestCase;
 
 class Vinti4NetTest extends TestCase
@@ -156,7 +156,7 @@ class Vinti4NetTest extends TestCase
     public function testCreatePaymentFormThrowsExceptionForInvalidPaymentData()
     {
         // Criar mock do Payment
-        $mockPayment = $this->getMockBuilder(\Erilshk\Sisp\Core\Payment::class)
+        $mockPayment = $this->getMockBuilder(\Eril\Sisp\Core\Payment::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['preparePayment'])
             ->getMock();

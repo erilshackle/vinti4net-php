@@ -3,9 +3,9 @@
 namespace Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
-use Erilshk\Sisp\Vinti4Net;
-use Erilshk\Sisp\Core\Payment;
-use Erilshk\Sisp\Core\Refund;
+use Eril\Sisp\Vinti4Net;
+use Eril\Sisp\Core\Payment;
+use Eril\Sisp\Core\Refund;
 
 class Vinti4NetResponseTest extends TestCase
 {

@@ -1,295 +1,493 @@
 <?php
 
-namespace Erilshk\Sisp;
+declare(strict_types=1);
 
-/**
- * Represents billing information to be sent to the Vinti4/SISP gateway.
- *
- * This class provides a fluent builder for billing data, including
- * address, contact information, account details, and fraud-related flags.
- * 
- * It can be instantiated using `make()` or used statically via
- * `create()` to quickly generate structured arrays.
- *
- * @package Erilshk\Sisp
- * @link https://erilshackle.github.io/vinti4net-php/billing
- */
+namespace Eril\Sisp;
+
+use Eril\Sisp\Exception\InvalidRequestException;
+
 final class Billing
 {
+    /** @var array<string, mixed> */
     private array $data = [
-        'email'            => '',
-        'billAddrCountry'  => '132',
-        'billAddrCity'     => '',
-        'billAddrLine1'    => '',
-        'billAddrLine2'    => '',
-        'billAddrLine3'    => '',
-        'billAddrPostCode' => '',
-        'billAddrState'    => '',
-        'shipAddrCountry'  => '',
-        'shipAddrCity'     => '',
-        'shipAddrLine1'    => '',
-        'shipAddrPostCode' => '',
-        'shipAddrState'    => '',
-        'mobilePhone'      => null,
-        'workPhone'        => null,
-        'acctID'           => '',
-        'acctInfo'         => [],
-        'suspicious'       => false,
-        'addrMatch'        => null,
+        'billAddrCountry' => '132',
     ];
 
-    private function __construct() {}
+    private const ACCOUNT_INFO_FIELDS = [
+        'chAccAgeInd',
+        'chAccChange',
+        'chAccDate',
+        'chAccPwChange',
+        'chAccPwChangeInd',
+        'suspiciousAccActivity',
+    ];
 
+    private function __construct()
+    {
+    }
+
+    /**
+     * Create an empty billing builder.
+     */
     public static function make(): self
     {
         return new self();
     }
 
     /**
-     * returns an Array of Billing Params for PurchaseRequest in Purchase Payment
-     * 
-     * params avaiable:
-     * `email`,
-     * `country`, `billAddrCountry`,
-     * `city`, `billAddrCity`,
-     * `address`, `billAddrLine1`,
-     * `address2`, `billAddrLine2`,
-     * `address3`, `billAddrLine3`,
-     * `postalCode`, `billAddrPostCode`,
-     * `state`, `billAddrState`,
-     * `shipCountry`, `shipAddrCountry`,
-     * `shipCity`, `shipAddrCity`,
-     * `shipAddress`, `shipAddrLine1`,
-     * `shipPostalCode`, `shipAddrPostCode`,
-     * `shipState`, `shipAddrState`,
-     * `addrMatch`,
-     * `mobilePhone`, `phone`,
-     * `workPhone`,
-     * `acctID`,
-     * `acctInfo`,
-     * `suspicious`,
-     * 
-     * @param array $data
-     * @return array
-     * @example https://erilshackle.github.io/vinti4net-php/billing/#exemplo-rapido-usando-billingcreate
+     * Create billing information from an array.
+     *
+     * @param array<string, mixed> $data
+     *
+     * @throws InvalidRequestException
      */
-    public static function create(array $data): array
+    public static function from(array $data): self
     {
-        return self::make()
-            ->fill($data)
-            ->toArray();
+        $billing = self::make();
+
+        foreach ($data as $field => $value) {
+            match ($field) {
+                'email' =>
+                    $billing->email((string) $value),
+
+                'country', 'billAddrCountry' =>
+                    $billing->country((string) $value),
+
+                'city', 'billAddrCity' =>
+                    $billing->city((string) $value),
+
+                'address', 'billAddrLine1' =>
+                    $billing->address((string) $value),
+
+                'address2', 'billAddrLine2' =>
+                    $billing->address2((string) $value),
+
+                'address3', 'billAddrLine3' =>
+                    $billing->address3((string) $value),
+
+                'postalCode', 'billAddrPostCode' =>
+                    $billing->postalCode((string) $value),
+
+                'state', 'billAddrState' =>
+                    $billing->state((string) $value),
+
+                'shipCountry', 'shipAddrCountry' =>
+                    $billing->shipCountry((string) $value),
+
+                'shipCity', 'shipAddrCity' =>
+                    $billing->shipCity((string) $value),
+
+                'shipAddress', 'shipAddrLine1' =>
+                    $billing->shipAddress((string) $value),
+
+                'shipPostalCode', 'shipAddrPostCode' =>
+                    $billing->shipPostalCode((string) $value),
+
+                'shipState', 'shipAddrState' =>
+                    $billing->shipState((string) $value),
+
+                'addrMatch' =>
+                    $billing->setAddressMatch($value),
+
+                'mobilePhone', 'phone' =>
+                    $billing->setPhone('mobilePhone', $value),
+
+                'workPhone' =>
+                    $billing->setPhone('workPhone', $value),
+
+                'acctID', 'accountId' =>
+                    $billing->accountId((string) $value),
+
+                'acctInfo', 'accountInfo' =>
+                    $billing->accountInfo(
+                        self::requireArray($field, $value)
+                    ),
+
+                'suspicious' =>
+                    $billing->suspicious(
+                        self::requireBoolean($field, $value)
+                    ),
+
+                default => throw new InvalidRequestException(
+                    "Campo de billing não permitido: {$field}."
+                ),
+            };
+        }
+
+        return $billing;
     }
 
-    public function fill(array $data): self
+    /**
+     * Set the cardholder email address.
+     */
+    public function email(string $email): self
     {
-        $map = [
-            'email' => 'email',
-            'country' => 'billAddrCountry',
-            'billAddrCountry' => 'billAddrCountry',
-            'city' => 'billAddrCity',
-            'billAddrCity' => 'billAddrCity',
-            'address' => 'billAddrLine1',
-            'billAddrLine1' => 'billAddrLine1',
-            'address2' => 'billAddrLine2',
-            'billAddrLine2' => 'billAddrLine2',
-            'address3' => 'billAddrLine3',
-            'billAddrLine3' => 'billAddrLine3',
-            'postalCode' => 'billAddrPostCode',
-            'billAddrPostCode' => 'billAddrPostCode',
-            'state' => 'billAddrState',
-            'billAddrState' => 'billAddrState',
-            'shipCountry' => 'shipAddrCountry',
-            'shipAddrCountry' => 'shipAddrCountry',
-            'shipCity' => 'shipAddrCity',
-            'shipAddrCity' => 'shipAddrCity',
-            'shipAddress' => 'shipAddrLine1',
-            'shipAddrLine1' => 'shipAddrLine1',
-            'shipPostalCode' => 'shipAddrPostCode',
-            'shipAddrPostCode' => 'shipAddrPostCode',
-            'shipState' => 'shipAddrState',
-            'shipAddrState' => 'shipAddrState',
-            'addrMatch' => 'addrMatch',
-            'mobilePhone' => 'mobilePhone',
-            'phone' => 'mobilePhone',
-            'workPhone' => 'workPhone',
-            'acctID' => 'acctID',
-            'acctInfo' => 'acctInfo',
-            'suspicious' => 'suspicious',
-        ];
+        $email = trim($email);
 
-        foreach ($data as $k => $v) {
-            if (!isset($map[$k])) {
-                continue; // ignora campos desconhecidos
+        if (
+            $email !== '' &&
+            filter_var($email, FILTER_VALIDATE_EMAIL) === false
+        ) {
+            throw new InvalidRequestException(
+                'O email do billing é inválido.'
+            );
+        }
+
+        $this->data['email'] = $email;
+
+        return $this;
+    }
+
+    /**
+     * Set the numeric ISO 3166-1 billing country code.
+     */
+    public function country(string $country): self
+    {
+        $country = trim($country);
+
+        if ($country !== '' && !preg_match('/^\d{3}$/', $country)) {
+            throw new InvalidRequestException(
+                'O país do billing deve usar um código numérico de 3 dígitos.'
+            );
+        }
+
+        $this->data['billAddrCountry'] = $country;
+
+        return $this;
+    }
+
+    /**
+     * Set the billing city.
+     */
+    public function city(string $city): self
+    {
+        $this->data['billAddrCity'] = trim($city);
+
+        return $this;
+    }
+
+    /**
+     * Set the primary billing address.
+     */
+    public function address(string $address): self
+    {
+        $this->data['billAddrLine1'] = trim($address);
+
+        return $this;
+    }
+
+    /**
+     * Set the secondary billing address.
+     */
+    public function address2(string $address): self
+    {
+        $this->data['billAddrLine2'] = trim($address);
+
+        return $this;
+    }
+
+    /**
+     * Set the third billing address line.
+     */
+    public function address3(string $address): self
+    {
+        $this->data['billAddrLine3'] = trim($address);
+
+        return $this;
+    }
+
+    /**
+     * Set the billing postal code.
+     */
+    public function postalCode(string $postalCode): self
+    {
+        $this->data['billAddrPostCode'] = trim($postalCode);
+
+        return $this;
+    }
+
+    /**
+     * Set the billing state or region.
+     */
+    public function state(string $state): self
+    {
+        $this->data['billAddrState'] = trim($state);
+
+        return $this;
+    }
+
+    /**
+     * Set the shipping country code.
+     */
+    public function shipCountry(string $country): self
+    {
+        $country = trim($country);
+
+        if ($country !== '' && !preg_match('/^\d{3}$/', $country)) {
+            throw new InvalidRequestException(
+                'O país de entrega deve usar um código numérico de 3 dígitos.'
+            );
+        }
+
+        $this->data['shipAddrCountry'] = $country;
+
+        return $this;
+    }
+
+    /**
+     * Set the shipping city.
+     */
+    public function shipCity(string $city): self
+    {
+        $this->data['shipAddrCity'] = trim($city);
+
+        return $this;
+    }
+
+    /**
+     * Set the shipping address.
+     */
+    public function shipAddress(string $address): self
+    {
+        $this->data['shipAddrLine1'] = trim($address);
+
+        return $this;
+    }
+
+    /**
+     * Set the shipping postal code.
+     */
+    public function shipPostalCode(string $postalCode): self
+    {
+        $this->data['shipAddrPostCode'] = trim($postalCode);
+
+        return $this;
+    }
+
+    /**
+     * Set the shipping state or region.
+     */
+    public function shipState(string $state): self
+    {
+        $this->data['shipAddrState'] = trim($state);
+
+        return $this;
+    }
+
+    /**
+     * Indicate whether billing and shipping addresses match.
+     */
+    public function addressMatchesShipping(bool $matches): self
+    {
+        $this->data['addrMatch'] = $matches ? 'Y' : 'N';
+
+        return $this;
+    }
+
+    /**
+     * Set the cardholder mobile phone.
+     */
+    public function mobilePhone(
+        string $countryCode,
+        string $subscriber,
+    ): self {
+        $this->data['mobilePhone'] = $this->phone(
+            $countryCode,
+            $subscriber,
+        );
+
+        return $this;
+    }
+
+    /**
+     * Set the cardholder work phone.
+     */
+    public function workPhone(
+        string $countryCode,
+        string $subscriber,
+    ): self {
+        $this->data['workPhone'] = $this->phone(
+            $countryCode,
+            $subscriber,
+        );
+
+        return $this;
+    }
+
+    /**
+     * Set the cardholder account identifier.
+     */
+    public function accountId(string $accountId): self
+    {
+        $accountId = trim($accountId);
+
+        if (strlen($accountId) > 64) {
+            throw new InvalidRequestException(
+                'O identificador da conta deve ter no máximo 64 caracteres.'
+            );
+        }
+
+        $this->data['acctID'] = $accountId;
+
+        return $this;
+    }
+
+    /**
+     * Set the cardholder 3DS account information.
+     *
+     * @param array<string, mixed> $info
+     */
+    public function accountInfo(array $info): self
+    {
+        foreach ($info as $field => $value) {
+            if (!in_array($field, self::ACCOUNT_INFO_FIELDS, true)) {
+                throw new InvalidRequestException(
+                    "Campo de accountInfo não permitido: {$field}."
+                );
             }
 
-            $field = $map[$k];
-
-            if (in_array($field, ['mobilePhone', 'workPhone']) && is_string($v)) {
-                // Suporta string simples para telefone (apenas subscriber)
-                $this->data[$field] = ['cc' => '238', 'subscriber' => preg_replace('/\D+/', '', $v)];
-            } elseif ($field === 'acctInfo' && is_array($v)) {
-                $this->acctInfo($v); // garante defaults
-            } elseif ($field === 'addrMatch' && is_bool($v)) {
-                $this->addrMatch($v);
-            } else {
-                $this->data[$field] = $v;
-            }
+            $this->data['acctInfo'][$field] = trim(
+                (string) $value
+            );
         }
 
         return $this;
     }
 
+    /**
+     * Mark whether the account has suspicious activity.
+     */
+    public function suspicious(bool $suspicious = true): self
+    {
+        $this->data['acctInfo']['suspiciousAccActivity'] =
+            $suspicious ? '02' : '01';
 
-    /* ------------------ Fluent Setters ------------------ */
-
-    public function email(string $v): self
-    {
-        $this->data['email'] = $v;
-        return $this;
-    }
-    public function country(string $v): self
-    {
-        $this->data['billAddrCountry'] = $v;
-        return $this;
-    }
-    public function city(string $v): self
-    {
-        $this->data['billAddrCity'] = $v;
-        return $this;
-    }
-    public function address(string $v): self
-    {
-        $this->data['billAddrLine1'] = $v;
-        return $this;
-    }
-    public function address2(string $v): self
-    {
-        $this->data['billAddrLine2'] = $v;
-        return $this;
-    }
-    public function address3(string $v): self
-    {
-        $this->data['billAddrLine3'] = $v;
-        return $this;
-    }
-    public function postalCode(string $v): self
-    {
-        $this->data['billAddrPostCode'] = $v;
-        return $this;
-    }
-    public function state(string $v): self
-    {
-        $this->data['billAddrState'] = $v;
-        return $this;
-    }
-    public function shipCountry(string $v): self
-    {
-        $this->data['shipAddrCountry'] = $v;
-        return $this;
-    }
-    public function shipCity(string $v): self
-    {
-        $this->data['shipAddrCity'] = $v;
-        return $this;
-    }
-    public function shipAddress(string $v): self
-    {
-        $this->data['shipAddrLine1'] = $v;
-        return $this;
-    }
-    public function shipPostalCode(string $v): self
-    {
-        $this->data['shipAddrPostCode'] = $v;
-        return $this;
-    }
-    public function shipState(string $v): self
-    {
-        $this->data['shipAddrState'] = $v;
-        return $this;
-    }
-    public function addrMatch(bool $v): self
-    {
-        $this->data['addrMatch'] = $v ? 'Y' : 'N';
         return $this;
     }
 
-    public function mobilePhone(string $cc, string $subscriber): self
-    {
-        $this->data['mobilePhone'] = [
-            'cc' => $cc,
-            'subscriber' => preg_replace('/\D+/', '', $subscriber)
-        ];
-        return $this;
-    }
-
-    public function workPhone(string $cc, string $subscriber): self
-    {
-        $this->data['workPhone'] = [
-            'cc' => $cc,
-            'subscriber' => preg_replace('/\D+/', '', $subscriber)
-        ];
-        return $this;
-    }
-
-    public function acctID(string $v): self
-    {
-        $this->data['acctID'] = $v;
-        return $this;
-    }
-
-    public function acctInfo(array $info): self
-    {
-        $defaults = [
-            'chAccAgeInd'           => '01',
-            'chAccChange'           => '',
-            'chAccDate'             => '',
-            'chAccPwChange'         => '',
-            'chAccPwChangeInd'      => '01',
-            'suspiciousAccActivity' => '01',
-        ];
-        $this->data['acctInfo'] = array_merge($defaults, $info);
-        return $this;
-    }
-
-    public function suspicious(bool $v = true): self
-    {
-        $this->data['suspicious'] = $v;
-        return $this;
-    }
-
-    /* ------------------ Final Output ------------------ */
+    /**
+     * Return normalized SISP billing fields.
+     *
+     * @return array<string, mixed>
+     */
     public function toArray(): array
     {
         return array_filter(
             $this->data,
-            fn($v) => !($v === null || $v === '')
+            static fn(mixed $value): bool =>
+                $value !== null &&
+                $value !== '' &&
+                $value !== [],
         );
     }
 
+    /**
+     * Set a phone field from an array or subscriber string.
+     *
+     * @throws InvalidRequestException
+     */
+    private function setPhone(
+        string $field,
+        mixed $value,
+    ): self {
+        if (is_string($value) || is_int($value)) {
+            $phone = $this->phone('238', (string) $value);
+        } elseif (
+            is_array($value) &&
+            isset($value['cc'], $value['subscriber'])
+        ) {
+            $phone = $this->phone(
+                (string) $value['cc'],
+                (string) $value['subscriber'],
+            );
+        } else {
+            throw new InvalidRequestException(
+                "O campo {$field} deve ser um número ou conter cc e subscriber."
+            );
+        }
 
-    /* ------------------ Helpers ------------------ */
-    public static function fromUser(array $user): self
+        $this->data[$field] = $phone;
+
+        return $this;
+    }
+
+    /**
+     * Normalize a phone number.
+     *
+     * @return array{cc: string, subscriber: string}
+     */
+    private function phone(
+        string $countryCode,
+        string $subscriber,
+    ): array {
+        $countryCode = preg_replace('/\D+/', '', $countryCode);
+        $subscriber = preg_replace('/\D+/', '', $subscriber);
+
+        if ($countryCode === '' || $subscriber === '') {
+            throw new InvalidRequestException(
+                'O telefone deve conter código do país e número.'
+            );
+        }
+
+        return [
+            'cc' => $countryCode,
+            'subscriber' => $subscriber,
+        ];
+    }
+
+    /**
+     * Set addrMatch from a boolean or Y/N value.
+     */
+    private function setAddressMatch(mixed $value): self
     {
-        return self::make()
-            ->email($user['email'] ?? '')
-            ->country($user['country'] ?? '132')
-            ->city($user['city'] ?? '')
-            ->address($user['address'] ?? '')
-            ->address2($user['address2'] ?? '')
-            ->address3($user['address3'] ?? '')
-            ->postalCode($user['postCode'] ?? '')
-            ->state($user['state'] ?? '')
-            ->mobilePhone($user['mobilePhoneCC'] ?? '238', $user['mobilePhone'] ?? '')
-            ->workPhone($user['workPhoneCC'] ?? '238', $user['workPhone'] ?? '')
-            ->acctID($user['id'] ?? '')
-            ->acctInfo([
-                'chAccAgeInd' => $user['chAccAgeInd'] ?? '05',
-                'chAccChange' => isset($user['updated_at']) ? date('Ymd', strtotime($user['updated_at'])) : '',
-                'chAccDate' => isset($user['created_at']) ? date('Ymd', strtotime($user['created_at'])) : '',
-                'chAccPwChange' => isset($user['updated_at']) ? date('Ymd', strtotime($user['updated_at'])) : '',
-                'chAccPwChangeInd' => $user['chAccPwInd'] ?? '05',
-                'suspiciousAccActivity' => isset($user['suspicious']) ? ($user['suspicious'] ? '02' : '01') : '01',
-            ])
-            ->suspicious($user['suspicious'] ?? false);
+        if (is_bool($value)) {
+            return $this->addressMatchesShipping($value);
+        }
+
+        $value = strtoupper(trim((string) $value));
+
+        if (!in_array($value, ['Y', 'N'], true)) {
+            throw new InvalidRequestException(
+                "AddrMatch deve ser booleano, 'Y' ou 'N'."
+            );
+        }
+
+        $this->data['addrMatch'] = $value;
+
+        return $this;
+    }
+
+    /**
+     * Require an array field.
+     *
+     * @return array<string, mixed>
+     */
+    private static function requireArray(
+        string $field,
+        mixed $value,
+    ): array {
+        if (!is_array($value)) {
+            throw new InvalidRequestException(
+                "O campo {$field} deve ser um array."
+            );
+        }
+
+        return $value;
+    }
+
+    /**
+     * Require a boolean field.
+     */
+    private static function requireBoolean(
+        string $field,
+        mixed $value,
+    ): bool {
+        if (!is_bool($value)) {
+            throw new InvalidRequestException(
+                "O campo {$field} deve ser booleano."
+            );
+        }
+
+        return $value;
     }
 }

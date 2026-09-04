@@ -9,16 +9,16 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use Erilshk\Sisp\Vinti4Net;
-use Erilshk\Sisp\Vinti4Response;
+use Eril\Sisp\Vinti4Net;
+use Eril\Sisp\Vinti4Response;
 
 // =============================================================================
 // 1. CONFIGURAÇÃO (mesma do pagamento)
 // =============================================================================
 
 $vinti4 = new Vinti4Net(
-    posID: 'SEU_POS_ID_AQUI',
-    posAuthCode: 'SEU_AUTH_CODE_AQUI'
+    posId: 'SEU_POS_ID_AQUI',
+    authCode: 'SEU_AUTH_CODE_AQUI'
 );
 
 // =============================================================================
@@ -142,7 +142,7 @@ function processDcc(array $dcc) {
 
 function displayReceipt(Vinti4Response $response, string $title) {
     // Gerar recibo HTML
-    $receiptHtml = $response->generateReceiptHtml(
+    $receiptHtml = $response->generateReceipt(
         companyName: 'Minha Loja Lda',
         // companyContact: 'suporte@minhaloja.cv | +238 262 0000'
     );

@@ -1,31 +1,36 @@
 <?php
 
-namespace Erilshk\Sisp\Core;
+declare(strict_types=1);
 
-use InvalidArgumentException;
+namespace Eril\Sisp\Core;
 
-/**
- * Classe responsável por operações de Pagamento com o SISP.
- * Inclui compras 3DS, serviços e recargas.
- */
-class Payment extends Sisp
+use Eril\Sisp\Exception\InvalidRequestException;
+
+final class Payment extends Sisp
 {
     /**
-     * Gera fingerprint para requisição de pagamento.
+     * Generate the fingerprint for a payment request.
+     *
+     * @param array<string, mixed> $data
      */
     protected function fingerprintRequest(array $data): string
     {
-        $amount = (float)($data['amount'] ?? 0);;
-        $amountLong = (int) bcmul($amount, '1000', 0);
+        $amount = $this->fingerprintAmount(
+            (string) ($data['amount'] ?? '')
+        );
 
-        $entity = !empty($data['entityCode']) ? (int)$data['entityCode'] : '';
-        $reference = !empty($data['referenceNumber']) ? (int)$data['referenceNumber'] : '';
+        $entity = !empty($data['entityCode'])
+            ? (string) (int) $data['entityCode']
+            : '';
 
-        $encodedPOSAuthCode = base64_encode(hash('sha512', $this->posAuthCode, true));
+        $reference = !empty($data['referenceNumber'])
+            ? (string) (int) $data['referenceNumber']
+            : '';
 
-        $toHash = $encodedPOSAuthCode .
+        $content =
+            $this->encodedAuthorizationCode() .
             ($data['timeStamp'] ?? '') .
-            $amountLong .
+            $amount .
             ($data['merchantRef'] ?? '') .
             ($data['merchantSession'] ?? '') .
             ($data['posID'] ?? '') .
@@ -34,108 +39,170 @@ class Payment extends Sisp
             $entity .
             $reference;
 
-        return base64_encode(hash('sha512', $toHash, true));
+        return base64_encode(
+            hash('sha512', $content, true)
+        );
     }
 
     /**
-     * Gera fingerprint esperado na resposta do SISP.
+     * Generate the expected fingerprint for a payment response.
+     *
+     * @param array<string, mixed> $data
      */
     protected function fingerprintResponse(array $data): string
     {
-        $amount = (float)($data["merchantRespPurchaseAmount"] ?? 0);
-        $amountLong = (int) bcmul($amount, '1000', 0);
+        $amount = $this->responseFingerprintAmount(
+            $data['merchantRespPurchaseAmount'] ?? null
+        );
 
-        $encodedPOSAuthCode = base64_encode(hash('sha512', $this->posAuthCode, true));
+        $reference = !empty($data['merchantRespReferenceNumber'])
+            ? (string) (int) $data['merchantRespReferenceNumber']
+            : '';
 
-        $toHash = $encodedPOSAuthCode .
-            ($data["messageType"] ?? '') .
-            ($data["merchantRespCP"] ?? '') .
-            ($data["merchantRespTid"] ?? '') .
-            ($data["merchantRespMerchantRef"] ?? '') .
-            ($data["merchantRespMerchantSession"] ?? '') .
-            $amountLong .
-            ($data["merchantRespMessageID"] ?? '') .
-            ($data["merchantRespPan"] ?? '') .
-            ($data["merchantResp"] ?? '') .
-            ($data["merchantRespTimeStamp"] ?? '') .
-            (!empty($data['merchantRespReferenceNumber']) ? (int)$data['merchantRespReferenceNumber'] : '') .
-            (!empty($data['merchantRespEntityCode']) ? (int)$data['merchantRespEntityCode'] : '') .
-            ($data["merchantRespClientReceipt"] ?? '') .
-            trim($data["merchantRespAdditionalErrorMessage"] ?? '') .
-            ($data["merchantRespReloadCode"] ?? '');
+        $entity = !empty($data['merchantRespEntityCode'])
+            ? (string) (int) $data['merchantRespEntityCode']
+            : '';
 
-        return base64_encode(hash('sha512', $toHash, true));
+        $content =
+            $this->encodedAuthorizationCode() .
+            ($data['messageType'] ?? '') .
+            ($data['merchantRespCP'] ?? '') .
+            ($data['merchantRespTid'] ?? '') .
+            ($data['merchantRespMerchantRef'] ?? '') .
+            ($data['merchantRespMerchantSession'] ?? '') .
+            $amount .
+            ($data['merchantRespMessageID'] ?? '') .
+            ($data['merchantRespPan'] ?? '') .
+            ($data['merchantResp'] ?? '') .
+            ($data['merchantRespTimeStamp'] ?? '') .
+            $reference .
+            $entity .
+            ($data['merchantRespClientReceipt'] ?? '') .
+            trim((string) (
+                $data['merchantRespAdditionalErrorMessage'] ?? ''
+            )) .
+            ($data['merchantRespReloadCode'] ?? '');
+
+        return base64_encode(
+            hash('sha512', $content, true)
+        );
     }
 
     /**
-     * Prepara uma requisição de pagamento (compra, serviço, recarga).
-     * 
-     * @param array{
-     *  transactionCode: string, 
-     *  urlMerchantResponse: string, 
-     *  amount: string, 
-     *  currency: string, 
-     *  merchantRef?: string, 
-     *  merchantSession?: string, 
-     *  languageMessages?: string, 
-     *  entityCode?: string, 
-     *  referenceNumber?: string
-     * } $params parametros da requisição. 
-     * 
-     * Obrigatórios:
-     *  - **transactionCode**
-     *  - **amount**
-     *  - **urlMerchantResponse**
-     * 
-     * @throws \InvalidArgumentException
-     * @return array{fields: array, postUrl: string}
+     * Prepare a purchase, service payment or recharge request.
+     *
+     * @param array<string, mixed> $params
+     *
+     * @return array{
+     *     postUrl: string,
+     *     fields: array<string, mixed>
+     * }
+     *
+     * @throws InvalidRequestException
      */
     public function preparePayment(array $params): array
     {
-        if (empty($params['transactionCode'])) {
-            throw new InvalidArgumentException("transactionCode é obrigatório.");
-        }
+        $transactionCode = (string) (
+            $params['transactionCode'] ?? ''
+        );
 
-        $currencyCode = $this->currencyToCode($params['currency'] ?? self::CURRENCY_CVE);
+        if (!in_array($transactionCode, [
+            self::TRANSACTION_TYPE_PURCHASE,
+            self::TRANSACTION_TYPE_SERVICE,
+            self::TRANSACTION_TYPE_RECHARGE,
+        ], true)) {
+            throw new InvalidRequestException(
+                'Tipo de pagamento inválido.'
+            );
+        }
 
         $request = [
             'posID' => $this->posID,
-            'merchantRef' => $params['merchantRef'] ?? 'R' . date('YmdHis'),
-            'merchantSession' => $params['merchantSession'] ?? 'S' . date('YmdHis'),
-            'amount' => (int)(float)$params['amount'],
-            'currency' => $currencyCode,
-            'transactionCode' => $params['transactionCode'],
-            'languageMessages' => $params['languageMessages'] ?? 'pt',
+            'merchantRef' => trim((string) (
+                $params['merchantRef'] ?? ''
+            )),
+            'merchantSession' => $this->merchantSession($params),
+            'amount' => $this->normalizeAmount(
+                $params['amount'] ?? ''
+            ),
+            'currency' => $this->currencyToCode(
+                $params['currency'] ?? self::CURRENCY_CVE
+            ),
+            'transactionCode' => $transactionCode,
+            'languageMessages' => strtolower(trim((string) (
+                $params['languageMessages'] ?? 'pt'
+            ))),
             'entityCode' => $params['entityCode'] ?? '',
             'referenceNumber' => $params['referenceNumber'] ?? '',
-            'timeStamp' => date('Y-m-d H:i:s'),
+            'timeStamp' => $params['timeStamp']
+                ?? date('Y-m-d H:i:s'),
             'fingerprintversion' => '1',
             'is3DSec' => '1',
-            'urlMerchantResponse' => $params['urlMerchantResponse'] ?? '',
+            'urlMerchantResponse' => trim((string) (
+                $params['urlMerchantResponse'] ?? ''
+            )),
         ];
 
-        // Adiciona billing se for transação de compra
-        if ($params['transactionCode'] === self::TRANSACTION_TYPE_PURCHASE && !empty($params['billing'])) {
-            $request['billing'] = $params['billing'];
-            $request = array_merge($request, $params['billing']);
-            $request['purchaseRequest'] = $this->generatePurchaseRequest($params['billing']);
+        if ($transactionCode === self::TRANSACTION_TYPE_PURCHASE) {
+            $request = $this->addBilling(
+                $request,
+                $params['billing'] ?? null,
+            );
         }
 
-        if($error = $this->validateParams($request)){
-            throw new InvalidArgumentException($error);
+        if ($error = $this->validateParams($request)) {
+            throw new InvalidRequestException($error);
         }
 
-        $request['fingerprint'] = $this->fingerprintRequest($request);
-
-        $postUrl = $this->baseUrl . '?' . http_build_query([
-            'FingerPrint' => $request['fingerprint'],
-            'TimeStamp' => $request['timeStamp'],
-            'FingerPrintVersion' => $request['fingerprintversion']
-        ]);
+        $request['fingerprint'] = $this->fingerprintRequest(
+            $request
+        );
 
         return [
-            'postUrl' => $postUrl,
-            'fields' => $request
+            'postUrl' => $this->buildPostUrl($request),
+            'fields' => $request,
         ];
+    }
+
+    /**
+     * Add normalized 3DS billing data to a purchase request.
+     *
+     * @param array<string, mixed> $request
+     *
+     * @return array<string, mixed>
+     *
+     * @throws InvalidRequestException
+     */
+    private function addBilling(
+        array $request,
+        mixed $billing,
+    ): array {
+        if (!is_array($billing) || $billing === []) {
+            throw new InvalidRequestException(
+                'Os dados de billing são obrigatórios para uma compra.'
+            );
+        }
+
+        $request = array_merge($request, $billing);
+        $request['purchaseRequest'] =
+            $this->generatePurchaseRequest($billing);
+
+        return $request;
+    }
+
+    /**
+     * Resolve the merchant session or generate a default value.
+     *
+     * @param array<string, mixed> $params
+     */
+    private function merchantSession(array $params): string
+    {
+        $session = trim((string) (
+            $params['merchantSession'] ?? ''
+        ));
+
+        return $session !== ''
+            ? $session
+            : 'S' . date('YmdHis');
     }
 }

@@ -3,7 +3,7 @@
 namespace Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
-use Erilshk\Sisp\Billing;
+use Eril\Sisp\Billing;
 
 class Vinti4BillingTest extends TestCase
 {

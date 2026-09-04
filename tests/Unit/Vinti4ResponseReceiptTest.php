@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
-use Erilshk\Sisp\Vinti4Response;
+use Eril\Sisp\Vinti4Response;
 
 final class Vinti4ResponseReceiptTest extends TestCase
 {

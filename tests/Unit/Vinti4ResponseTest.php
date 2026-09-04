@@ -2,8 +2,8 @@
 
 namespace Tests\Unit;
 
-use Erilshk\Sisp\Core\Sisp;
-use Erilshk\Sisp\Vinti4Response;
+use Eril\Sisp\Core\Sisp;
+use Eril\Sisp\Vinti4Response;
 use PHPUnit\Framework\TestCase;
 
 class Vinti4ResponseTest extends TestCase
@@ -279,7 +279,7 @@ class Vinti4ResponseTest extends TestCase
 
     //     $recepit = $response->receipt('My COmpany');
 
-    //     // $this->assertInstanceOf(Erilshk\Sisp\Receipt::class, $recepit);
+    //     // $this->assertInstanceOf(Eril\Sisp\Receipt::class, $recepit);
     // }
 
     public function testStaticConstructors()

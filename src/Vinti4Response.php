@@ -1,9 +1,10 @@
 <?php
 
-namespace Erilshk\Sisp;
+namespace Eril\Sisp;
 
-use Erilshk\Sisp\Core\Sisp;
-use Erilshk\Sisp\Traits\ReceiptRenderer;
+use Eril\Sisp\Core\Sisp;
+use Eril\Sisp\Receipt\ReceiptRenderer;
+use Eril\Sisp\Receipt\ReceiptRendererInterface;
 
 /**
  * Smart wrapper class that represents and interprets a SISP response.
@@ -19,7 +20,6 @@ use Erilshk\Sisp\Traits\ReceiptRenderer;
 class Vinti4Response
 {
 
-    use ReceiptRenderer;
 
     /**
      * Creates a structured SISP response object.
@@ -313,11 +313,20 @@ class Vinti4Response
     /**
      * Summary of GetAdditionalErrorMessage
      */
-    public function GetAdditionalErrorMessage(){
+    public function GetAdditionalErrorMessage()
+    {
         return $this->data['merchantRespAdditionalErrorMessage'] ?? '';
     }
 
-    // public function receipt(?string $companyName = null){
-    //     return new Receipt($this, $companyName);
-    // }
+
+    public function generateReceipt(?string $companyName = null, bool $styled = true): string
+    {
+        return (new ReceiptRenderer($this))
+            ->html($companyName, $styled);
+    }
+
+    public function generateReceiptText(?string $companyName = null): string
+    {
+        return (new ReceiptRenderer($this))->text($companyName);
+    }
 }

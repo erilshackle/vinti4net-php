@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use Erilshk\Sisp\Billing;
+use Eril\Sisp\Billing;
 use PHPUnit\Framework\TestCase;
 
 class BillingTest extends TestCase

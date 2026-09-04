@@ -7,8 +7,6 @@
 /.phpunit.result.cache
 
 #Docs
-mkdocs.yml
-/mkdocs/
 
 # IDE
 /.vscode/

@@ -79,7 +79,7 @@ All notable changes to this project will be documented in this file.
 - delete: teste.php from examples
 - Update export-ignore rules in .gitattributes
 - Update .gitattributes to include mkdocs and teste.php
-- refactor: change project namespace from Erilshk\Vinti4Net to Erilshk\Sisp;
+- refactor: change project namespace from Erilshk\Vinti4Net to Eril\Sisp;
 - changelog
 - Replace favicon with new icon and remove unused image asset
 - Refactor Vinti4Net class documentation for clarity and completeness

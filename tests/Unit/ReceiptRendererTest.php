@@ -3,8 +3,8 @@
 namespace Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
-use Erilshk\Sisp\Traits\ReceiptRenderer;
-use Erilshk\Sisp\Core\Sisp;
+use Eril\Sisp\Traits\ReceiptRenderer;
+use Eril\Sisp\Core\Sisp;
 
 final class ReceiptRendererTest extends TestCase
 {
