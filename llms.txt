@@ -1,41 +1,46 @@
-# Vinti4Net
+# Vinti4Net v3
 
-> SDK PHP comunitário para integração com o Gateway de Pagamentos Rede Vinti4 / SISP, em Cabo Verde. Suporta compras 3DS, pagamentos de serviços, recargas, reembolsos, processamento de respostas e geração de recibos HTML.
+> SDK PHP comunitário para o gateway Rede Vinti4/SISP de Cabo Verde. Suporta compras 3DS, pagamentos de serviços, recargas, reembolsos, validação de callbacks e recibos HTML.
 
-Vinti4Net não é um SDK oficial da SISP. Use a documentação e as credenciais fornecidas pela SISP como autoridade para requisitos operacionais, segurança e produção.
+Vinti4Net não é um SDK oficial da SISP. Use o contrato e a documentação fornecidos pela SISP como autoridade operacional.
 
-## Começar
+## Documentação
 
-- [Instalação](/installation/): requisitos do sistema e instalação via Composer.
-- [Quick Start](/quickstart/): fluxo mínimo para criar o cliente, preparar uma compra, gerar o formulário e processar o callback.
-- [Pagamentos](/payments/): compras 3DS, pagamentos de serviços e recargas.
+- [Instalação](/installation/): requisitos e instalação via Composer.
+- [Guia rápido](/quickstart/): fluxo mínimo de pagamento.
+- [Compras](/payments/): compra 3DS e Billing.
+- [Serviços e recargas](/requests/): operações por entidade e referência.
+- [Reembolsos](/refunds/): estorno com transaction ID e clearing period.
+- [Respostas](/responses/): validação e leitura do callback.
+- [Recibos](/receipt/): recibo padrão e templates próprios.
+- [API](/api/): classes e métodos públicos.
+- [Referência completa para LLMs](/llms-full.txt): documentação consolidada.
 
-## Integração
+## API pública v3
 
-- [Requisições](/requests/): parâmetros aceites, dados do comerciante, billing e exemplos por tipo de transação.
-- [Billing 3DS](/billing/): construção e normalização dos dados do titular, endereço, contacto e conta.
-- [Respostas](/responses/): interpretação de sucesso, cancelamento, erro e fingerprint inválido.
-- [Reembolsos](/refunds/): preparação de reembolsos com transaction ID e clearing period.
-- [Recibos](/receipt/): geração de comprovativos HTML estilizados ou em texto simples.
+- Facade: `Eril\Sisp\Vinti4Net`.
+- Billing: `Eril\Sisp\Billing::make()` ou `Billing::from(array)`.
+- Criar operações: `purchase()`, `servicePayment()`, `recharge()` e `refund()`.
+- Obter formulário: `TransactionRequest::form(returnUrl, lang)`.
+- Enviar e encerrar: `TransactionRequest::send(returnUrl, lang)`.
+- Callback: `Vinti4Net::processResponse($_POST)`.
+- Estado: `isSuccess()`, `isCancelled()`, `hasFailed()` e `hasInvalidFingerprint()`.
+- Identificadores: `merchantReference()`, `transactionId()` e `clearingPeriod()`.
+- Recibos: `renderDefaultReceipt(companyName, logo)` e `renderReceipt(template, data)`.
 
-## Referência
+## Regras importantes
 
-- [API Reference](/api/): classes `Vinti4Net`, `Billing` e `Vinti4Response`.
-- [Arquitetura](/architecture/): componentes internos e fluxo das transações.
-- [Sobre](/about/): escopo, autoria e aviso legal.
-- [Referência completa para LLMs](/llms-full.txt): documentação consolidada e exemplos essenciais em um único arquivo.
-
-## Instruções para LLMs
-
-- Use `Eril\Sisp\Vinti4Net` como facade principal.
 - Instale com `composer require erilshk/vinti4net`.
-- Prefira os métodos públicos `preparePurchase()`, `prepareServicePayment()`, `prepareRecharge()` e `prepareRefund()`.
-- Para compras 3DS, forneça os dados de faturação como `Billing` ou `array`.
-- Defina uma referência própria com `setMerchant()` e guarde os identificadores devolvidos pela SISP.
-- Gere o POST auto-submit com `createPaymentForm()` e processe o callback com `processResponse($_POST)`.
-- Confirme o resultado por `Vinti4Response::isSuccess()`; nunca considere apenas o redirecionamento do navegador como confirmação.
-- Não invente parâmetros da SISP nem credenciais, endpoints, códigos de entidade ou regras que não estejam na documentação do projeto ou no contrato do comerciante.
+- Use `Eril\Sisp\` como namespace.
+- Informe valores em escudos como inteiro positivo, por exemplo `1500`.
+- Crie e guarde uma referência própria antes de enviar o cliente ao gateway.
+- Passe a URL de retorno para `form()` ou `send()`.
+- Nunca confirme uma operação apenas pelo redirecionamento do navegador.
+- Rejeite respostas com fingerprint inválido.
+- Em sucesso, compare referência, valor e moeda com a operação local.
+- Faça o processamento de callback de forma idempotente.
+- Não registre credenciais, PAN bruto nem o payload completo em produção.
 
 ## Código-fonte
 
-- [GitHub](https://github.com/erilshackle/vinti4net-php): repositório oficial do projeto comunitário.
+- [GitHub](https://github.com/erilshackle/vinti4net-php)

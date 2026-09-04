@@ -1,96 +1,88 @@
-  docs_dir: docs
-  site_name: Vinti4Net PHP SDK
-  site_description: "SDK PHP para integração com o sistema de pagamentos Vinti4/SISP (Cabo Verde)"
-  repo_url: https://github.com/erilshackle/vinti4net-php
-  repo_name: erilshackle/vinti4net
+site_name: Vinti4Net PHP SDK
+site_description: SDK PHP para integração com o sistema de pagamentos Vinti4/SISP em Cabo Verde
+site_url: https://erilshackle.github.io/vinti4net-php/
+repo_url: https://github.com/erilshackle/vinti4net-php
+repo_name: erilshackle/vinti4net-php
+edit_uri: edit/main/docs/
+docs_dir: docs
+strict: true
 
-  theme:
-    name: material
-    logo: assets/logo.png
-    favicon: assets/icon.png
+theme:
+  name: material
+  language: pt
+  logo: assets/logo.png
+  favicon: assets/icon.png
+  palette:
+    - scheme: default
+      primary: teal
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Mudar para tema escuro
+    - scheme: slate
+      primary: orange
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Mudar para tema claro
+  features:
+    - content.code.copy
+    - content.code.annotate
+    - navigation.sections
+    - navigation.top
+    - navigation.instant
+    - navigation.tracking
+    - toc.follow
+    - search.suggest
+    - search.highlight
+  font:
+    text: Inter
+    code: Fira Code
 
-    language: pt
+plugins:
+  - search
+  - tags
 
-    palette:
-      - scheme: default
-        primary: teal
-        accent: indigo
-        toggle:
-          icon: material/weather-night
-          name: Mudar para tema escuro
+markdown_extensions:
+  - admonition
+  - attr_list
+  - footnotes
+  - def_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - abbr
+  - pymdownx.caret
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
 
-      - scheme: slate
-        primary: orange
-        accent: teal
-        toggle:
-          icon: material/weather-sunny
-          name: Mudar para tema claro
-
-    features:
-      - content.code.copy
-      - content.code.annotate
-      - navigation.sections
-      - navigation.top
-      - navigation.expand
-      - navigation.instant
-      - navigation.tracking
-      - toc.follow
-      - toc.integrate       # TOC aparece à direita
-      - header.autohide
-      - search.suggest
-      - search.highlight
-      - search.share
-      - announce.dismiss
-
-    font:
-      text: Inter
-      code: Fira Code
-
-  plugins:
-    - search
-    - tags
-
-  extra:
-    version:
-      provider: manual
-      version: "2.0.0"
-
-  markdown_extensions:
-    - admonition
-    - attr_list
-    - footnotes
-    - def_list
-    - md_in_html
-    - tables
-    - toc:
-        permalink: true
-    - abbr
-    - pymdownx.caret
-    - pymdownx.mark
-    - pymdownx.tilde
-    - pymdownx.superfences:
-        custom_fences:
-          - name: mermaid
-            class: mermaid
-    - pymdownx.emoji:
-        emoji_generator: !!python/name:pymdownx.emoji.to_png
-    - pymdownx.highlight
-    - pymdownx.details
-    - pymdownx.tabbed:
-        alternate_style: true
-
-  nav:
-    - Home: index.md
-    - Instalação: installation.md
-    - Guia Rápido: quickstart.md
-    - Pagamentos:
-        - Compra: payments.md
-        - Reembolsos: refunds.md
-        - Requests: requests.md
-        - Recibos: receipt.md
-    - Faturação (3DS): billing.md
-    - Respostas: responses.md
-    - Arquitetura: architecture.md
-    - Referências:
-        - API: api.md
-        - Sobre: about.md
+nav:
+  - Home: index.md
+  - Instalação: installation.md
+  - Guia rápido: quickstart.md
+  - Integração completa: payment-integration-guide.md
+  - Pagamentos:
+      - Compra: payments.md
+      - Pagamento de serviço e recarga: requests.md
+      - Reembolsos: refunds.md
+      - Recibos: receipt.md
+  - Billing 3DS: billing.md
+  - Respostas: responses.md
+  - Arquitetura: architecture.md
+  - Referência:
+      - API: api.md
+      - Sobre: about.md
