@@ -14,7 +14,6 @@ try {
     );
 
     $response = $vinti4->processResponse($_POST);
-
 } catch (Vinti4Exception $exception) {
     http_response_code(400);
     exit('Resposta inválida.');
@@ -31,11 +30,13 @@ $reference = $response->merchantReference();
 
 if ($response->isSuccess()) {
     // Compare amount() e currency() com os dados locais.
-    // Guarde transactionId() e clearingPeriod(). podem ser usados no refund
+    // Guarde transactionId() e clearingPeriod(). Podem ser usados para operação de refund
     // Confirme o pagamento apenas uma vez.
 
     http_response_code(200);
-    echo $response->renderDefaultReceipt('Minha Empresa');
+    echo $response->renderReceipt(
+        data: ['companyName' => 'Minha Empresa'],
+    );
     exit;
 }
 

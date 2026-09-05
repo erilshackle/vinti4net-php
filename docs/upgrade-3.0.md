@@ -71,7 +71,7 @@ Argumentos nomeados precisam ser atualizados para `posId` e `authCode`.
 
 ```php
 $vinti4->preparePurchase(1500, $billing);
-$vinti4->setMerchant('PEDIDO-12345', session_id());
+$vinti4->setMerchant('PEDIDO-12345', 'S' . date('YmdHis'));
 
 echo $vinti4->createPaymentForm(
     'https://exemplo.cv/pagamento/callback',
@@ -87,7 +87,7 @@ $payment = $vinti4->purchase(
     reference: 'PEDIDO-12345',
     billing: $billing,
     currency: 'CVE',
-    session: session_id() ?: null,
+    session: 'S' . date('YmdHis') ?: null,
 );
 
 echo $payment->form(

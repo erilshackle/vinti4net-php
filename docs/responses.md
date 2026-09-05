@@ -49,6 +49,26 @@ $response->transactionType();
 $response->dcc();
 ```
 
+`dcc()` devolve as informações normalizadas de Dynamic Currency Conversion:
+
+```php
+[
+    'enabled' => true,
+    'amount' => '10.58',
+    'currency' => 'USD',
+    'rate' => '92.65882',
+    'markup' => '0.31',
+]
+```
+
+Quando `enabled` for verdadeiro, o recibo oficial pode ser gerado com:
+
+```php
+echo $response->renderDccReceipt();
+```
+
+A biblioteca apresenta os valores DCC recebidos da SISP sem recalcular, arredondar ou interpretar o markup como percentagem.
+
 `toArray()` e `toJson()` não incluem o payload bruto nem o PAN. `raw()` existe para diagnóstico explícito, mas não deve ser registrado em produção.
 
 ## Confirmação segura

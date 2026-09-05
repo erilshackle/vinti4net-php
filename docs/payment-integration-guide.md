@@ -54,7 +54,7 @@ echo $payment->form(
 );
 ```
 
-`send()` imprime o mesmo HTML e encerra a execução:
+`send()` renderiza o mesmo HTML e encerra a execução:
 
 ```php
 $payment->send('https://exemplo.cv/pagamento/callback', 'pt');
@@ -113,7 +113,9 @@ if ($response->isSuccess()) {
     // Compare referência, valor e moeda e confirme de forma idempotente.
     // saveSispIdentifiers($transactionId, $clearingPeriod);
 
-    echo $response->renderDefaultReceipt('Minha Empresa');
+    echo $response->renderReceipt(
+        data: ['companyName' => 'Minha Empresa'],
+    );
     exit;
 }
 

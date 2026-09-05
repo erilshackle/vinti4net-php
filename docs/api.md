@@ -48,9 +48,23 @@ $response->merchantSession(): ?string;
 $response->amount(): ?string;
 $response->currency(): ?string;
 $response->transactionType(): ?string;
+$response->dcc(): array;
 $response->toArray(): array;
 $response->toJson(): string;
 ```
+
+### Recibos
+
+```php
+$response->renderReceipt(
+    ?string $template = null,
+    array $data = [],
+): string;
+
+$response->renderDccReceipt(): string;
+```
+
+`renderReceipt()` utiliza o template padrão quando `$template` for `null`. `renderDccReceipt()` exige dados DCC completos e lança `ReceiptException` quando a resposta não representar uma operação DCC válida.
 
 ## Exceções
 

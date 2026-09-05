@@ -208,9 +208,11 @@ O `transactionId` e o `clearingPeriod` são obtidos na resposta válida da opera
 ```php
 $response = $vinti4->processResponse($_POST);
 
-echo $response->renderDefaultReceipt(
-    companyName: 'Sua Empresa Lda',
-    logo: '/assets/logo.svg',
+echo $response->renderReceipt(
+    data: [
+        'companyName' => 'Sua Empresa Lda',
+        'logo' => '/assets/logo.svg',
+    ],
 );
 ```
 
@@ -226,6 +228,18 @@ echo $response->renderReceipt(
 ```
 
 O template pode ser `.php`, `.html` ou `.htm`. Templates PHP recebem `$receipt` e `$data`; templates HTML podem usar placeholders como `{{ merchantReference }}`.
+
+### Recibo DCC
+
+Quando o cliente escolher pagar noutra moeda através de Dynamic Currency Conversion:
+
+```php
+if ($response->dcc()['enabled']) {
+    echo $response->renderDccReceipt();
+}
+```
+
+O recibo DCC segue o modelo bilíngue exigido pela SISP e apresenta o valor original em CVE, a moeda escolhida, a taxa de conversão, o markup e o total convertido. Os valores recebidos da SISP não são recalculados nem arredondados pela biblioteca.
 
 ## 🔧 Configuração avançada
 
@@ -311,6 +325,8 @@ composer test-coverage
 
 - [Documentação](https://erilshackle.github.io/vinti4net-php/)
 - [Guia de integração](docs/payment-integration-guide.md)
+- [Atualização da v2 para v3](UPGRADE-3.0.md)
+- [Changelog](CHANGELOG.md)
 - [SISP](https://www.sisp.cv)
 - [Vinti4Net](https://vinti4net.cv)
 - [Exemplos completos](examples/)
