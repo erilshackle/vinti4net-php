@@ -1,32 +1,52 @@
-# ⚙️ Installation
+# Instalação
 
-Instale facilmente via **Composer**:
+## Requisitos
+
+- PHP 8.1 ou superior;
+- Composer 2;
+- credenciais POS fornecidas pela SISP;
+- URL HTTPS pública para receber o callback.
+
+## Composer
 
 ```bash
 composer require erilshk/vinti4net
 ```
 
----
+Carregue o autoloader:
 
-## 🖥️ Requisitos do Sistema
+```php
+require_once __DIR__ . '/vendor/autoload.php';
+```
 
-Antes de usar o SDK, certifique-se de que o seu ambiente atende aos seguintes requisitos:
+## Credenciais
 
-- 🔹 **PHP** 8.1 ou superior  
-- 🔹 Extensões PHP obrigatórias: 
-  - `json`  
-  - `mbstring`  
+Configure as credenciais por variáveis de ambiente:
 
-> ⚠️ **Nota:**  
-> Se alguma extensão estiver faltando, o SDK poderá não funcionar corretamente. No Linux, você pode instalar via `apt` ou `yum` (ex.: `sudo apt install php-mbstring php-json`).
+```dotenv
+SISP_POS_ID=seu-pos-id
+SISP_AUTH_CODE=seu-auth-code
+```
 
----
+```php
+use Eril\Sisp\Vinti4Net;
 
-## ✅ Dica rápida
+$vinti4 = new Vinti4Net(
+    posId: $_ENV['SISP_POS_ID'],
+    authCode: $_ENV['SISP_AUTH_CODE'],
+);
+```
 
-Para verificar sua versão do PHP e extensões instaladas:
+Não publique credenciais no repositório e não as grave em logs.
 
-```bash
-php -v
-php -m | grep -E "json|mbstring"
+## Endpoint alternativo
+
+Use `endpoint` somente quando a SISP fornecer um endereço diferente:
+
+```php
+$vinti4 = new Vinti4Net(
+    posId: $_ENV['SISP_POS_ID'],
+    authCode: $_ENV['SISP_AUTH_CODE'],
+    endpoint: $_ENV['SISP_ENDPOINT'],
+);
 ```

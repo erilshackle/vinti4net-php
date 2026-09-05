@@ -203,6 +203,6 @@ final class Payment extends Sisp
 
         return $session !== ''
             ? $session
-            : 'S' . date('YmdHis');
+            : self::generateSession();
     }
 }

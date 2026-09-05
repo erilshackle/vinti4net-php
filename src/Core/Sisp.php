@@ -12,7 +12,7 @@ use JsonException;
 abstract class Sisp
 {
     public const DEFAULT_BASE_URL =
-        'https://mc.vinti4net.cv/BizMPIOnUsSisp/CardPayment';
+    'https://mc.vinti4net.cv/BizMPIOnUsSisp/CardPayment';
 
     public const TRANSACTION_TYPE_PURCHASE = '1';
     public const TRANSACTION_TYPE_SERVICE = '2';
@@ -148,6 +148,54 @@ abstract class Sisp
             'message_type' => $messageType,
             'data' => $postData,
         ];
+    }
+
+    /**
+     * Generates a merchant session accepted by the SISP gateway.
+     *
+     * The returned value always contains exactly 15 characters:
+     * one prefix character followed by the current date and time.
+     */
+    final public static function generateSession(): string
+    {
+        return 'S' . date('YmdHis');
+    }
+
+    /**
+     * Generates a merchant reference with exactly 15 characters.
+     *
+     * The prefix may contain letters, numbers and hyphens and must
+     * contain no more than six characters.
+     *
+     * @throws InvalidRequestException
+     */
+    final public static function generateReference(string $prefix = 'R'): string
+    {
+        $prefix = strtoupper(trim($prefix));
+
+        if ($prefix === '') {
+            throw new InvalidRequestException(
+                'O prefixo da referência não pode estar vazio.'
+            );
+        }
+
+        if (strlen($prefix) > 6) {
+            throw new InvalidRequestException(
+                'O prefixo da referência deve ter no máximo 6 caracteres.'
+            );
+        }
+
+        if (!preg_match('/^[A-Z0-9-]+$/', $prefix)) {
+            throw new InvalidRequestException(
+                'O prefixo da referência aceita apenas letras, números e hífen.'
+            );
+        }
+
+        $remainingLength = 15 - strlen($prefix);
+        $randomBytes = random_bytes((int) ceil($remainingLength / 2));
+        $randomPart = strtoupper(bin2hex($randomBytes));
+
+        return $prefix . substr($randomPart, 0, $remainingLength);
     }
 
     /**
@@ -296,8 +344,8 @@ abstract class Sisp
         if ($missing !== []) {
             throw new InvalidRequestException(
                 'Campos obrigatórios ausentes no billing: '
-                . implode(', ', $missing)
-                . '.'
+                    . implode(', ', $missing)
+                    . '.'
             );
         }
 
@@ -305,8 +353,8 @@ abstract class Sisp
             $json = json_encode(
                 $billing,
                 JSON_THROW_ON_ERROR |
-                JSON_UNESCAPED_SLASHES |
-                JSON_UNESCAPED_UNICODE,
+                    JSON_UNESCAPED_SLASHES |
+                    JSON_UNESCAPED_UNICODE,
             );
         } catch (JsonException $exception) {
             throw new InvalidRequestException(

@@ -1,50 +1,70 @@
-# Quick Start
+# Guia rápido
 
-## 1. Criar instância
+## 1. Criar o cliente
 
 ```php
 use Eril\Sisp\Vinti4Net;
 
-$sdk = new Vinti4Net(
-    posID: "1234",
-    posAuthCode: "SECRETO",
+$vinti4 = new Vinti4Net(
+    posId: $_ENV['SISP_POS_ID'],
+    authCode: $_ENV['SISP_AUTH_CODE'],
 );
 ```
 
----
-
-## 2. Preparar pagamento
+## 2. Preparar a compra
 
 ```php
-// Os dados de Billing são obrigatórios, segundo a documentação da SISP, ela compõe o PurchaseRequest.
-$billing = [
-    'email' => 'cliente@email.com',
-    'billAddrCountry' => '132',
-    'billAddrCity' => 'Cidade',
-    'billAddrLine1' => 'endereço',
-    'billAddrPostCode' => '7601',
-];
+use Eril\Sisp\Billing;
 
-$sdk->preparePurchase(1000, $billing);
+$reference = 'PEDIDO-12345';
+
+$payment = $vinti4->purchase(
+    amount: 1500,
+    reference: $reference,
+    billing: Billing::make()
+        ->email('cliente@exemplo.cv')
+        ->country('132')
+        ->city('Praia')
+        ->address('Achada Santo António')
+        ->postalCode('7600'),
+    currency: 'CVE',
+    session: session_id() ?: null,
+);
 ```
 
----
+Guarde a referência, o valor e a moeda como uma operação pendente antes de abrir o gateway.
 
-## 3. Gerar formulário auto-submit
+## 3. Abrir a página de pagamento
 
 ```php
-echo $sdk->createPaymentForm("https://meusite.com/callback");
+echo $payment->form(
+    returnUrl: 'https://exemplo.cv/pagamento/callback',
+    lang: 'pt',
+);
 ```
 
----
-
-## 4. Processar callback
+Ou envie e encerre a execução:
 
 ```php
-// na página de resposta de retorno:
-$response = $sdk->processResponse($_POST);
+$payment->send('https://exemplo.cv/pagamento/callback', 'pt');
+```
+
+## 4. Processar o retorno
+
+```php
+$response = $vinti4->processResponse($_POST);
+
+if ($response->hasInvalidFingerprint()) {
+    http_response_code(400);
+    exit('Resposta inválida.');
+}
 
 if ($response->isSuccess()) {
-    // OK
+    $reference = $response->merchantReference();
+    $transactionId = $response->transactionId();
+
+    // Compare os dados e confirme de forma idempotente.
 }
 ```
+
+Nunca confirme uma operação somente porque o navegador regressou ao seu site.

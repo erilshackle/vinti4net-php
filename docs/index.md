@@ -1,42 +1,50 @@
 # Vinti4Net PHP SDK
 
-SDK PHP para integração com o **Gateway de Pagamentos RedeVinti4 / SISP (Cabo Verde)**.
+SDK PHP comunitário para integração com o gateway de pagamentos **Rede Vinti4/SISP** de Cabo Verde, Serviço MOP021.
 
-Este SDK oferece:
+O Vinti4Net v3 suporta:
 
-- 🔒 Pagamentos 3DS (purchase)
-- 🔄 Pagamentos de serviços (entidade + referência)
-- ⚡ Recargas
-- 💰 Reembolsos
-- 🧾 Interpretação simplificada das respostas do SISP
-- 📦 Simplificação completa da geração de formulários auto-submit
+- compras com autenticação 3D Secure;
+- pagamentos de serviços;
+- recargas;
+- reembolsos;
+- validação segura de callbacks;
+- recibos padrão e customizados.
 
----
+!!! warning "Projeto comunitário"
+    Este não é um SDK oficial da SISP. O contrato, as credenciais e a documentação fornecidos pela SISP são a autoridade para uso em produção.
 
-## Composer 
+## Instalação
 
 ```bash
-# install
 composer require erilshk/vinti4net
 ```
 
+## Exemplo mínimo
+
 ```php
-# namespace
-use Eril\Sisp\Vinti4Net; 
+use Eril\Sisp\Billing;
+use Eril\Sisp\Vinti4Net;
+
+$vinti4 = new Vinti4Net(
+    posId: $_ENV['SISP_POS_ID'],
+    authCode: $_ENV['SISP_AUTH_CODE'],
+);
+
+$payment = $vinti4->purchase(
+    amount: 1500,
+    reference: 'PEDIDO-12345',
+    billing: Billing::from([
+        'email' => 'cliente@exemplo.cv',
+        'country' => '132',
+        'city' => 'Praia',
+        'address' => 'Rua Principal',
+        'postalCode' => '7600',
+    ]),
+);
+
+echo $payment->form('https://exemplo.cv/pagamento/callback');
 ```
 
-## Fluxo geral
-
-
-```mermaid
-graph LR
-
-    A["Seu Sistema"] --> B["Vinti4Net SDK"]
-    B --> C["Gera Formulário<br/>POST (auto-submit)"]
-    C --> D["SISP<br/>MPI / 3DSServer "]
-    D --> E["Cliente Autentica<br/> Dados do cartão + Autenticação 3DS"]
-    E --> F["SISP envia POST de Retorno (Response)"]
-    F --> G["Vinti4Net::processResponse()"]
-    G --> H["Objeto Vinti4Response"]
-    H --> A
-```
+[Começar a integração](quickstart.md){ .md-button .md-button--primary }
+[Consultar a API](api.md){ .md-button }

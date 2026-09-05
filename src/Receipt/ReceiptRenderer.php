@@ -15,17 +15,63 @@ final class ReceiptRenderer
     ) {}
 
     /**
-     * Render the default minimal receipt.
+     * Render a transaction receipt.
+     *
+     * @param string|null          $template Optional custom template path.
+     * @param array<string, mixed> $data     Custom template data.
+     *
+     * @return string Rendered receipt HTML.
+     *
+     * @throws ReceiptException When the template is invalid or cannot be rendered.
      */
-    public function renderDefault(
-        ?string $companyName = null,
-        ?string $logo = null,
+    public function render(
+        ?string $template = null,
+        array $data = [],
     ): string {
-        return $this->render(
-            template: dirname(__DIR__, 2) . '/resources/views/default-receipt.php',
-            data: [
-                'companyName' => $companyName,
-                'logo' => $logo,
+        $template ??= dirname(__DIR__, 2)
+            . '/resources/views/default-receipt.php';
+
+        return $this->renderTemplate(
+            $template,
+            $data,
+        );
+    }
+
+
+    /**
+     * Render the official SISP Dynamic Currency Conversion receipt.
+     *
+     * @return string Rendered DCC receipt HTML.
+     *
+     * @throws ReceiptException When DCC was not used or its data is incomplete.
+     */
+    public function renderDcc(): string
+    {
+        $dcc = $this->response->dcc();
+
+        if (!$dcc['enabled']) {
+            throw new ReceiptException(
+                'A resposta não contém uma operação DCC.'
+            );
+        }
+
+        foreach (['amount', 'currency', 'rate', 'markup'] as $field) {
+            if ($dcc[$field] === null || $dcc[$field] === '') {
+                throw new ReceiptException(
+                    sprintf(
+                        'O campo DCC obrigatório "%s" não está disponível.',
+                        $field,
+                    )
+                );
+            }
+        }
+
+        return $this->renderPhp(
+            dirname(__DIR__, 2) .
+                '/resources/views/default-dcc-receipt.php',
+            [
+                'receipt' => $this->response->receiptData(),
+                'dcc' => $dcc,
             ],
         );
     }
@@ -40,7 +86,7 @@ final class ReceiptRenderer
      *
      * @throws ReceiptException
      */
-    public function render(
+    protected function renderTemplate(
         string $template,
         array $data = [],
     ): string {
@@ -65,6 +111,8 @@ final class ReceiptRenderer
             ),
         };
     }
+
+
 
     /**
      * Render a PHP receipt template.

@@ -2,7 +2,7 @@
 
 ## Visão geral
 
-> Vinti4Net é um SDK PHP comunitário para integração com o gateway Rede Vinti4/SISP de Cabo Verde. O pacote suporta compra 3DS, pagamento de serviço, recarga, reembolso, validação de callbacks e renderização de recibos.
+Vinti4Net é um SDK PHP comunitário para integração com o gateway Rede Vinti4/SISP de Cabo Verde. O pacote suporta compra 3DS, pagamento de serviço, recarga, reembolso, validação de callbacks e renderização de recibos.
 
 - Pacote Composer: `erilshk/vinti4net`
 - Namespace: `Eril\Sisp`
@@ -45,7 +45,7 @@ $request = $vinti4->purchase(
         ->address('Achada Santo António')
         ->postalCode('7600'),
     currency: 'CVE',
-    session: session_id() ?: null,
+    session: "S" . date('YmdHms'); ?: null,
 );
 
 echo $request->form(
@@ -98,7 +98,7 @@ $request = $vinti4->servicePayment(
     entityCode: 10001,
     referenceNumber: '123456789',
     reference: 'SERVICO-123',
-    session: 'SESSAO-123',
+    session: 'S202609051714',
 );
 
 echo $request->form('https://exemplo.cv/pagamento/callback', 'pt');
@@ -112,7 +112,7 @@ $request = $vinti4->recharge(
     entityCode: 10021,
     referenceNumber: '9912345',
     reference: 'RECARGA-123',
-    session: 'SESSAO-123',
+    session: 'S202609051714',
 );
 ```
 
@@ -124,7 +124,7 @@ $request = $vinti4->refund(
     transactionId: 'TRANSACAO-SISP',
     clearingPeriod: '2511',
     reference: 'ESTORNO-123',
-    session: 'SESSAO-123',
+    session: 'S202609051714',
 );
 
 echo $request->form('https://exemplo.cv/pagamento/callback', 'pt');

@@ -161,6 +161,6 @@ final class Refund extends Sisp
 
         return $session !== ''
             ? $session
-            : 'S' . date('YmdHis');
+            : self::generateSession();
     }
 }

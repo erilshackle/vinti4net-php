@@ -22,9 +22,7 @@ final class Billing
         'suspiciousAccActivity',
     ];
 
-    private function __construct()
-    {
-    }
+    private function __construct() {}
 
     /**
      * Create an empty billing builder.
@@ -37,9 +35,72 @@ final class Billing
     /**
      * Create billing information from an array.
      *
-     * @param array<string, mixed> $data
+     * Friendly field names and their equivalent SISP field names are accepted.
      *
-     * @throws InvalidRequestException
+     * @param array{
+     *     email?: string,
+     *     country?: string,
+     *     billAddrCountry?: string,
+     *     city?: string,
+     *     billAddrCity?: string,
+     *     address?: string,
+     *     billAddrLine1?: string,
+     *     address2?: string,
+     *     billAddrLine2?: string,
+     *     address3?: string,
+     *     billAddrLine3?: string,
+     *     postalCode?: string,
+     *     billAddrPostCode?: string,
+     *     state?: string,
+     *     billAddrState?: string,
+     *     shipCountry?: string,
+     *     shipAddrCountry?: string,
+     *     shipCity?: string,
+     *     shipAddrCity?: string,
+     *     shipAddress?: string,
+     *     shipAddrLine1?: string,
+     *     shipPostalCode?: string,
+     *     shipAddrPostCode?: string,
+     *     shipState?: string,
+     *     shipAddrState?: string,
+     *     mobilePhone?: string|array{
+     *         cc?: string,
+     *         subscriber: string
+     *     },
+     *     phone?: string|array{
+     *         cc?: string,
+     *         subscriber: string
+     *     },
+     *     workPhone?: string|array{
+     *         cc?: string,
+     *         subscriber: string
+     *     },
+     *     addressMatchesShipping?: bool,
+     *     addrMatch?: bool,
+     *     accountId?: string,
+     *     acctID?: string,
+     *     accountInfo?: array{
+     *         chAccAgeInd?: string,
+     *         chAccDate?: string,
+     *         chAccChange?: string,
+     *         chAccPwChange?: string,
+     *         chAccPwChangeInd?: string,
+     *         suspiciousAccActivity?: string
+     *     },
+     *     acctInfo?: array{
+     *         chAccAgeInd?: string,
+     *         chAccDate?: string,
+     *         chAccChange?: string,
+     *         chAccPwChange?: string,
+     *         chAccPwChangeInd?: string,
+     *         suspiciousAccActivity?: string
+     *     },
+     *     suspicious?: bool
+     * } $data Billing and 3D Secure customer information.
+     *
+     * @return self Configured billing instance.
+     *
+     * @throws InvalidRequestException When a field or value is invalid.
      */
     public static function from(array $data): self
     {
@@ -48,65 +109,65 @@ final class Billing
         foreach ($data as $field => $value) {
             match ($field) {
                 'email' =>
-                    $billing->email((string) $value),
+                $billing->email((string) $value),
 
                 'country', 'billAddrCountry' =>
-                    $billing->country((string) $value),
+                $billing->country((string) $value),
 
                 'city', 'billAddrCity' =>
-                    $billing->city((string) $value),
+                $billing->city((string) $value),
 
                 'address', 'billAddrLine1' =>
-                    $billing->address((string) $value),
+                $billing->address((string) $value),
 
                 'address2', 'billAddrLine2' =>
-                    $billing->address2((string) $value),
+                $billing->address2((string) $value),
 
                 'address3', 'billAddrLine3' =>
-                    $billing->address3((string) $value),
+                $billing->address3((string) $value),
 
                 'postalCode', 'billAddrPostCode' =>
-                    $billing->postalCode((string) $value),
+                $billing->postalCode((string) $value),
 
                 'state', 'billAddrState' =>
-                    $billing->state((string) $value),
+                $billing->state((string) $value),
 
                 'shipCountry', 'shipAddrCountry' =>
-                    $billing->shipCountry((string) $value),
+                $billing->shipCountry((string) $value),
 
                 'shipCity', 'shipAddrCity' =>
-                    $billing->shipCity((string) $value),
+                $billing->shipCity((string) $value),
 
                 'shipAddress', 'shipAddrLine1' =>
-                    $billing->shipAddress((string) $value),
+                $billing->shipAddress((string) $value),
 
                 'shipPostalCode', 'shipAddrPostCode' =>
-                    $billing->shipPostalCode((string) $value),
+                $billing->shipPostalCode((string) $value),
 
                 'shipState', 'shipAddrState' =>
-                    $billing->shipState((string) $value),
+                $billing->shipState((string) $value),
 
                 'addrMatch' =>
-                    $billing->setAddressMatch($value),
+                $billing->setAddressMatch($value),
 
                 'mobilePhone', 'phone' =>
-                    $billing->setPhone('mobilePhone', $value),
+                $billing->setPhone('mobilePhone', $value),
 
                 'workPhone' =>
-                    $billing->setPhone('workPhone', $value),
+                $billing->setPhone('workPhone', $value),
 
                 'acctID', 'accountId' =>
-                    $billing->accountId((string) $value),
+                $billing->accountId((string) $value),
 
                 'acctInfo', 'accountInfo' =>
-                    $billing->accountInfo(
-                        self::requireArray($field, $value)
-                    ),
+                $billing->accountInfo(
+                    self::requireArray($field, $value)
+                ),
 
                 'suspicious' =>
-                    $billing->suspicious(
-                        self::requireBoolean($field, $value)
-                    ),
+                $billing->suspicious(
+                    self::requireBoolean($field, $value)
+                ),
 
                 default => throw new InvalidRequestException(
                     "Campo de billing não permitido: {$field}."
@@ -375,7 +436,7 @@ final class Billing
         return array_filter(
             $this->data,
             static fn(mixed $value): bool =>
-                $value !== null &&
+            $value !== null &&
                 $value !== '' &&
                 $value !== [],
         );

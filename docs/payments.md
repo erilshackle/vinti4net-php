@@ -1,35 +1,45 @@
-# Purchase Payment (3DS)
+# Compra 3DS
 
-Use este método para compras normais com cartão Vinti4:
+Uma compra requer valor, referência própria e dados de Billing.
 
 ```php
-$sdk->preparePurchase(
+$payment = $vinti4->purchase(
     amount: 1500,
-    billing: Billing::create($dadosDeFaturacao),
-    currency: 'CVE'
+    reference: 'PEDIDO-12345',
+    billing: $billing,
+    currency: 'CVE',
+    session: 'SESSAO-12345',
 );
 ```
 
----
+| Parâmetro | Obrigatório | Descrição |
+| --- | --- | --- |
+| `amount` | Sim | Valor inteiro positivo em CVE |
+| `reference` | Sim | Referência única da aplicação |
+| `billing` | Sim | Instância de `Billing` ou array |
+| `currency` | Não | Moeda, padrão `CVE` |
+| `session` | Não | Identificador de sessão do comerciante |
 
-# Service Payment
+## Renderizar ou enviar
+
+Toda operação devolve um `TransactionRequest`:
 
 ```php
-$sdk->prepareServicePayment(
-    amount: 2000,
-    entity: 341,
-    number: "123456789"
-);
+$html = $payment->form($returnUrl, 'pt');
 ```
-
----
-
-# Recharge Payment
 
 ```php
-$sdk->prepareRecharge(
-    amount: 500,
-    entity: 341,
-    number: "987654321"
-);
+$payment->send($returnUrl, 'pt');
 ```
+
+`form()` retorna o HTML. `send()` imprime o HTML e encerra a execução.
+
+## Persistência recomendada
+
+Antes do redirecionamento, guarde:
+
+- referência do comerciante;
+- valor e moeda;
+- sessão, quando utilizada;
+- estado pendente;
+- data de criação.

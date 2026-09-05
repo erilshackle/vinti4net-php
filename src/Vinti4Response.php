@@ -6,6 +6,7 @@ namespace Eril\Sisp;
 
 use Eril\Sisp\Core\Sisp;
 use Eril\Sisp\Exception\InvalidResponseException;
+use Eril\Sisp\Exception\ReceiptException;
 use Eril\Sisp\Receipt\ReceiptRenderer;
 use JsonException;
 
@@ -317,31 +318,45 @@ final class Vinti4Response
     }
 
     /**
-     * Render the default minimal receipt.
-     */
-    public function renderDefaultReceipt(
-        ?string $companyName = null,
-        ?string $logo = null,
-    ): string {
-        return (new ReceiptRenderer($this))->renderDefault(
-            $companyName,
-            $logo,
-        );
-    }
-
-    /**
-     * Render a custom PHP or HTML receipt template.
+     * Render the transaction receipt.
      *
-     * @param array<string, mixed> $data
+     * When no template is provided, the default minimal receipt
+     * template bundled with the library is used.
+     *
+     * PHP templates receive the normalized transaction data through
+     * `$receipt` and custom values through `$data`.
+     *
+     * HTML templates may use escaped placeholders such as
+     * `{{ merchantReference }}`.
+     *
+     * @param string|null         $template Optional PHP, HTML or HTM template path.
+     * @param array<string, mixed> $data     Custom data available to the template.
+     *
+     * @return string Rendered receipt HTML.
+     *
+     * @throws ReceiptException When the template cannot be rendered.
      */
     public function renderReceipt(
-        string $template,
+        ?string $template = null,
         array $data = [],
     ): string {
         return (new ReceiptRenderer($this))->render(
             $template,
             $data,
         );
+    }
+
+    /**
+     * Render the official Dynamic Currency Conversion receipt.
+     *
+     * @return string Rendered DCC receipt HTML.
+     *
+     * @throws ReceiptException When the response does not contain
+     *                          complete DCC information.
+     */
+    public function renderDccReceipt(): string
+    {
+        return (new ReceiptRenderer($this))->renderDcc();
     }
 
     /**

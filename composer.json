@@ -41,10 +41,18 @@
         }
     ],
     "scripts": {
+        "check": [
+            "@validates",
+            "@test"
+        ],
+        "validates": "composer validate --strict",
         "test": "phpunit --colors=always",
-        "test-coverage": "phpunit --coverage-html coverage"
+        "test-coverage": "phpunit --coverage-clover coverage.xml"
     },
     "minimum-stability": "stable",
-
-    "prefer-stable": true
+    "prefer-stable": true,
+    "support": {
+        "issues": "https://github.com/erilshackle/vinti4net-php/issues",
+        "source": "https://github.com/erilshackle/vinti4net-php"
+    }
 }

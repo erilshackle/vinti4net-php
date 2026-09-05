@@ -1,34 +1,25 @@
-# 💸 Refunds
+# Reembolsos
 
-Para **reembolsar** uma transação existente, use o método:
+O reembolso usa os identificadores devolvidos pela operação original.
 
 ```php
-$vinti4->prepareRefund(
-    amount: 1000,                  // 💰 Valor a reembolsar
-    transactionID: "TX119922",     // 🆔 ID da transação SISP
-    clearingPeriod: "1125"         // 📅 Período de compensação obrigatório
+$refund = $vinti4->refund(
+    amount: 1500,
+    transactionId: 'TXN78901',
+    clearingPeriod: '2411',
+    reference: 'ESTORNO-12345',
+    session: session_id() ?: null,
 );
+
+echo $refund->form($returnUrl, 'pt');
 ```
 
-> ⚠️ **Nota:** guarde esses dados
-> 
->  **`clearingPeriod`** é o Período Contabilístico em que a transação se realizou, e  é enviado na resposta pela SISP no pagamento `merchantRespCP`.
+| Parâmetro | Descrição |
+| --- | --- |
+| `amount` | Valor inteiro positivo a reembolsar |
+| `transactionId` | Identificador da transação SISP original |
+| `clearingPeriod` | Período de compensação original |
+| `reference` | Nova referência própria para o estorno |
+| `session` | Sessão opcional do comerciante |
 
->  **`Transaction ID`** da transação Original, que é enviado na 
-resposta pela SISP no parâmetro `merchantRespTid`.
-
-> _juntos identificam unicamente uma transação na rede vinti4._
-
----
-
-## 🔹 Fluxo de Reembolso
-
-```mermaid
-graph LR
-   
-    A["Merchant"] --> B["prepareRefundPayment()"]
-    B --> C["createPaymentForm()"]
-    C --> D["SISP"]
-    D --> E["Callback"]
-    E --> F["processResponse()"]
-```
+Guarde `transactionId()` e `clearingPeriod()` quando confirmar o pagamento original. Processe o callback do reembolso com o mesmo `processResponse()`.
