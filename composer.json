@@ -42,10 +42,9 @@
     ],
     "scripts": {
         "check": [
-            "@validates",
+            "composer validate --strict",
             "@test"
         ],
-        "validates": "composer validate --strict",
         "test": "phpunit --colors=always",
         "test-coverage": "phpunit --coverage-clover coverage.xml"
     },

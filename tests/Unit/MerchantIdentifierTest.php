@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Eril\Sisp\Tests\Unit;
 
+use Eril\Sisp\Core\Sisp;
 use Eril\Sisp\Exception\InvalidRequestException;
 use Eril\Sisp\Vinti4Net;
 use PHPUnit\Framework\TestCase;
@@ -12,7 +13,7 @@ final class MerchantIdentifierTest extends TestCase
 {
     public function testItGeneratesSessionWithExpectedFormat(): void
     {
-        $session = Vinti4Net::generateSession();
+        $session = Sisp::generateSession();
 
         self::assertSame(15, strlen($session));
         self::assertMatchesRegularExpression(

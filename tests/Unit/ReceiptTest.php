@@ -12,9 +12,12 @@ final class ReceiptTest extends TestCase
 {
     public function testItRendersTheDefaultReceipt(): void
     {
-        $html = $this->response()->renderDefaultReceipt(
-            companyName: 'Minha Empresa',
-            logo: 'https://example.com/logo.png',
+        $html = $this->response()->renderReceipt(
+            template: null,
+            data: [
+                'companyName' => 'Minha Empresa',
+                'logo' => 'https://example.com/logo.png',
+            ]
         );
 
         self::assertStringContainsString('Comprovativo de pagamento', $html);
