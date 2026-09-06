@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use Erilshk\Sisp\Core\Refund as Vinti4Refund;
-use InvalidArgumentException;
+use Erilshk\Sisp\Exceptions\Vinti4Exception;
 use PHPUnit\Framework\TestCase;
 
 class RefundExceptionTest extends TestCase
@@ -20,7 +20,7 @@ class RefundExceptionTest extends TestCase
      */
     public function testPreparePaymentMissingRequiredField()
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(Vinti4Exception::class);
         $this->expectExceptionMessage("Campo obrigatório faltando: transactionID");
 
         $this->refund->preparePayment([
@@ -36,7 +36,7 @@ class RefundExceptionTest extends TestCase
      */
     public function testPreparePaymentInvalidAmount()
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(Vinti4Exception::class);
         $this->expectExceptionMessage("Amount deve ser inteiro, sem casas decimais.");
 
         $this->refund->preparePayment([
@@ -54,7 +54,7 @@ class RefundExceptionTest extends TestCase
      */
     public function testPreparePaymentInvalidUrl()
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(Vinti4Exception::class);
         $this->expectExceptionMessage("urlMerchantResponse deve ser uma URL válida.");
 
         $this->refund->preparePayment([
@@ -80,7 +80,7 @@ class RefundExceptionTest extends TestCase
 
         $refund->method('validateParams')->willReturn('Erro de validação interno');
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(Vinti4Exception::class);
         $this->expectExceptionMessage('Erro de validação interno');
 
         $refund->preparePayment([

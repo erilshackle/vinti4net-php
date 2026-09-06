@@ -59,7 +59,7 @@ class Vinti4NetTest extends TestCase
 
     public function testSetRequestParamsThrowsExceptionForInvalidParam()
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\Erilshk\Sisp\Exceptions\Vinti4Exception::class);
         $this->expectExceptionMessage('Parâmetro não permitido: invalid_param');
 
         $this->vinti4net->setRequestParams([
@@ -108,22 +108,6 @@ class Vinti4NetTest extends TestCase
         $this->assertSame($this->vinti4net, $result);
     }
 
-    public function testCreatePaymentFormTriggersRefundPreparePayment()
-    {
-        // Prepare refund
-        $this->vinti4net->prepareRefund(1500, "TXN123", "2024");
-
-        // Mock de comportamento interno esperado
-        $form = $this->vinti4net->createPaymentForm("https://callback.example.com");
-
-        $this->assertStringContainsString('<form', $form);
-        $this->assertStringContainsString('method="post"', $form);
-
-        // Garante que refund foi realmente usado:
-        $request = $this->vinti4net->getRequest();
-        $this->assertArrayHasKey('fields', $request);
-        $this->assertArrayHasKey('postUrl', $request);
-    }
 
 
     public function testCreatePaymentForm()

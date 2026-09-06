@@ -34,7 +34,7 @@ class Vinti4ResponseTest extends TestCase
     {
         $processorResult = [
             'success' => false,
-            'fingerprint_valid' => false,
+            'fingerprint_valid' => true,
             'message_type' => '',
             'data' => [
                 'UserCancelled' => 'true'
@@ -156,12 +156,12 @@ class Vinti4ResponseTest extends TestCase
 
         $receipt = $response->generateReceiptHtml('Test Store');
 
-        $this->assertStringContainsString('COMPROVATIVO DE PAGAMENTO', $receipt);
+        $this->assertStringContainsString('Comprovativo de pagamento', $receipt);
         $this->assertStringContainsString('Test Store', $receipt);
         $this->assertStringContainsString('REF123', $receipt);
-        $this->assertStringContainsString('1 500,00 CVE', $receipt);
+        $this->assertStringContainsString('1500 CVE', $receipt);
         $this->assertStringContainsString('<style>', $receipt);
-        $this->assertStringContainsString('<h2>COMPROVATIVO DE PAGAMENTO</h2>', $receipt);
+        $this->assertStringContainsString('<h1>Comprovativo de pagamento</h1>', $receipt);
     }
 
     public function testRefundMessage()

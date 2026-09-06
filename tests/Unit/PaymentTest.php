@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Erilshk\Sisp\Core\Payment as Vinti4Payment;
+use Erilshk\Sisp\Exceptions\Vinti4Exception;
 use PHPUnit\Framework\TestCase;
 
 class PaymentTest extends TestCase
@@ -25,7 +26,7 @@ class PaymentTest extends TestCase
         ];
 
         $result = $this->payment->preparePayment([
-            'amount' => 1500.50,
+            'amount' => 1500,
             'transactionCode' => '1',
             'billing' => $billing,
             'currency' => 'CVE',
@@ -80,7 +81,7 @@ class PaymentTest extends TestCase
 
     public function testPreparePaymentThrowsExceptionForMissingTransactionCode()
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(Vinti4Exception::class);
         $this->expectExceptionMessage("transactionCode é obrigatório.");
 
         $this->payment->preparePayment([
@@ -93,7 +94,7 @@ class PaymentTest extends TestCase
 
     public function testPreparePaymentThrowsExceptionForInvalidParams()
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(Vinti4Exception::class);
         $this->expectExceptionMessage("Currency para estorno deve ser '132' (CVE).");
 
         $this->payment->preparePayment([
@@ -106,8 +107,8 @@ class PaymentTest extends TestCase
 
     public function testPreparePaymentThrowsExceptionForMissingEntityCode()
     {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage("EntityCode é obrigatório para transactionCode 2 e 3.");
+        $this->expectException(Vinti4Exception::class);
+        $this->expectExceptionMessage("EntityCode é obrigatório e deve ser numérico.");
 
         $this->payment->preparePayment([
             'transactionCode' => '2', // Serviço

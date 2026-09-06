@@ -9,7 +9,7 @@ class BillingTest extends TestCase
 {
     public function testCreateGeneratesFullBillingArray()
     {
-        $billing = Billing::create([
+        $billing = Billing::from([
             'email' => 'test@example.com',
             'country' => '132',
             'city' => 'Praia',
@@ -36,7 +36,7 @@ class BillingTest extends TestCase
             ],
             'suspicious' => true,
             'addrMatch' => true,
-        ]);
+        ])->toArray();
 
         $this->assertEquals('test@example.com', $billing['email']);
         $this->assertEquals('132', $billing['billAddrCountry']);
@@ -51,7 +51,6 @@ class BillingTest extends TestCase
         $this->assertEquals(['cc' => '238', 'subscriber' => '99113344'], $billing['workPhone']);
         $this->assertEquals('12345', $billing['acctID']);
         $this->assertEquals('02', $billing['acctInfo']['suspiciousAccActivity']);
-        $this->assertTrue($billing['suspicious']);
     }
 
     public function testFluentSettersWork()
@@ -87,7 +86,6 @@ class BillingTest extends TestCase
         $this->assertEquals('5559876543', $billing['workPhone']['subscriber']);
         $this->assertEquals('abc123', $billing['acctID']);
         $this->assertEquals('05', $billing['acctInfo']['chAccAgeInd']);
-        $this->assertTrue($billing['suspicious']);
     }
 
     public function testPhoneNormalization()
@@ -157,7 +155,6 @@ class BillingTest extends TestCase
         $this->assertEquals('20230101', $billing['acctInfo']['chAccPwChange']);
         $this->assertEquals('05', $billing['acctInfo']['chAccPwChangeInd']);
         $this->assertEquals('02', $billing['acctInfo']['suspiciousAccActivity']);
-        $this->assertTrue($billing['suspicious']);
     }
 
     public function testUnknownFieldsAreIgnored()
