@@ -1,0 +1,79 @@
+site_name: Vinti4Net PHP SDK 2.2
+site_description: SDK PHP para integração com a Rede Vinti4 / SISP em Cabo Verde
+site_url: https://erilshackle.github.io/vinti4net-php/
+repo_url: https://github.com/erilshackle/vinti4net-php
+repo_name: erilshackle/vinti4net-php
+edit_uri: edit/main/mkdocs/
+docs_dir: mkdocs
+site_dir: site
+strict: true
+
+theme:
+  name: material
+  language: pt
+  logo: assets/logo.png
+  favicon: assets/icon.png
+  palette:
+    - scheme: default
+      primary: teal
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Mudar para tema escuro
+    - scheme: slate
+      primary: orange
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Mudar para tema claro
+  features:
+    - content.code.copy
+    - navigation.sections
+    - navigation.top
+    - navigation.instant
+    - toc.follow
+    - search.suggest
+    - search.highlight
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+
+nav:
+  - Início: index.md
+  - Primeiros passos:
+      - Instalação: installation.md
+      - Configuração: configuration.md
+      - Guia rápido: quickstart.md
+      - Integração completa: payment-integration-guide.md
+  - Pagamentos: payments.md
+  - Requisições: requests.md
+  - Billing 3DS: billing.md
+  - Reembolsos: refunds.md
+  - Respostas: responses.md
+  - Recibos:
+      - Recibo padrão e personalizado: receipt.md
+      - Recibo DCC: dcc.md
+  - Referência da API: api.md
+  - Guias técnicos:
+      - Referência e sessão: merchant-data.md
+      - Campos enviados: request-fields.md
+      - Campos recebidos: response-fields.md
+      - Fingerprint: fingerprint.md
+      - Segurança: security.md
+      - Erros e diagnóstico: troubleshooting.md
+  - Atualização 2.1 → 2.2: upgrade-2.2.md
+  - Internals: architecture.md
+  - Sobre: about.md
