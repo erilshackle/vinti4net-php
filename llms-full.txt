@@ -1,463 +1,181 @@
-# Vinti4Net — Referência completa para LLMs
+# Vinti4Net PHP SDK 2.2 — Referência completa
 
-> SDK PHP comunitário para integração com o Gateway de Pagamentos Rede Vinti4 / SISP, em Cabo Verde.
+Vinti4Net é um SDK PHP comunitário para integração com a Rede Vinti4 / SISP em Cabo Verde. O pacote Composer é `erilshk/vinti4net`, requer PHP 8.1+ e usa o namespace `Erilshk\Sisp`.
 
-Vinti4Net simplifica compras com autenticação 3DS, pagamentos de serviços, recargas, reembolsos, formulários POST auto-submit, interpretação das respostas do SISP e emissão de recibos.
+Este projeto não é oficial. A documentação e o contrato do comerciante fornecidos pela SISP prevalecem para credenciais, endpoints, entidades e requisitos operacionais.
 
-Este SDK não é oficial da SISP. A documentação e o contrato fornecidos pela SISP continuam sendo a autoridade para credenciais, endpoints, homologação, segurança e uso em produção.
-
-## Instalação e requisitos
-
-Requisitos documentados:
-
-- PHP 8.1 ou superior;
-- extensão `json`;
-- extensão `mbstring`.
-
-Instalação:
+## Instalação
 
 ```bash
-composer require erilshk/vinti4net
+composer require erilshk/vinti4net:^2.2
 ```
 
-Namespaces principais:
+## Cliente
 
 ```php
-use Erilshk\Sisp\Billing;
-use Erilshk\Sisp\Vinti4Net;
-use Erilshk\Sisp\Vinti4Response;
-```
-
-## Fluxo de uma transação
-
-1. O sistema cria uma instância de `Vinti4Net` com as credenciais POS.
-2. Prepara a operação desejada: compra, serviço, recarga ou reembolso.
-3. Define a referência e, opcionalmente, a sessão do comerciante.
-4. Gera um formulário HTML auto-submit com `createPaymentForm()`.
-5. O cliente conclui o fluxo no ambiente da SISP, incluindo autenticação 3DS quando aplicável.
-6. A SISP envia um POST para a URL de resposta.
-7. O sistema passa os dados recebidos para `processResponse()`.
-8. O SDK devolve um `Vinti4Response`, que deve ser usado para validar e persistir o resultado.
-
-O retorno do navegador, isoladamente, não deve ser tratado como confirmação de pagamento. Verifique o objeto processado e aplique as validações exigidas pela integração SISP.
-
-## Quick start: compra 3DS
-
-```php
-<?php
-
-use Erilshk\Sisp\Billing;
 use Erilshk\Sisp\Vinti4Net;
 
-$sdk = new Vinti4Net(
-    posID: '1234',
-    posAuthCode: 'SECRETO',
+$vinti4 = new Vinti4Net(
+    posID: $_ENV['VINTI4_POS_ID'],
+    posAuthCode: $_ENV['VINTI4_AUTH_CODE'],
+    endpoint: $_ENV['VINTI4_ENDPOINT'] ?? null,
 );
-
-$billing = Billing::make()
-    ->email('cliente@email.com')
-    ->country('132')
-    ->city('Praia')
-    ->address('Av. Cidade da Praia, 45')
-    ->postalCode('7600');
-
-echo $sdk
-    ->preparePurchase(1000, $billing, 'CVE')
-    ->setMerchant('REF12345', 'SESSION001')
-    ->createPaymentForm('https://meusite.com/callback', 'pt');
 ```
 
-Na URL de callback:
+`endpoint` é opcional. Quando omitido, a biblioteca usa o endpoint de produção. Não invente endpoints nem publique credenciais.
+
+## Referência e sessão
 
 ```php
-<?php
+$vinti4->setMerchant(
+    reference: 'PEDIDO00000001',
+    session: 'S20260906123000',
+);
+```
 
-$response = $sdk->processResponse($_POST);
+`reference` e `session` são obrigatórias na requisição final e aceitam no máximo 15 caracteres. Quando `session` for omitida, a v2 gera `S` seguido de `date('YmdHis')`.
 
-if ($response->isSuccess()) {
-    $transactionId = $response->getTransactionId();
-    $clearingPeriod = $response->getClearingPeriod();
+## Compra 3DS
 
-    // Registe o pagamento confirmado de forma idempotente.
-} elseif ($response->isCancelled()) {
-    // A transação foi cancelada pelo cliente.
-} elseif ($response->hasInvalidFingerprint()) {
-    // Não aceite a transação; investigue a falha de integridade.
-} else {
-    // Trate o erro retornado.
+```php
+use Erilshk\Sisp\Billing;
+
+$billing = Billing::from([
+    'email' => 'cliente@example.cv',
+    'country' => '132',
+    'city' => 'Praia',
+    'address' => 'Avenida Cidade de Lisboa',
+    'postalCode' => '7600',
+]);
+
+$vinti4
+    ->setMerchant('PEDIDO00000001')
+    ->preparePurchase(
+        amount: 1500,
+        billing: $billing,
+        currency: 'CVE',
+    );
+```
+
+Campos mínimos de billing: `email`, `billAddrCountry`, `billAddrCity`, `billAddrLine1` e `billAddrPostCode`. Os aliases amigáveis são `country`, `city`, `address` e `postalCode`.
+
+Billing também aceita `billAddrLine2`, `billAddrLine3`, `billAddrState`, endereço de entrega, `mobilePhone`, `workPhone`, `acctID`, `acctInfo` e `addrMatch`.
+
+## Pagamento de serviço
+
+```php
+$vinti4
+    ->setMerchant('SERVICO0000001')
+    ->prepareServicePayment(2500, 10001, '123456789');
+```
+
+## Recarga
+
+```php
+$vinti4
+    ->setMerchant('RECARGA0000001')
+    ->prepareRecharge(500, 10021, '9912345');
+```
+
+## Reembolso
+
+```php
+$vinti4
+    ->setMerchant('REFUND00000001')
+    ->prepareRefund(
+        amount: 1500,
+        transactionID: 'TXN78901',
+        clearingPeriod: '2411',
+    );
+```
+
+## Formulário
+
+```php
+echo $vinti4->createPaymentForm(
+    responseUrl: 'https://example.cv/pagamentos/callback',
+    lang: 'pt',
+);
+```
+
+O retorno é uma página HTML com formulário POST auto-submit. Idiomas aceitos: `pt`, `en` e `fr`.
+
+## Callback
+
+```php
+use Erilshk\Sisp\Exceptions\Vinti4Exception;
+
+try {
+    $response = $vinti4->processResponse($_POST);
+
+    if ($response->hasInvalidFingerprint()) {
+        http_response_code(400);
+        return;
+    }
+
+    if ($response->isSuccess()) {
+        $transactionId = $response->getTransactionId();
+        $reference = $response->getMerchantRef();
+        $amount = $response->getAmount();
+        $currency = $response->getCurrency();
+
+        // Compare referência e valor com o pedido guardado.
+        // Conclua a operação uma única vez.
+    } elseif ($response->isCancelled()) {
+        // Cancelada pelo utilizador.
+    } else {
+        // Recusada ou com erro.
+    }
+} catch (Vinti4Exception $exception) {
+    // Payload ou configuração inválidos.
 }
 ```
 
-## Classe Vinti4Net
+Estados: `SUCCESS`, `ERROR`, `CANCELLED` e `INVALID_FINGERPRINT`. Fingerprint inválido tem prioridade sobre cancelamento. `hasFailed()` é verdadeiro para erros e fingerprint inválido, mas não para cancelamento.
 
-`Erilshk\Sisp\Vinti4Net` é a facade principal do SDK. Ela prepara transações, gera o formulário enviado à SISP e transforma callbacks em `Vinti4Response`.
+Nunca confirme uma transação apenas porque o navegador voltou ao site. Valide fingerprint, referência, valor e idempotência. Não registre `$response->data` integralmente. `toArray()` e `toJson()` mascaram o PAN.
 
-Criação:
-
-```php
-$sdk = new Vinti4Net($posID, $posAuthCode, $endpoint);
-```
-
-O terceiro argumento, `endpoint`, é opcional na documentação de início rápido. Não invente um endpoint: utilize aquele disponibilizado para o ambiente do comerciante.
-
-### Métodos públicos principais
-
-| Método | Retorno | Finalidade |
-| --- | --- | --- |
-| `setRequestParams(array $params)` | `self` | Define parâmetros opcionais para a próxima transação. |
-| `setMerchant(string $reference, ?string $session = null)` | `self` | Define a referência e a sessão do comerciante. |
-| `preparePurchase(float|string $amount, array|Billing $billing, string $currency = 'CVE')` | `self` | Prepara uma compra com 3DS. |
-| `prepareServicePayment(float|string $amount, int $entity, string $number)` | `self` | Prepara um pagamento de serviço. |
-| `prepareRecharge(float|string $amount, int $entity, string $number)` | `self` | Prepara uma recarga. |
-| `prepareRefund(float|string $amount, string $transactionID, string $clearingPeriod)` | `self` | Prepara o reembolso de uma transação. |
-| `createPaymentForm(string $responseUrl, string $lang = 'pt')` | `string` | Gera o formulário HTML auto-submit. |
-| `processResponse(array $postData)` | `Vinti4Response` | Valida, interpreta e normaliza a resposta. |
-| `getRequest()` | `array` | Retorna a requisição preparada, útil para inspeção e debug seguro. |
-
-Alguns diagramas antigos da documentação mostram nomes como `preparePurchasePayment()` ou `prepareRefundPayment()`. Para código de integração, prefira a API pública documentada acima: `preparePurchase()`, `prepareServicePayment()`, `prepareRecharge()` e `prepareRefund()`.
-
-### Parâmetros aceites por setRequestParams
-
-Os parâmetros documentados incluem:
-
-| Parâmetro | Tipo | Uso |
-| --- | --- | --- |
-| `merchantRef` | `string` | Referência do comerciante, documentada com até 15 caracteres. |
-| `merchantSession` | `string` | Identificador da sessão do comerciante. |
-| `languageMessages` | `string` | Idioma das mensagens, por exemplo `pt`, `en` ou `fr`. |
-| `entityCode` | `int|string` | Código da entidade em serviço ou recarga. |
-| `referenceNumber` | `string` | Referência do serviço ou número da recarga. |
-| `timeStamp` | `string` | Sobrescreve o timestamp da requisição quando necessário. |
-| `billing` | `array|Billing` | Dados de faturação para compra 3DS. |
-| `currency` | `string|int` | Moeda ISO ou código numérico aceite pela integração. |
-| `acctID` | `string` | Identificador da conta do titular para 3DS2. |
-| `acctInfo` | `array` | Informações adicionais da conta do titular. |
-| `addrMatch` | `string` | `Y` ou `N`, conforme coincidência entre endereços. |
-| `billAddrCountry` | `string` | País do endereço de faturação. |
-| `billAddrCity` | `string` | Cidade do endereço de faturação. |
-| `billAddrLine1` | `string` | Endereço principal de faturação. |
-| `billAddrPostCode` | `string` | Código postal de faturação. |
-| `email` | `string` | Email do cliente. |
-| `clearingPeriod` | `string` | Período contabilístico, necessário para reembolso. |
-
-Os campos exigidos variam por tipo de transação. O SDK lança `InvalidArgumentException` ao receber parâmetros não suportados; não acrescente chaves arbitrárias.
-
-## Tipos de pagamento
-
-### Compra 3DS
+## Recibo padrão
 
 ```php
-$sdk->preparePurchase(
-    amount: 1500,
-    billing: Billing::create($dadosDeFaturacao),
-    currency: 'CVE',
-);
-```
-
-Os dados de billing fazem parte do `PurchaseRequest` e são obrigatórios conforme a documentação do projeto.
-
-### Pagamento de serviço
-
-```php
-$sdk
-    ->prepareServicePayment(
-        amount: 2000,
-        entity: 341,
-        number: '123456789',
-    )
-    ->setMerchant('REF456');
-```
-
-### Recarga
-
-```php
-$sdk
-    ->prepareRecharge(
-        amount: 500,
-        entity: 341,
-        number: '987654321',
-    )
-    ->setMerchant('REF789');
-```
-
-Não presuma se o valor é expresso em unidades inteiras ou decimais apenas a partir dos exemplos. Use a convenção exigida pelo SDK em sua versão e pela documentação do ambiente SISP contratado.
-
-## Billing para 3DS
-
-`Erilshk\Sisp\Billing` normaliza dados do titular e da conta para compras 3DS. Pode ser criado rapidamente a partir de um array ou montado por uma API fluente.
-
-### Billing::create
-
-```php
-$billing = Billing::create([
-    'email' => 'user@mail.com',
-    'country' => '132',
-    'city' => 'Praia',
-    'address' => 'Achada Santo António',
-    'postalCode' => '7600',
-    'mobilePhone' => '9911122',
+echo $response->renderReceipt(data: [
+    'companyName' => 'Minha Empresa',
+    'logo' => '/assets/logo.svg',
 ]);
 ```
 
-### Billing::make
+## Template personalizado
 
 ```php
-$billing = Billing::make()
-    ->email('user@mail.com')
-    ->country('132')
-    ->city('Praia')
-    ->address('Achada Santo António')
-    ->address2('Bloco B, Apt 10')
-    ->postalCode('7600')
-    ->state('01')
-    ->shipAddress('Rua de Entrega, 45')
-    ->shipCity('Praia')
-    ->shipPostalCode('7601')
-    ->mobilePhone('238', '9911122')
-    ->workPhone('238', '2612345')
-    ->acctID('123456')
-    ->acctInfo([
-        'chAccAgeInd' => '05',
-        'chAccChange' => '20230101',
-        'chAccDate' => '20220101',
-        'chAccPwChange' => '20230201',
-        'chAccPwChangeInd' => '05',
-        'suspiciousAccActivity' => '01',
-    ])
-    ->addrMatch(true)
-    ->suspicious(false)
-    ->toArray();
-```
-
-Métodos principais:
-
-| Método | Finalidade |
-| --- | --- |
-| `Billing::make()` | Cria uma instância vazia para preenchimento fluente. |
-| `Billing::create(array $data)` | Cria os dados finais a partir de um array. |
-| `fill(array $data)` | Preenche a instância com dados existentes. |
-| `toArray()` | Retorna o array pronto para a requisição. |
-
-### Campos relevantes
-
-| Campo | Obrigatoriedade documentada | Descrição |
-| --- | --- | --- |
-| `email` | Sim | Email do titular. |
-| `billAddrCountry` | Sim | Código numérico ISO 3166-1 do país. |
-| `billAddrCity` | Sim | Cidade de faturação. |
-| `billAddrLine1` | Sim | Endereço principal. |
-| `billAddrLine2`, `billAddrLine3` | Não | Linhas adicionais do endereço. |
-| `billAddrPostCode` | Sim | Código postal. |
-| `billAddrState` | Não | Código da região ou estado. |
-| `shipAddr*` | Não | Endereço de entrega. |
-| `mobilePhone` | Não | Telefone móvel, com código do país e assinante. |
-| `workPhone` | Não | Telefone profissional. |
-| `acctID` | Recomendado | ID da conta do utilizador. |
-| `acctInfo` | Recomendado | Informações históricas da conta para 3DS2. |
-| `suspicious` | Opcional | Marca atividade suspeita. |
-| `addrMatch` | Opcional | Informa se faturação e entrega coincidem. |
-
-A documentação original contém descrições divergentes sobre o formato de país em áreas diferentes. Os exemplos de Billing usam o código numérico `132` para Cabo Verde; valide sempre o formato esperado pela versão instalada e pela SISP.
-
-## Reembolsos
-
-Um reembolso referencia a transação original:
-
-```php
-$sdk
-    ->prepareRefund(
-        amount: 1000,
-        transactionID: 'TX119922',
-        clearingPeriod: '1125',
-    )
-    ->setMerchant('REFUND001')
-    ->createPaymentForm('https://meusite.com/callback');
-```
-
-Guarde no pagamento original:
-
-- o transaction ID retornado pela SISP em `merchantRespTid`;
-- o clearing period retornado em `merchantRespCP`.
-
-Esses valores identificam a transação original necessária ao reembolso. Preserve-os exatamente como recebidos; não tente reconstruí-los.
-
-## Classe Vinti4Response
-
-`Erilshk\Sisp\Vinti4Response` normaliza respostas de pagamentos e reembolsos.
-
-Status documentados:
-
-- `SUCCESS`: transação bem-sucedida;
-- `CANCELLED`: transação cancelada;
-- `INVALID_FINGERPRINT`: falha de validação da fingerprint;
-- `ERROR`: falha genérica ou específica da transação.
-
-Propriedades documentadas:
-
-| Propriedade | Tipo | Conteúdo |
-| --- | --- | --- |
-| `status` | `string` | Status normalizado. |
-| `message` | `string` | Mensagem amigável. |
-| `success` | `bool` | Indica sucesso. |
-| `data` | `array` | Dados brutos ou detalhados da SISP. |
-| `dcc` | `array` | Informações de Dynamic Currency Conversion. |
-| `debug` | `array` | Dados de diagnóstico, especialmente para fingerprint inválido. |
-| `detail` | `?string` | Detalhes adicionais de erro. |
-
-Métodos principais:
-
-| Método | Finalidade |
-| --- | --- |
-| `isSuccess()` | Informa se a transação foi concluída com sucesso. |
-| `isCancelled()` | Informa se foi cancelada pelo utilizador. |
-| `hasInvalidFingerprint()` | Informa falha de fingerprint. |
-| `getTransactionId()` | Obtém o ID da transação. |
-| `getClearingPeriod()` | Obtém o período contabilístico. |
-| `getMerchantRef()` | Obtém a referência do comerciante. |
-| `getAmount()` | Obtém o valor retornado. |
-| `getCurrency()` | Obtém a moeda retornada. |
-| `toArray()` | Exporta a resposta como array. |
-| `toJson()` | Exporta a resposta como JSON formatado. |
-| `generateReceiptHtml()` | Gera o recibo da transação. |
-
-Exemplo:
-
-```php
-$response = $sdk->processResponse($_POST);
-
-if ($response->isSuccess()) {
-    echo 'Transação aprovada: '
-        . $response->getAmount()
-        . ' '
-        . $response->getCurrency();
-} elseif ($response->isCancelled()) {
-    echo 'Transação cancelada pelo utilizador.';
-} elseif ($response->hasInvalidFingerprint()) {
-    echo 'Fingerprint inválido.';
-} else {
-    echo 'A transação não foi concluída.';
-}
-```
-
-Não exponha `debug`, payloads integrais, credenciais ou dados sensíveis do cartão ao utilizador final ou aos logs de produção.
-
-### DCC
-
-DCC é documentado para compras 3DS. A estrutura normalizada pode conter:
-
-```php
-[
-    'enabled' => true,
-    'amount' => 100.50,
-    'currency' => 'USD',
-    'markup' => 5,
-    'rate' => 1.2,
-    'error' => null,
-]
-```
-
-Não presuma que DCC está presente. Verifique `enabled` e trate erros ou campos ausentes.
-
-## Recibos HTML
-
-`Vinti4Response` usa o trait interno `ReceiptRenderer` para produzir comprovativos de compra, serviço, recarga, reembolso ou uma resposta genérica.
-
-```php
-$response = $sdk->processResponse($_POST);
-
-// Recibo com estilo incorporado.
-echo $response->generateReceiptHtml('Minha Empresa');
-
-// Recibo sem CSS, adequado a saída textual simples.
-echo $response->generateReceiptHtml('Minha Empresa', true);
-```
-
-Métodos documentados:
-
-| Método | Finalidade |
-| --- | --- |
-| `generateReceiptHtml(?string $companyName = null, bool $text = false)` | Seleciona automaticamente o recibo apropriado. |
-| `renderPurchaseReceipt(?string $companyName = null)` | Recibo de compra 3DS. |
-| `renderServiceReceipt(?string $companyName = null)` | Recibo de serviço. |
-| `renderRechargeReceipt(?string $companyName = null)` | Recibo de recarga. |
-| `renderRefundReceipt(?string $companyName = null)` | Recibo de reembolso. |
-| `renderGenericReceipt(?string $companyName = null)` | Recibo genérico. |
-
-Os recibos oferecem máscara de PAN, formatação de moeda e timestamp, suporte a DCC e apresentação diferenciada para sucesso, cancelamento, fingerprint inválido e outros erros.
-
-## Boas práticas de integração
-
-- Use uma referência própria e única em `setMerchant()` para correlacionar o pedido local com a resposta.
-- Persista a intenção de pagamento antes de redirecionar o cliente.
-- Processe callbacks de forma idempotente para evitar duplicação de pagamentos ou reembolsos.
-- Só marque uma operação como paga após `processResponse()` produzir uma resposta válida e `isSuccess()` retornar `true`.
-- Em caso de `INVALID_FINGERPRINT`, rejeite a confirmação e investigue; não faça fallback para os dados brutos do POST.
-- Guarde transaction ID e clearing period de operações que possam ser reembolsadas.
-- Use `Billing` para padronizar os campos 3DS2 e envie apenas dados realmente disponíveis e permitidos.
-- Use `getRequest()` apenas para diagnóstico e remova ou masque segredos e dados pessoais antes de registar logs.
-- Não aceite valores, referências ou estados apenas de campos controlados pelo navegador.
-- Utilize HTTPS nas URLs de retorno e proteja credenciais POS fora do código-fonte.
-- Confirme códigos de entidade, endpoint, formatos de moeda, limites e regras diretamente com a SISP.
-
-## Tratamento recomendado do callback
-
-```php
-<?php
-
-use Erilshk\Sisp\Vinti4Net;
-
-$sdk = new Vinti4Net(
-    posID: $_ENV['SISP_POS_ID'],
-    posAuthCode: $_ENV['SISP_POS_AUTH_CODE'],
+echo $response->renderReceipt(
+    template: __DIR__ . '/receipt.php',
+    data: ['supportEmail' => 'suporte@example.cv'],
 );
+```
 
-$response = $sdk->processResponse($_POST);
-$merchantRef = $response->getMerchantRef();
+Extensões aceitas: `.php`, `.html` e `.htm`. Templates PHP recebem `$receipt` e `$data`. Templates HTML utilizam placeholders escapados, como `{{ merchantReference }}`, `{{ transactionId }}`, `{{ amount }}` e `{{ dcc.amount }}`. Dados normalizados da transação não podem ser sobrescritos pelo array customizado.
 
-// Procure a intenção local pela merchantRef.
-// Garanta idempotência antes de alterar qualquer estado.
+## Recibo DCC
 
-if ($response->hasInvalidFingerprint()) {
-    http_response_code(400);
-    exit('Resposta inválida.');
-}
-
-if ($response->isSuccess()) {
-    // Confirme a operação uma única vez e guarde os identificadores SISP.
-} elseif ($response->isCancelled()) {
-    // Registe o cancelamento sem marcar como pago.
-} else {
-    // Registe a falha de forma segura.
+```php
+if (($response->dcc['enabled'] ?? false) === true) {
+    echo $response->renderDccReceipt();
 }
 ```
 
-Esse exemplo demonstra o fluxo, mas a persistência, transação de base de dados, logging, proteção contra repetição e resposta HTTP devem seguir a arquitetura da aplicação.
+O DCC normalizado contém `enabled`, `amount`, `currency`, `markup` e `rate`. O recibo apresenta os valores retornados pela SISP sem cálculo ou arredondamento. `markup` é um valor na moeda DCC, não uma percentagem. Dados ausentes geram `Vinti4Exception`.
 
-## Limites desta referência
+## Compatibilidade
 
-Esta referência consolida a documentação fornecida do projeto. Ela não define:
+Os métodos `preparePurchase()`, `prepareServicePayment()`, `prepareRecharge()`, `prepareRefund()`, `setMerchant()`, `setRequestParams()`, `createPaymentForm()` e `getRequest()` permanecem válidos na v2.2 e não são deprecated.
 
-- credenciais ou endpoints reais da SISP;
-- processo de adesão, certificação ou homologação;
-- códigos reais de entidades para cada comerciante;
-- política oficial de timeouts, retries ou webhooks;
-- formato definitivo de valores monetários além das assinaturas e exemplos documentados;
-- regras legais, fiscais ou de PCI DSS aplicáveis ao comerciante.
+`generateReceiptHtml()` e `generateReceiptText()` continuam disponíveis. Alguns aliases antigos de `Billing` estão deprecated somente porque possuem substitutos diretos na própria v2.2.
 
-Quando esses detalhes forem necessários, consulte a documentação oficial e o contrato do ambiente SISP utilizado.
+## Testes
 
-## Links da documentação
+```bash
+composer test
+composer test-coverage
+```
 
-- [Documentação inicial](/)
-- [Instalação](/installation/)
-- [Quick Start](/quickstart/)
-- [Pagamentos](/payments/)
-- [Requisições](/requests/)
-- [Billing 3DS](/billing/)
-- [Respostas](/responses/)
-- [Reembolsos](/refunds/)
-- [Recibos](/receipt/)
-- [API Reference](/api/)
-- [Arquitetura](/architecture/)
-- [Sobre](/about/)
-- [Código-fonte no GitHub](https://github.com/erilshackle/vinti4net-php)
+Veja também `README.md`, `UPGRADE-2.2.md`, `CHANGELOG.md` e `examples/`.

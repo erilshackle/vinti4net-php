@@ -1,207 +1,230 @@
 # Vinti4Net PHP SDK
 
-SDK PHP para integração com o sistema de pagamentos **Vinti4Net** ([SISP](https://www.sisp.cv/vinti4.aspx) Cabo Verde, Serviço MOP021).
+SDK PHP comunitário para integração com a **Rede Vinti4 / SISP**, em Cabo Verde (serviço MOP021).
 
-[![Packagist Version](https://img.shields.io/packagist/v/erilshk/vinti4net)](https://packagist.org/packages/erilshk/vinti4net) [![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://php.net) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) [![Build Status](https://img.shields.io/github/actions/workflow/status/erilshackle/vinti4net-php/ci.yml?branch=main&logo=github&label=CI)](https://github.com/erilshackle/vinti4net-php/actions) 
-[![cobertura](https://codecov.io/gh/erilshackle/vinti4net-php/graph/badge.svg?token=P93P8MGA67)](https://codecov.io/gh/erilshackle/vinti4net-php)
+[![Packagist Version](https://img.shields.io/packagist/v/erilshk/vinti4net)](https://packagist.org/packages/erilshk/vinti4net)
+[![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://php.net)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/erilshackle/vinti4net-php/ci.yml?branch=main&logo=github&label=CI)](https://github.com/erilshackle/vinti4net-php/actions)
+[![Codecov](https://codecov.io/gh/erilshackle/vinti4net-php/graph/badge.svg?token=P93P8MGA67)](https://codecov.io/gh/erilshackle/vinti4net-php)
 
+> Este projeto não é um SDK oficial da SISP. A documentação e o contrato fornecidos pela SISP são a autoridade para credenciais, entidades e requisitos de produção.
 
-
-## 📦 [Instalação](https://packagist.org/packages/erilshk/vinti4net)
+## Instalação
 
 ```bash
-composer require erilshk/vinti4net
+composer require erilshk/vinti4net:^2.2
 ```
 
-## 🚀 Começo Rápido
+Requer PHP 8.1 ou superior.
 
-### 1. Configuração Básica
-> Esta parte do código deve estar presente em ambos os arquivos de [processamento](#2-criar-pagamento) e [resposta](#4-processar-resposta-callback)
+## Pagamento mínimo
 
 ```php
 <?php
 
-require_once 'vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
+use Erilshk\Sisp\Billing;
+use Erilshk\Sisp\Exceptions\Vinti4Exception;
 use Erilshk\Sisp\Vinti4Net;
 
-// Configuração
 $vinti4 = new Vinti4Net(
-    posID: 'SEU_POS_ID',           // Fornecido pelo SISP
-    posAuthCode: 'SEU_AUTH_CODE',  // Fornecido pelo SISP
-    endpoint: null                 // Opcional: URL customizada para testes
-);
-```
-
-### 2. Criar Pagamento
-
-```php
-// Pagamento com 3DS (Compra)
-$vinti4->preparePurchase(
-    amount: 1500.00,
-    billing: [
-        'email' => 'cliente@email.com',
-        'billAddrCountry' => '132', // Código do país (132 = Cabo Verde)
-        'billAddrCity' => 'Praia',
-        'billAddrLine1' => 'Rua Exemplo, 123',
-        'billAddrPostCode' => '7600'
-    ],
-    currency: 'CVE' // opcional
+    posID: $_ENV['VINTI4_POS_ID'],
+    posAuthCode: $_ENV['VINTI4_AUTH_CODE'],
 );
 
-// Ou pagamento de serviço (Água, Luz, etc.)
-$vinti4->prepareServicePayment(
-    amount: 2500.00,
-    entity: 10001,        // Código da entidade (ex: ELECTRA)
-    number: '123456789'   // Referência do cliente
-);
+$billing = Billing::from([
+    'email' => 'cliente@example.cv',
+    'country' => '132',
+    'city' => 'Praia',
+    'address' => 'Avenida Cidade de Lisboa',
+    'postalCode' => '7600',
+]);
 
-// Ou recarga de telemóvel
-$vinti4->prepareRecharge(
-    amount: 500.00,
-    entity: 10021,        // Código da operadora (ex: CVMóvel)
-    number: '9912345'     // Número de telefone
-);
-```
+try {
+    $vinti4
+        ->setMerchant(reference: 'PEDIDO00000001')
+        ->preparePurchase(amount: 1500, billing: $billing);
 
-### 3. Gerar Formulário de Pagamento
-
-```php
-$htmlForm = $vinti4->createPaymentForm(
-    responseUrl: 'https://seusite.com/pagamento/callback',
-    lang: 'pt' // Opcional: languageMessages
-);
-
-echo $htmlForm; // Formulário auto-submissível
-```
-
-### 4. Processar Resposta (Callback)
-
-```php
-// No seu endpoint de callback (ex: /pagamento/callback)
-$response = $vinti4->processResponse($_POST);
-
-if ($response->isSuccess()) {
-    // Pagamento aprovado
-    $transactionId = $response->getTransactionId();
-    $amount = $response->getAmount();
-    
-    // Atualizar DB
-    // Liberar produto/serviço
-    
-} elseif ($response->isCancelled()) {
-    // Usuário cancelou
-    echo "Pagamento cancelado pelo usuário";
-    
-} elseif ($response->hasInvalidFingerprint()) {
-    // Erro de segurança
-    error_log("Fingerprint inválido: " . json_encode($response->debug));
-    
-} else {
-    // Erro no pagamento
-    echo "Erro: " . $response->message;
-    echo "Detalhe: " . $response->detail;
+    echo $vinti4->createPaymentForm(
+        responseUrl: 'https://example.cv/pagamentos/callback',
+        lang: 'pt',
+    );
+} catch (Vinti4Exception $exception) {
+    error_log($exception->getMessage());
+    http_response_code(400);
 }
 ```
 
-## 📋 Tipos de Transação
+O formulário é auto-submetido para a página da Rede Vinti4. `merchantRef` e `merchantSession` aceitam no máximo 15 caracteres.
 
-| Tipo | Método | Descrição |
-|------|--------|-----------|
-| 💳 Compra 3DS | `preparePurchase()` | Compras com autenticação 3D Secure |
-| 🧾 Serviço | `prepareServicePayment()` | Pagamento de entidades (água, luz, etc.) |
-| 📱 Recarga | `prepareRecharge()` | Recarga de telemóvel |
-| 💰 Reembolso | `prepareRefund()` | Estorno de transação |
+## Tipos de transação
 
-## 🧾 Gerar Recibo
+| Operação | Método |
+| --- | --- |
+| Compra 3DS | `preparePurchase()` |
+| Pagamento de serviço | `prepareServicePayment()` |
+| Recarga | `prepareRecharge()` |
+| Reembolso | `prepareRefund()` |
+
+### Pagamento de serviço
 
 ```php
-$response = $vinti4->processResponse($_POST);
-
-// Gerar recibo HTML
-$receiptHtml = $response->generateReceiptHtml(
-    companyName: 'Sua Empresa Lda',
-);
-
-echo $receiptHtml;
+$vinti4
+    ->setMerchant('SERVICO0000001')
+    ->prepareServicePayment(
+        amount: 2500,
+        entity: 10001,
+        number: '123456789',
+    );
 ```
 
-## 🔧 Configuração Avançada
-
-### Parâmetros Customizados
+### Recarga
 
 ```php
-$vinti4->setRequestParams([
-    'merchantRef' => 'REF_CUSTOM',
-    'merchantSession' => 'SESS_CUSTOM',
-    'languageMessages' => 'pt', // ou 'en'
-    'timeStamp' => '2024-01-01 12:00:00'
-]);
+$vinti4
+    ->setMerchant('RECARGA0000001')
+    ->prepareRecharge(
+        amount: 500,
+        entity: 10021,
+        number: '9912345',
+    );
 ```
 
 ### Reembolso
 
 ```php
-$vinti4->prepareRefund(
-    amount: 1500.00,
-    merchantRef: 'E_REFERENCE',
-    transactionID: 'TXN78901',
-    clearingPeriod: '2411'
+$vinti4
+    ->setMerchant('REFUND00000001')
+    ->prepareRefund(
+        amount: 1500,
+        transactionID: 'TXN78901',
+        clearingPeriod: '2411',
+    );
+
+echo $vinti4->createPaymentForm(
+    'https://example.cv/pagamentos/refund-callback'
 );
 ```
 
-## 🛡️ Tratamento de Erros
+## Processar o callback
+
+Configure um endpoint HTTPS público e use as mesmas credenciais POS do pedido:
 
 ```php
+<?php
+
+require_once __DIR__ . '/vendor/autoload.php';
+
+use Erilshk\Sisp\Exceptions\Vinti4Exception;
+use Erilshk\Sisp\Vinti4Net;
+
+$vinti4 = new Vinti4Net(
+    $_ENV['VINTI4_POS_ID'],
+    $_ENV['VINTI4_AUTH_CODE'],
+);
+
 try {
-    $vinti4->preparePurchase(1500, $billing);
-    $form = $vinti4->createPaymentForm('https://callback.com');
-    echo $form;
-    
-} catch (InvalidArgumentException $e) {
-    echo "Erro de validação: " . $e->getMessage();
-    
-} catch (Exception $e) {
-    echo "Erro geral: " . $e->getMessage();
+    $response = $vinti4->processResponse($_POST);
+
+    if ($response->hasInvalidFingerprint()) {
+        http_response_code(400);
+        exit('Resposta inválida.');
+    }
+
+    if ($response->isSuccess()) {
+        $transactionId = $response->getTransactionId();
+        $merchantRef = $response->getMerchantRef();
+        $amount = $response->getAmount();
+
+        // Confirme a referência e o valor esperados e torne a atualização idempotente.
+    } elseif ($response->isCancelled()) {
+        // O cliente cancelou a operação.
+    } else {
+        // A operação foi recusada ou falhou.
+    }
+
+    http_response_code(200);
+} catch (Vinti4Exception $exception) {
+    error_log($exception->getMessage());
+    http_response_code(400);
 }
 ```
 
-## 🧪 Testes
+Não confirme pagamentos apenas pelo redirecionamento do navegador. Valide sempre o fingerprint, a referência, o valor e se a transação ainda não foi processada.
 
-[![Maintenance](https://img.shields.io/maintenance/yes/2025.svg)]() [![Coverage Status](https://img.shields.io/codecov/c/github/erilshackle/vinti4net-php/main?logo=codecov)](https://app.codecov.io/gh/erilshackle/vinti4net-php/tree/main/src)
+## Recibos
+
+### Recibo padrão
+
+```php
+echo $response->renderReceipt(data: [
+    'companyName' => 'Minha Empresa, Lda.',
+    'logo' => '/assets/logo.svg',
+]);
+```
+
+### Template próprio
+
+```php
+echo $response->renderReceipt(
+    template: __DIR__ . '/templates/receipt.php',
+    data: ['supportEmail' => 'suporte@example.cv'],
+);
+```
+
+Templates `.php`, `.html` e `.htm` são aceitos. Templates PHP recebem `$receipt` e `$data`; templates HTML utilizam placeholders como `{{ merchantReference }}` e `{{ dcc.amount }}`.
+
+### Recibo DCC
+
+```php
+if (($response->dcc['enabled'] ?? false) === true) {
+    echo $response->renderDccReceipt();
+}
+```
+
+O recibo DCC exibe exatamente os valores validados enviados pela SISP. A biblioteca não recalcula `amount`, não arredonda `rate` e não acrescenta `%` a `markup`.
+
+Os métodos antigos continuam disponíveis na v2.2:
+
+```php
+$response->generateReceiptHtml('Minha Empresa');
+$response->generateReceiptText('Minha Empresa');
+```
+
+## Tratamento de erros
+
+Todas as falhas da biblioteca usam uma única exceção:
+
+```php
+use Erilshk\Sisp\Exceptions\Vinti4Exception;
+
+try {
+    // integração
+} catch (Vinti4Exception $exception) {
+    error_log($exception->getMessage());
+}
+```
+
+## Testes
 
 ```bash
-# Executar testes
 composer test
-
-# Testes com cobertura
 composer test-coverage
 ```
 
-[![codecov](https://codecov.io/gh/erilshackle/vinti4net-php/graphs/icicle.svg?token=P93P8MGA67)](https://app.codecov.io/gh/erilshackle/vinti4net-php/flags)
+## Atualização
 
-## 🔗 Links Úteis
+Consulte [UPGRADE-2.2.md](UPGRADE-2.2.md) antes de atualizar a partir da v2.1.
 
-- [Documentação](https://erilshackle.github.io/vinti4net-php/about/)
-- [Sisp](https://www.sisp.cv)
-- [Vinti4Net](https://vinti4net.cv)
-- [Exemplos completos](examples/)
+## Links
 
-## 📄 Licença
+- [Documentação](https://erilshackle.github.io/vinti4net-php/)
+- [Packagist](https://packagist.org/packages/erilshk/vinti4net)
+- [SISP](https://www.sisp.cv)
+- [Exemplos](examples/)
 
-MIT License - veja [LICENSE](LICENSE) para detalhes.
+## Licença
 
-## 🤝 Contribuições
-
-Contribuições são bem-vindas! Por favor, leia [CONTRIBUTING](CONTRIBUTING.md) antes de enviar *Pull Requests*.
-
----
-
-**Desenvolvido com ❤️ para Cabo Verde**
-
-[![GitHub followers](https://img.shields.io/github/followers/erilshackle?label=Follow&style=social)](https://github.com/erilshackle) [![Stars](https://img.shields.io/github/stars/erilshackle/vinti4net-php.svg)](https://github.com/erilshackle/vinti4net-php/stargazers) [![Contributors](https://img.shields.io/github/contributors/erilshackle/vinti4net-php.svg)](https://github.com/erilshackle/vinti4net-php/graphs/contributors)  [![Issues](https://img.shields.io/github/issues/erilshackle/vinti4net-php)](https://github.com/erilshackle/vinti4net-php/issues)
-
-
-
-
-  
+Distribuído sob a licença MIT. Consulte [LICENSE](LICENSE).

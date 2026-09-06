@@ -1,41 +1,27 @@
-# Vinti4Net
+# Vinti4Net PHP SDK 2.2
 
-> SDK PHP comunitário para integração com o Gateway de Pagamentos Rede Vinti4 / SISP, em Cabo Verde. Suporta compras 3DS, pagamentos de serviços, recargas, reembolsos, processamento de respostas e geração de recibos HTML.
+> SDK PHP comunitário para a Rede Vinti4 / SISP, Cabo Verde. Não é um SDK oficial da SISP.
 
-Vinti4Net não é um SDK oficial da SISP. Use a documentação e as credenciais fornecidas pela SISP como autoridade para requisitos operacionais, segurança e produção.
+## Referências
 
-## Começar
+- [README](README.md): instalação e fluxo principal.
+- [Guia de atualização](UPGRADE-2.2.md): diferenças entre 2.1 e 2.2.
+- [Changelog](CHANGELOG.md): alterações da versão.
+- [Referência completa](llms-full.txt): API, regras e exemplos.
+- [Exemplos](examples/): pagamento e callback.
 
-- [Instalação](/installation/): requisitos do sistema e instalação via Composer.
-- [Quick Start](/quickstart/): fluxo mínimo para criar o cliente, preparar uma compra, gerar o formulário e processar o callback.
-- [Pagamentos](/payments/): compras 3DS, pagamentos de serviços e recargas.
+## Instruções
 
-## Integração
-
-- [Requisições](/requests/): parâmetros aceites, dados do comerciante, billing e exemplos por tipo de transação.
-- [Billing 3DS](/billing/): construção e normalização dos dados do titular, endereço, contacto e conta.
-- [Respostas](/responses/): interpretação de sucesso, cancelamento, erro e fingerprint inválido.
-- [Reembolsos](/refunds/): preparação de reembolsos com transaction ID e clearing period.
-- [Recibos](/receipt/): geração de comprovativos HTML estilizados ou em texto simples.
-
-## Referência
-
-- [API Reference](/api/): classes `Vinti4Net`, `Billing` e `Vinti4Response`.
-- [Arquitetura](/architecture/): componentes internos e fluxo das transações.
-- [Sobre](/about/): escopo, autoria e aviso legal.
-- [Referência completa para LLMs](/llms-full.txt): documentação consolidada e exemplos essenciais em um único arquivo.
-
-## Instruções para LLMs
-
-- Use `Erilshk\Sisp\Vinti4Net` como facade principal.
-- Instale com `composer require erilshk/vinti4net`.
-- Prefira os métodos públicos `preparePurchase()`, `prepareServicePayment()`, `prepareRecharge()` e `prepareRefund()`.
-- Para compras 3DS, forneça os dados de faturação como `Billing` ou `array`.
-- Defina uma referência própria com `setMerchant()` e guarde os identificadores devolvidos pela SISP.
-- Gere o POST auto-submit com `createPaymentForm()` e processe o callback com `processResponse($_POST)`.
-- Confirme o resultado por `Vinti4Response::isSuccess()`; nunca considere apenas o redirecionamento do navegador como confirmação.
-- Não invente parâmetros da SISP nem credenciais, endpoints, códigos de entidade ou regras que não estejam na documentação do projeto ou no contrato do comerciante.
-
-## Código-fonte
-
-- [GitHub](https://github.com/erilshackle/vinti4net-php): repositório oficial do projeto comunitário.
+- Instale com `composer require erilshk/vinti4net:^2.2`.
+- Use o namespace `Erilshk\Sisp` e a facade `Vinti4Net`.
+- Configure credenciais por ambiente; nunca escreva POS ID ou auth code no código.
+- Defina referência e sessão com `setMerchant()`; ambas aceitam no máximo 15 caracteres.
+- Use `preparePurchase()`, `prepareServicePayment()`, `prepareRecharge()` ou `prepareRefund()`.
+- Gere o formulário auto-submit com `createPaymentForm(returnUrl, lang)`.
+- Processe callbacks com `processResponse($_POST)`.
+- Trate `hasInvalidFingerprint()` antes de confiar nos dados.
+- Confirme referência, valor e idempotência no banco da aplicação.
+- Capture `Erilshk\Sisp\Exceptions\Vinti4Exception`.
+- Use `renderReceipt()` para recibos normais e `renderDccReceipt()` para DCC.
+- Nunca recalcule ou arredonde valores DCC nem trate `dccMarkup` como percentagem.
+- Não registre o payload bruto do callback, pois ele pode conter PAN.
