@@ -2,7 +2,7 @@
 
 namespace Erilshk\Sisp\Core;
 
-use InvalidArgumentException;
+use Erilshk\Sisp\Exceptions\Vinti4Exception;
 
 /**
  * Classe responsável por operações de Pagamento com o SISP.
@@ -15,13 +15,12 @@ class Payment extends Sisp
      */
     protected function fingerprintRequest(array $data): string
     {
-        $amount = (float)($data['amount'] ?? 0);;
-        $amountLong = (int) bcmul($amount, '1000', 0);
+        $amountLong = $this->amountToLong($data['amount'] ?? null);
 
         $entity = !empty($data['entityCode']) ? (int)$data['entityCode'] : '';
         $reference = !empty($data['referenceNumber']) ? (int)$data['referenceNumber'] : '';
 
-        $encodedPOSAuthCode = base64_encode(hash('sha512', $this->posAuthCode, true));
+        $encodedPOSAuthCode = $this->encodedAuthCode();
 
         $toHash = $encodedPOSAuthCode .
             ($data['timeStamp'] ?? '') .
@@ -42,10 +41,11 @@ class Payment extends Sisp
      */
     protected function fingerprintResponse(array $data): string
     {
-        $amount = (float)($data["merchantRespPurchaseAmount"] ?? 0);
-        $amountLong = (int) bcmul($amount, '1000', 0);
+        $amountLong = $this->amountToLong(
+            $data['merchantRespPurchaseAmount'] ?? null
+        );
 
-        $encodedPOSAuthCode = base64_encode(hash('sha512', $this->posAuthCode, true));
+        $encodedPOSAuthCode = $this->encodedAuthCode();
 
         $toHash = $encodedPOSAuthCode .
             ($data["messageType"] ?? '') .
@@ -87,13 +87,13 @@ class Payment extends Sisp
      *  - **amount**
      *  - **urlMerchantResponse**
      * 
-     * @throws \InvalidArgumentException
+     * @throws Vinti4Exception
      * @return array{fields: array, postUrl: string}
      */
     public function preparePayment(array $params): array
     {
         if (empty($params['transactionCode'])) {
-            throw new InvalidArgumentException("transactionCode é obrigatório.");
+            throw new Vinti4Exception("transactionCode é obrigatório.");
         }
 
         $currencyCode = $this->currencyToCode($params['currency'] ?? self::CURRENCY_CVE);
@@ -102,7 +102,7 @@ class Payment extends Sisp
             'posID' => $this->posID,
             'merchantRef' => $params['merchantRef'] ?? 'R' . date('YmdHis'),
             'merchantSession' => $params['merchantSession'] ?? 'S' . date('YmdHis'),
-            'amount' => (int)(float)$params['amount'],
+            'amount' => $this->normalizeRequestAmount($params['amount']),
             'currency' => $currencyCode,
             'transactionCode' => $params['transactionCode'],
             'languageMessages' => $params['languageMessages'] ?? 'pt',
@@ -121,8 +121,8 @@ class Payment extends Sisp
             $request['purchaseRequest'] = $this->generatePurchaseRequest($params['billing']);
         }
 
-        if($error = $this->validateParams($request)){
-            throw new InvalidArgumentException($error);
+        if ($error = $this->validateParams($request)) {
+            throw new Vinti4Exception($error);
         }
 
         $request['fingerprint'] = $this->fingerprintRequest($request);

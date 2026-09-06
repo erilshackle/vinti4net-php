@@ -2,7 +2,7 @@
 
 namespace Erilshk\Sisp\Core;
 
-use InvalidArgumentException;
+use Erilshk\Sisp\Exceptions\Vinti4Exception;
 
 /**
  * Classe responsável por operações de Refund (estorno) com o SISP.
@@ -15,13 +15,12 @@ class Refund extends Sisp
      */
    protected function fingerprintRequest(array $data): string
     {
-        $amount = (float)($data['amount'] ?? 0);;
-        $amountLong = (int) bcmul($amount, '1000', 0);
+        $amountLong = $this->amountToLong($data['amount'] ?? null);
 
         $entity = !empty($data['entityCode']) ? (int)$data['entityCode'] : '';
         $reference = !empty($data['referenceNumber']) ? (int)$data['referenceNumber'] : '';
 
-        $encodedPOSAuthCode = base64_encode(hash('sha512', $this->posAuthCode, true));
+        $encodedPOSAuthCode = $this->encodedAuthCode();
 
         $toHash = $encodedPOSAuthCode .
             ($data['timeStamp'] ?? '') .
@@ -42,10 +41,11 @@ class Refund extends Sisp
      */
      protected function fingerprintResponse(array $data): string
     {
-        $amount = (float)($data["merchantRespPurchaseAmount"] ?? 0);
-        $amountLong = (int) bcmul($amount, '1000', 0);
+        $amountLong = $this->amountToLong(
+            $data['merchantRespPurchaseAmount'] ?? null
+        );
 
-        $encodedPOSAuthCode = base64_encode(hash('sha512', $this->posAuthCode, true));
+        $encodedPOSAuthCode = $this->encodedAuthCode();
 
         $toHash = $encodedPOSAuthCode .
             ($data["messageType"] ?? '') .
@@ -88,7 +88,7 @@ class Refund extends Sisp
      * - clearingPeriod
      * - transactionID
      *
-     * @throws InvalidArgumentException
+     * @throws Vinti4Exception
      * @return array{fields: array, postUrl: string}
      */
     public function preparePayment(array $params): array
@@ -96,25 +96,25 @@ class Refund extends Sisp
         // Validar campos obrigatórios
         foreach (['amount', 'urlMerchantResponse', 'clearingPeriod', 'transactionID'] as $field) {
             if (empty($params[$field])) {
-                throw new InvalidArgumentException("Campo obrigatório faltando: $field");
+                throw new Vinti4Exception("Campo obrigatório faltando: $field");
             }
         }
 
         // Validar amount
         if (!preg_match('/^\d+$/', (string)$params['amount'])) {
-            throw new InvalidArgumentException("Amount deve ser inteiro, sem casas decimais.");
+            throw new Vinti4Exception("Amount deve ser inteiro, sem casas decimais.");
         }
 
         // Validar URL
         if (!filter_var($params['urlMerchantResponse'], FILTER_VALIDATE_URL)) {
-            throw new InvalidArgumentException("urlMerchantResponse deve ser uma URL válida.");
+            throw new Vinti4Exception("urlMerchantResponse deve ser uma URL válida.");
         }
 
         $request = [
             'posID' => $this->posID,
-            'merchantRef' => $params['merchantRef'] ?? "R" . date('YmdHms'),
-            'merchantSession' => $params['merchantSession'] ?? "S" . date('YmdHms'),
-            'amount' => (int)$params['amount'],
+            'merchantRef' => $params['merchantRef'] ?? 'R' . date('YmdHis'),
+            'merchantSession' => $params['merchantSession'] ?? 'S' . date('YmdHis'),
+            'amount' => $this->normalizeRequestAmount($params['amount']),
             'currency' => self::CURRENCY_CVE,
             'is3DSec' => 1,
             'transactionCode' => self::TRANSACTION_TYPE_REFUND,
@@ -131,7 +131,7 @@ class Refund extends Sisp
 
         // Validar params usando método existente
         if ($error = $this->validateParams($request)) {
-            throw new InvalidArgumentException($error);
+            throw new Vinti4Exception($error);
         }
 
         // Gerar fingerprint

@@ -1,12 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Erilshk\Sisp;
 
 use Erilshk\Sisp\Core\Payment;
 use Erilshk\Sisp\Core\Refund;
 use Erilshk\Sisp\Core\Sisp;
-use InvalidArgumentException;
-use Exception;
+use Erilshk\Sisp\Exceptions\Vinti4Exception;
 
 /**
  * Main SDK facade for Vinti4Net Payments (SISP - Cabo Verde).
@@ -108,7 +109,8 @@ class Vinti4Net
      *
      * @return self
      *
-     * @throws InvalidArgumentException If a disallowed parameter is included.
+     * @throws Vinti4Exception If a disallowed parameter is included.
+     *
      */
     public function setRequestParams(array $params): self
     {
@@ -134,7 +136,7 @@ class Vinti4Net
 
         foreach ($params as $key => $value) {
             if (!in_array($key, $allowed, true)) {
-                throw new InvalidArgumentException("Parâmetro não permitido: {$key}");
+                throw new Vinti4Exception("Parâmetro não permitido: {$key}");
             }
             $this->request[$key] = $value;
         }
@@ -151,12 +153,13 @@ class Vinti4Net
      * @param string      $reference Non-empty merchant reference or transaction_id. up to 15 character maximun
      * @param mixed|null  $session   Optional session information (string). up to 15 character maximun
      * @return self                  Returns $this to allow method chaining.
+     *
      */
-    public function setMerchant(string $reference, ?string $session = null)
+    public function setMerchant(string $reference, ?string $session = null): self
     {
         return $this->setRequestParams([
             'merchantRef' => $reference,
-            'merchantSession' => $session ?? "S" . date('YmdHms'),
+            'merchantSession' => $session ?? 'S' . date('YmdHis'),
         ]);
     }
 
@@ -178,18 +181,19 @@ class Vinti4Net
      * @param string        $currency ISO currency (default: CVE).
      * 
      * @return static
+     *
      */
     public function preparePurchase(float|string $amount, array|Billing $billing, string $currency = 'CVE'): static
     {
         $this->prepared = true;
         $billing = (is_object($billing) && $billing instanceof Billing) ? $billing->toArray() : $billing;
 
-        $this->request = [
+        $this->prepareRequest([
             'transactionCode' => Sisp::TRANSACTION_TYPE_PURCHASE,
             'amount' => $amount,
             'billing' => $billing,
             'currency' => $currency
-        ];
+        ]);
 
         return $this;
     }
@@ -207,17 +211,18 @@ class Vinti4Net
      * @param string       $number Reference number.
      *
      * @return static
+     *
      */
     public function prepareServicePayment(float|string $amount, int $entity, string $number): static
     {
         $this->prepared = true;
 
-        $this->request = [
+        $this->prepareRequest([
             'transactionCode' => Sisp::TRANSACTION_TYPE_SERVICE,
             'amount' => $amount,
             'entityCode' => $entity,
             'referenceNumber' => $number,
-        ];
+        ]);
 
         return $this;
     }
@@ -235,17 +240,18 @@ class Vinti4Net
      * @param string       $number Target account/phone number.
      *
      * @return static
+     *
      */
     public function prepareRecharge(float|string $amount, int $entity, string $number): static
     {
         $this->prepared = true;
 
-        $this->request = [
+        $this->prepareRequest([
             'transactionCode' => Sisp::TRANSACTION_TYPE_RECHARGE,
             'amount' => $amount,
             'entityCode' => $entity,
             'referenceNumber' => $number,
-        ];
+        ]);
 
         return $this;
     }
@@ -259,11 +265,11 @@ class Vinti4Net
      * Prepares a **refund** request.
      *
      * @param float|string $amount          Refund amount.
-     * @param string       $merchantRef     Original merchant reference.
      * @param string       $transactionID   Original SISP transaction ID.
      * @param string       $clearingPeriod  Clearing period required by SISP.
      *
      * @return static
+     *
      */
     public function prepareRefund(
         float|string $amount,
@@ -272,12 +278,12 @@ class Vinti4Net
     ): static {
         $this->prepared = true;
 
-        $this->request = [
+        $this->prepareRequest([
             'transactionCode' => Sisp::TRANSACTION_TYPE_REFUND,
             'amount' => $amount,
             'transactionID' => $transactionID,
             'clearingPeriod' => $clearingPeriod,
-        ];
+        ]);
 
         return $this;
     }
@@ -296,12 +302,13 @@ class Vinti4Net
      *
      * @return string HTML form with auto-submit enabled.
      *
-     * @throws Exception If no payment has been prepared or data is invalid.
+     * @throws Vinti4Exception If no payment has been prepared or data is invalid.
+     *
      */
     public function createPaymentForm(string $responseUrl, string $lang = 'pt'): string
     {
         if (!$this->prepared) {
-            throw new Exception("Nenhum pagamento preparado.");
+            throw new Vinti4Exception("Nenhum pagamento preparado.");
         }
 
         $this->setRequestParams([
@@ -315,31 +322,38 @@ class Vinti4Net
         $tc = $params['transactionCode'] ?? null;
 
         if ($tc === Sisp::TRANSACTION_TYPE_REFUND) {
-            $this->request = $this->refund->preparePayment($params);
+            $prepared = $this->refund->preparePayment($params);
         } else {
-            $this->request = $this->payment->preparePayment($params);
+            $prepared = $this->payment->preparePayment($params);
         }
 
-        $fields = $this->request['fields'] ?? [];
-        $postUrl = $this->request['postUrl'] ?? '';
+        $fields = $prepared['fields'] ?? [];
+        $postUrl = $prepared['postUrl'] ?? '';
 
         if (empty($fields) || empty($postUrl)) {
-            throw new Exception("Dados de pagamento inválidos.");
+            throw new Vinti4Exception("Dados de pagamento inválidos.");
         }
 
         $html = '';
         foreach ($fields as $key => $value) {
             if (is_array($value)) continue;
-            $html .= "<input type='hidden' name='{$key}' value='" . htmlspecialchars((string)$value) . "'>\n";
+            $name = htmlspecialchars((string)$key, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $value = htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $html .= "<input type='hidden' name='{$name}' value='{$value}'>\n";
         }
 
-        $processing = $lang == 'pt' ? 'processando...' : 'processing...';
+        $processing = strtolower($lang) === 'pt'
+            ? 'Processando...'
+            : 'Processing...';
+
+        $action = htmlspecialchars($postUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $processing = htmlspecialchars($processing, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
         return "
     <html>
         <head><title>Pagamento Vinti4Net</title></head>
         <body onload='document.forms[0].submit()'>
-            <form method=\"post\" action=\"{$postUrl}\">
+            <form method=\"post\" action=\"{$action}\">
                 {$html}
             </form>
             <p>$processing>
@@ -363,9 +377,11 @@ class Vinti4Net
      */
     public function processResponse(array $postData): Vinti4Response
     {
-        $type = ($postData['transactionCode'] ?? '') === '4' ? 'refund' : 'payment';
+        $isRefund =
+            ($postData['transactionCode'] ?? '') === Sisp::TRANSACTION_TYPE_REFUND ||
+            ($postData['messageType'] ?? '') === '10';
 
-        $result = $type === 'refund'
+        $result = $isRefund
             ? $this->refund->processResponse($postData)
             : $this->payment->processResponse($postData);
 
@@ -376,19 +392,30 @@ class Vinti4Net
      * Returns the currently prepared request data (for debugging).
      *
      * @return array
+     *
      */
     public function getRequest(): array
     {
-        $request = $this->request;
-        $request['urlMerchantResponse'] = 'http://localhost:8000/examples/callback_example.php/';
-        $data = [];
-        if ($tc = $tcrequest['transactionCode'] ?? false) {
-            if ($tc  === Sisp::TRANSACTION_TYPE_REFUND) {
-                $data = $this->refund->preparePayment($request);
-            } else {
-                $data = $this->payment->preparePayment($request);
-            }
-        }
-        return array_merge($request, $data);
+        return $this->request;
+    }
+
+    /**
+     * Replace transaction-specific data while preserving merchant options.
+     *
+     * @param array<string, mixed> $transaction
+     */
+    private function prepareRequest(array $transaction): void
+    {
+        $persistent = array_intersect_key(
+            $this->request,
+            array_flip([
+                'merchantRef',
+                'merchantSession',
+                'languageMessages',
+                'timeStamp',
+            ]),
+        );
+
+        $this->request = array_merge($transaction, $persistent);
     }
 }

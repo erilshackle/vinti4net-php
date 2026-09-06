@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Erilshk\Sisp;
 
 use Erilshk\Sisp\Core\Sisp;
-use Erilshk\Sisp\Traits\ReceiptRenderer;
+use Erilshk\Sisp\Receipt\Receipt;
 
 /**
  * Smart wrapper class that represents and interprets a SISP response.
@@ -18,8 +20,10 @@ use Erilshk\Sisp\Traits\ReceiptRenderer;
  */
 class Vinti4Response
 {
-
-    use ReceiptRenderer;
+    public const SUCCESS = 'SUCCESS';
+    public const ERROR = 'ERROR';
+    public const CANCELLED = 'CANCELLED';
+    public const INVALID_FINGERPRINT = 'INVALID_FINGERPRINT';
 
     /**
      * Creates a structured SISP response object.
@@ -74,23 +78,20 @@ class Vinti4Response
      */
     private static function determineStatus(array $result, array $data): string
     {
-        // 1. Cancelamento pelo usuário
+        if (!($result['fingerprint_valid'] ?? false)) {
+            return self::INVALID_FINGERPRINT;
+        }
+
         if (($data['UserCancelled'] ?? '') === 'true') {
-            return 'CANCELLED';
+            return self::CANCELLED;
         }
 
-        // 2. Sucesso com fingerprint válido
-        if (($result['success'] ?? false) && ($result['fingerprint_valid'] ?? false)) {
-            return 'SUCCESS';
-        }
-
-        // 3. Fingerprint inválido
-        if (($result['success'] ?? false) && !($result['fingerprint_valid'] ?? false)) {
-            return 'INVALID_FINGERPRINT';
+        if ($result['success'] ?? false) {
+            return self::SUCCESS;
         }
 
         // 4. Erro
-        return 'ERROR';
+        return self::ERROR;
     }
 
     /**
@@ -98,15 +99,37 @@ class Vinti4Response
      */
     private static function determineMessage(array $result, array $data): string
     {
-        return match (self::determineStatus($result, $data)) {
-            'CANCELLED' => 'Utilizador cancelou a transação.',
-            'SUCCESS' => ($data['transactionCode'] ?? '') === Sisp::TRANSACTION_TYPE_REFUND
-                ? 'Reembolso processado com sucesso.'
-                : 'Transação válida.',
-            'INVALID_FINGERPRINT' => 'Fingerprint inválido (verificar segurança).',
-            'ERROR' => $data['merchantRespErrorDescription'] ?? 'Transação falhou.',
-            default => 'Erro desconhecido na transação.'
-        };
+        $status = self::determineStatus($result, $data);
+
+        if ($status === self::CANCELLED) {
+            return 'Utilizador cancelou a transação.';
+        }
+
+        if ($status === self::SUCCESS) {
+            return
+                ($data['transactionCode'] ?? '') === Sisp::TRANSACTION_TYPE_REFUND ||
+                ($data['messageType'] ?? '') === '10'
+                    ? 'Reembolso processado com sucesso.'
+                    : 'Transação válida.';
+        }
+
+        if ($status === self::INVALID_FINGERPRINT) {
+            return 'Fingerprint inválido (verificar segurança).';
+        }
+
+        foreach ([
+            'merchantRespErrorDescription',
+            'merchantRespErrorDetail',
+            'merchantRespAdditionalErrorMessage',
+        ] as $field) {
+            $message = trim((string) ($data[$field] ?? ''));
+
+            if ($message !== '') {
+                return $message;
+            }
+        }
+
+        return 'Transação falhou.';
     }
 
     /**
@@ -114,7 +137,7 @@ class Vinti4Response
      */
     private static function determineSuccess(array $result, array $data): bool
     {
-        return self::determineStatus($result, $data) === 'SUCCESS';
+        return self::determineStatus($result, $data) === self::SUCCESS;
     }
 
     /**
@@ -226,7 +249,7 @@ class Vinti4Response
             'status' => $this->status,
             'message' => $this->message,
             'success' => $this->success,
-            'data' => $this->data,
+            'data' => $this->safeData(),
             'dcc' => $this->dcc,
             'debug' => $this->debug,
             'detail' => $this->detail
@@ -238,7 +261,12 @@ class Vinti4Response
      */
     public function toJson(): string
     {
-        return json_encode($this->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        $json = json_encode(
+            $this->toArray(),
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE,
+        );
+
+        return $json === false ? '{}' : $json;
     }
 
     /**
@@ -254,7 +282,7 @@ class Vinti4Response
      */
     public function isCancelled(): bool
     {
-        return $this->status === 'CANCELLED';
+        return $this->status === self::CANCELLED;
     }
 
     /**
@@ -262,7 +290,12 @@ class Vinti4Response
      */
     public function hasInvalidFingerprint(): bool
     {
-        return $this->status === 'INVALID_FINGERPRINT';
+        return $this->status === self::INVALID_FINGERPRINT;
+    }
+
+    public function hasFailed(): bool
+    {
+        return !$this->isSuccess() && !$this->isCancelled();
     }
 
     /**
@@ -313,11 +346,78 @@ class Vinti4Response
     /**
      * Summary of GetAdditionalErrorMessage
      */
-    public function GetAdditionalErrorMessage(){
+    public function getAdditionalErrorMessage(): string
+    {
         return $this->data['merchantRespAdditionalErrorMessage'] ?? '';
     }
 
-    // public function receipt(?string $companyName = null){
-    //     return new Receipt($this, $companyName);
-    // }
+    /**
+     * Render the default receipt or a custom PHP/HTML template.
+     *
+     * @param string|null $template Absolute path to a .php, .html or .htm template.
+     * @param array<string, mixed> $data Custom template data.
+     */
+    public function renderReceipt(?string $template = null, array $data = []): string
+    {
+        return (new Receipt($this))->render($template, $data);
+    }
+
+    /**
+     * Render the official receipt for a DCC transaction.
+     *
+     * @param array<string, mixed> $data Custom template data.
+     */
+    public function renderDccReceipt(array $data = []): string
+    {
+        return (new Receipt($this))->renderDcc($data);
+    }
+
+    /**
+     * Generate the default HTML receipt using the legacy v2 API.
+     */
+    public function generateReceiptHtml(?string $companyName = null, bool $styled = true): string
+    {
+        return $this->renderReceipt(data: [
+            'companyName' => $companyName,
+            'styled' => $styled,
+        ]);
+    }
+
+    /**
+     * Generate a plain-text receipt using the legacy v2 API.
+     */
+    public function generateReceiptText(?string $companyName = null): string
+    {
+        return (new Receipt($this))->renderText([
+            'companyName' => $companyName,
+        ]);
+    }
+
+    /** @return array<string, mixed> */
+    private function safeData(): array
+    {
+        $data = $this->data;
+
+        if (isset($data['merchantRespPan'])) {
+            $data['merchantRespPan'] = self::maskPan(
+                (string) $data['merchantRespPan'],
+            );
+        }
+
+        return $data;
+    }
+
+    private static function maskPan(string $pan): string
+    {
+        $digits = preg_replace('/\D+/', '', $pan) ?? '';
+
+        if (strlen($digits) < 10) {
+            return str_repeat('*', strlen($digits));
+        }
+
+        return substr($digits, 0, 6)
+            . str_repeat('*', strlen($digits) - 10)
+            . substr($digits, -4);
+    }
+
 }
