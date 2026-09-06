@@ -104,7 +104,8 @@ class Vinti4Net
      *     billAddrLine1?: string,
      *     billAddrPostCode?: string,
      *     email?: string,
-     *     clearingPeriod?: string
+     *     clearingPeriod?: string,
+     *     ...
      * } $params
      *
      * @return self
@@ -151,7 +152,7 @@ class Vinti4Net
      * Sets the merchant identifier/reference used by this client
      *
      * @param string      $reference Non-empty merchant reference or transaction_id. up to 15 character maximun
-     * @param mixed|null  $session   Optional session information (string). up to 15 character maximun
+     * @param string|null $session   Optional session information (string). up to 15 character maximun
      * @return self                  Returns $this to allow method chaining.
      *
      */
@@ -186,7 +187,7 @@ class Vinti4Net
     public function preparePurchase(float|string $amount, array|Billing $billing, string $currency = 'CVE'): static
     {
         $this->prepared = true;
-        $billing = (is_object($billing) && $billing instanceof Billing) ? $billing->toArray() : $billing;
+        $billing = is_object($billing) ? $billing->toArray() : $billing;
 
         $this->prepareRequest([
             'transactionCode' => Sisp::TRANSACTION_TYPE_PURCHASE,
@@ -327,8 +328,8 @@ class Vinti4Net
             $prepared = $this->payment->preparePayment($params);
         }
 
-        $fields = $prepared['fields'] ?? [];
-        $postUrl = $prepared['postUrl'] ?? '';
+        $fields = $prepared['fields'];
+        $postUrl = $prepared['postUrl'];
 
         if (empty($fields) || empty($postUrl)) {
             throw new Vinti4Exception("Dados de pagamento inválidos.");

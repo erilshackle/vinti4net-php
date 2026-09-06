@@ -72,8 +72,8 @@ class Refund extends Sisp
      * @param array{
      *  amount: int|string, 
      *  amount: string, 
-     *  merchantRef: string, 
-     *  merchantSession: string, 
+     *  merchantRef?: string, 
+     *  merchantSession?: string, 
      *  transactionID: string, 
      *  clearingPeriod: string, 
      *  urlMerchantResponse: string, 

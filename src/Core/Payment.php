@@ -74,9 +74,10 @@ class Payment extends Sisp
      *  transactionCode: string, 
      *  urlMerchantResponse: string, 
      *  amount: string, 
-     *  currency: string, 
+     *  currency?: string, 
      *  merchantRef?: string, 
-     *  merchantSession?: string, 
+     *  merchantSession?: string,
+     *  billing?: array, 
      *  languageMessages?: string, 
      *  entityCode?: string, 
      *  referenceNumber?: string
@@ -111,7 +112,7 @@ class Payment extends Sisp
             'timeStamp' => date('Y-m-d H:i:s'),
             'fingerprintversion' => '1',
             'is3DSec' => '1',
-            'urlMerchantResponse' => $params['urlMerchantResponse'] ?? '',
+            'urlMerchantResponse' => $params['urlMerchantResponse'],
         ];
 
         // Adiciona billing se for transação de compra
