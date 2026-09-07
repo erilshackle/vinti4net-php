@@ -253,7 +253,7 @@
 
             <div class="field">
                 <label for="merchant_ref">Referência do pedido</label>
-                <input id="merchant_ref" name="merchant_ref" type="text" maxlength="15" value="PEDIDO00000001" required>
+                <input id="merchant_ref" name="merchant_ref" type="text" maxlength="15" value="REF000000000001" required>
             </div>
 
             <div class="field">

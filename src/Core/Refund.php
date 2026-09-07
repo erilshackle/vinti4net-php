@@ -89,7 +89,7 @@ class Refund extends Sisp
      * - transactionID
      *
      * @throws Vinti4Exception
-     * @return array{fields: array, postUrl: string}
+     * @return array{fields?: array, postUrl?: string}
      */
     public function preparePayment(array $params): array
     {

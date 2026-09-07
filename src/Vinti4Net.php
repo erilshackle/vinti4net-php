@@ -328,8 +328,8 @@ class Vinti4Net
             $prepared = $this->payment->preparePayment($params);
         }
 
-        $fields = $prepared['fields'];
-        $postUrl = $prepared['postUrl'];
+        $fields = $prepared['fields'] ?? [];
+        $postUrl = $prepared['postUrl'] ?? '';
 
         if (empty($fields) || empty($postUrl)) {
             throw new Vinti4Exception("Dados de pagamento inválidos.");

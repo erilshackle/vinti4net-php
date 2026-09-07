@@ -47,7 +47,7 @@
             "@analyse"
         ],
         "test": "phpunit --colors=always",
-        "analyse": "phpstan analyse"
+        "phpstan": "phpstan analyse"
     },
     "minimum-stability": "stable",
     "prefer-stable": true
