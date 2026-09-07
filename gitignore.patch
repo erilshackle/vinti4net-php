@@ -1,6 +1,0 @@
-# Remova estas entradas do .gitignore:
-# mkdocs.yml
-# /mkdocs/
-
-# O build local pode permanecer ignorado:
-/site/

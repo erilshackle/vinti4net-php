@@ -3,6 +3,8 @@
 /tests export-ignore
 /.github export-ignore
 /.cache export-ignore
+/mkdocs export-ignore
+/examples export-ignore
 
 # Excluir arquivos extras
 /.gitignore export-ignore
@@ -10,6 +12,10 @@
 /.editorconfig export-ignore
 /.phpunit.result.cache export-ignore
 /phpunit.xml export-ignore
+/phpstan.neon export-ignore
 /composer.lock export-ignore
 /CONTRIBUTING.md export-ignore
-/mkdocs export-ignore
+/llms-full.txt export-ignore
+/llms.txt export-ignore
+/mkdocs.yml export-ignore
+/README.md export-ignore
