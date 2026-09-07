@@ -1,10 +1,12 @@
 <?php # php -S localhost:8000 -t examples
 
+declare(strict_types=1);
+
 /**
- * Exemplo completo de pagamento com Vinti4Net
- * 
- * Este exemplo mostra como criar um pagamento e processar a resposta.
- * 
+ * Exemplo de criação de pagamento com Vinti4Net.
+ *
+ * Recebe os dados enviados pelo index.php, prepara a transação
+ * e redireciona o cliente para a página de pagamento.
  */
 
 require_once __DIR__ . '/../vendor/autoload.php';
@@ -12,36 +14,36 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use Erilshk\Sisp\Billing;
 use Erilshk\Sisp\Vinti4Net;
 
-// =============================================================================
-// 1. CONFIGURAÇÃO INICIAL
-// =============================================================================
-
 $posId = $_ENV['VINTI4_POS_ID'] ?? '';
 $authCode = $_ENV['VINTI4_AUTH_CODE'] ?? '';
 $endpoint = $_ENV['VINTI4_ENDPOINT'] ?? null;
-$callbackUrl = $_ENV['VINTI4_CALLBACK_URL'] ?? '';
+
+$callbackUrl = $_ENV['VINTI4_CALLBACK_URL']
+    ?? 'http://localhost:8000/callback_example.php';
+
+$amount = filter_input(INPUT_POST, 'amount', FILTER_VALIDATE_INT);
+$amount = $amount !== false && $amount !== null ? $amount : 150;
+
+$merchantRef = filter_input(INPUT_POST, 'merchant_ref');
+$merchantRef = is_string($merchantRef) && trim($merchantRef) !== ''
+    ? trim($merchantRef)
+    : 'PEDIDO00000001';
+
+$email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
+$email = is_string($email) ? $email : 'cliente@example.cv';
 
 try {
-
     $vinti4 = new Vinti4Net(
-        posID: $posId,          // Fornecido pelo SISP
-        posAuthCode: $authCode, // Fornecido pelo SISP
-        endpoint: $endpoint     // Use null para produção
+        posID: $posId,
+        posAuthCode: $authCode,
+        endpoint: $endpoint
     );
 
-
-
-    // =============================================================================
-    // 2. PREPARAR PAGAMENTO (ESCOLHA UM TIPO)
-    // =============================================================================
-
-
-
-    // PAGAMENTO COM 3DS (COMPRA)
+    // Compra 3DS
     $vinti4->preparePurchase(
-        amount: 150,
+        amount: $amount,
         billing: Billing::from([
-            'email' => 'cliente@example.cv',
+            'email' => $email,
             'country' => '132',
             'city' => 'Praia',
             'address' => 'Avenida Cidade de Lisboa',
@@ -51,47 +53,58 @@ try {
         currency: 'CVE'
     );
 
-    // PAGAMENTO DE SERVIÇO
+    // Pagamento de serviço
     // $vinti4->prepareServicePayment(
-    //     amount: 3500.00,
-    //     entity: 10001,           // ELECTRA
-    //     number: '123456789'      // Referência do cliente
+    //     amount: $amount,
+    //     entity: 10001,
+    //     number: '123456789'
     // );
 
-    // RECARGA DE TELEMÓVEL
+    // Recarga de telemóvel
     // $vinti4->prepareRecharge(
-    //     amount: 1000.00,
-    //     entity: 10021,           // CVMóvel
-    //     number: '9912345'        // Número de telefone
+    //     amount: $amount,
+    //     entity: 10021,
+    //     number: '9912345'
     // );
 
-    // ESTORNO
+    // Reembolso
     // $vinti4->prepareRefund(
-    //     amount:          2500,
-    //     transactionID:  '10021',     
+    //     amount: $amount,
+    //     transactionID: '10021',
     //     clearingPeriod: '2511'
     // );
 
-    // =========================================================================
-    // 3. GERAR FORMULÁRIO DE PAGAMENTO
-    // =========================================================================
+    $vinti4->setMerchant($merchantRef);
 
-    $callbackUrl = 'http://localhost:8000/callback_example.php';
+    echo $vinti4->createPaymentForm(
+        responseUrl: $callbackUrl,
+        lang: 'pt'
+    );
+} catch (InvalidArgumentException $exception) {
+    http_response_code(422);
 
-    $vinti4->setMerchant('PEDIDO00000001');
+    echo '<h2>Erro de validação</h2>';
+    echo '<p>' . htmlspecialchars(
+        $exception->getMessage(),
+        ENT_QUOTES,
+        'UTF-8'
+    ) . '</p>';
 
-    $paymentForm = $vinti4->createPaymentForm(responseUrl: $callbackUrl, lang: 'pt');
+    if (isset($vinti4)) {
+        echo '<pre>' . htmlspecialchars(
+            print_r($vinti4->getRequest(), true),
+            ENT_QUOTES,
+            'UTF-8'
+        ) . '</pre>';
+    }
+} catch (Exception $exception) {
+    http_response_code(500);
 
-    // =========================================================================
-    // 4. EXIBIR FORMULÁRIO (auto-submissão)
-    // =========================================================================
-
-    echo $paymentForm;
-} catch (InvalidArgumentException $e) {
-    echo "<h2>Erro de Validação</h2>";
-    echo "<p>{$e->getMessage()}</p>";
-    echo "<pre>" . print_r($vinti4->getRequest(), true) . "</pre>";
-} catch (Exception $e) {
-    echo "<h2>Erro no Sistema</h2>";
-    echo "<p>{$e->getMessage()}</p>";
+    echo '<h2>Erro ao iniciar o pagamento</h2>';
+    echo '<p>' . htmlspecialchars(
+        $exception->getMessage(),
+        ENT_QUOTES,
+        'UTF-8'
+    ) . '</p>';
 }
+echo '<p><a href="/">Voltar</a></p>';
