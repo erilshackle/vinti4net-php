@@ -5,6 +5,7 @@
 # Cache
 /cache/
 /.phpunit.result.cache
+/.phpstan-cache/
 
 # IDE
 /.vscode/
