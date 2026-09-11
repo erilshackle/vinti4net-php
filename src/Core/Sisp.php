@@ -95,28 +95,42 @@ abstract class Sisp
             );
         }
 
-        $messageType = (string) ($postData['messageType'] ?? '');
-        $successType = in_array(
-            $messageType,
-            self::SUCCESS_MESSAGE_TYPES,
-            true,
-        );
+        $messageType = trim((string) ($postData['messageType'] ?? ''));
+        $successType = in_array($messageType, self::SUCCESS_MESSAGE_TYPES, true);
+        $transactionSuccessful = $successType;
 
-        // The response fingerprint formula applies only to successful
-        // transaction message types. Error and cancellation payloads must
-        // never be promoted to success, but they do not use that formula.
+        if ($messageType === '8') {
+            $transactionSuccessful =
+                ($postData['merchantResp'] ?? '') === 'C';
+        }
+
+        // Error and cancellation responses do not use the successful
+        // transaction fingerprint formula.
         $fingerprintValid = true;
+        $calculatedFingerprint = null;
 
         if ($successType) {
-            $expected = $this->fingerprintResponse($postData);
-            $received = trim((string) ($postData['resultFingerPrint'] ?? ''));
-            $fingerprintValid = $received !== ''
-                && hash_equals($expected, $received);
+            $calculatedFingerprint = $this->fingerprintResponse(
+                $postData,
+            );
+
+            $receivedFingerprint = trim(
+                (string) ($postData['resultFingerPrint'] ?? '')
+            );
+
+            $fingerprintValid =
+                $receivedFingerprint !== ''
+                && hash_equals(
+                    $calculatedFingerprint,
+                    $receivedFingerprint,
+                );
         }
 
         return [
-            'success' => $successType && $fingerprintValid,
+            'success' => $transactionSuccessful
+                && $fingerprintValid,
             'fingerprint_valid' => $fingerprintValid,
+            'calculated_fingerprint' => $calculatedFingerprint,
             'message_type' => $messageType,
             'data' => $postData,
         ];

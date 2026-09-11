@@ -15,7 +15,7 @@ use Erilshk\Sisp\Receipt\Receipt;
  * - A human-friendly message
  * - Parsed data (including DCC information)
  * - Debug information when fingerprint validation fails
- * 
+ *
  * @package Erilshk\Vinti4Net
  */
 class Vinti4Response
@@ -78,19 +78,21 @@ class Vinti4Response
      */
     private static function determineStatus(array $result, array $data): string
     {
-        if (!($result['fingerprint_valid'] ?? false)) {
-            return self::INVALID_FINGERPRINT;
+        if (filter_var(
+            $data['UserCancelled'] ?? false,
+            FILTER_VALIDATE_BOOLEAN,
+        )) {
+            return self::CANCELLED;
         }
 
-        if (($data['UserCancelled'] ?? '') === 'true') {
-            return self::CANCELLED;
+        if (($result['fingerprint_valid'] ?? null) === false) {
+            return self::INVALID_FINGERPRINT;
         }
 
         if ($result['success'] ?? false) {
             return self::SUCCESS;
         }
 
-        // 4. Erro
         return self::ERROR;
     }
 
@@ -106,22 +108,23 @@ class Vinti4Response
         }
 
         if ($status === self::SUCCESS) {
-            return
-                ($data['transactionCode'] ?? '') === Sisp::TRANSACTION_TYPE_REFUND ||
+            return ($data['transactionCode'] ?? '') === Sisp::TRANSACTION_TYPE_REFUND ||
                 ($data['messageType'] ?? '') === '10'
-                    ? 'Reembolso processado com sucesso.'
-                    : 'Transação válida.';
+                ? 'Reembolso processado com sucesso.'
+                : 'Transação válida.';
         }
 
         if ($status === self::INVALID_FINGERPRINT) {
             return 'Fingerprint inválido (verificar segurança).';
         }
 
-        foreach ([
-            'merchantRespErrorDescription',
-            'merchantRespErrorDetail',
-            'merchantRespAdditionalErrorMessage',
-        ] as $field) {
+        foreach (
+            [
+                'merchantRespAdditionalErrorMessage',
+                'merchantRespErrorDetail',
+                'merchantRespErrorDescription',
+            ] as $field
+        ) {
             $message = trim((string) ($data[$field] ?? ''));
 
             if ($message !== '') {
@@ -156,14 +159,19 @@ class Vinti4Response
      */
     private static function extractDcc(array $data): array
     {
-        // Só aplica a compras (transactionCode = 1)
-        if (($data['transactionCode'] ?? '') !== Sisp::TRANSACTION_TYPE_PURCHASE || empty($data['merchantRespDCCData'])) {
+        $rawDcc = trim((string) ($data['merchantRespDCCData'] ?? ''));
+
+        if ($rawDcc === '') {
             return ['enabled' => false];
         }
 
-        $dcc = json_decode($data['merchantRespDCCData'], true);
-        if (json_last_error() !== JSON_ERROR_NONE || !is_array($dcc)) {
-            return ['enabled' => false, 'error' => 'DCC inválido ou mal formatado'];
+        $dcc = json_decode($rawDcc, true);
+
+        if (!is_array($dcc)) {
+            return [
+                'enabled' => false,
+                'error' => 'DCC inválido ou mal formatado.',
+            ];
         }
 
         return [
@@ -171,7 +179,7 @@ class Vinti4Response
             'amount' => $dcc['dccAmount'] ?? null,
             'currency' => $dcc['dccCurrency'] ?? null,
             'markup' => $dcc['dccMarkup'] ?? null,
-            'rate' => $dcc['dccRate'] ?? null
+            'rate' => $dcc['dccRate'] ?? null,
         ];
     }
 
@@ -180,13 +188,14 @@ class Vinti4Response
      */
     private static function extractDebug(array $result, array $data): array
     {
-        if (!($result['fingerprint_valid'] ?? false)) {
-            return [
-                'recebido' => $data['resultFingerPrint'] ?? '',
-                'calculado' => '...' // Não temos acesso ao fingerprint calculado aqui
-            ];
+        if (($result['fingerprint_valid'] ?? null) !== false) {
+            return [];
         }
-        return [];
+
+        return [
+            'received' => (string) ($data['resultFingerPrint'] ?? ''),
+            'calculated' => (string) ($result['calculated_fingerprint'] ?? ''),
+        ];
     }
 
     /**
@@ -295,7 +304,7 @@ class Vinti4Response
 
     public function hasFailed(): bool
     {
-        return !$this->isSuccess() && !$this->isCancelled();
+        return $this->status === self::ERROR;
     }
 
     /**
@@ -321,7 +330,20 @@ class Vinti4Response
      */
     public function getMerchantRef(): ?string
     {
-        return $this->data['merchantRespMerchantRef'] ?? null;
+        $merchantRef =
+            $this->data['merchantRespMerchantRef']
+            ?? $this->data['merchantRef']
+            ?? null;
+
+        if ($merchantRef === null) {
+            return null;
+        }
+
+        $merchantRef = trim((string) $merchantRef);
+
+        return $merchantRef !== ''
+            ? $merchantRef
+            : null;
     }
 
     /**
@@ -348,7 +370,7 @@ class Vinti4Response
      */
     public function getAdditionalErrorMessage(): string
     {
-        return $this->data['merchantRespAdditionalErrorMessage'] ?? '';
+        return (string) ($this->data['merchantRespAdditionalErrorMessage'] ?? '');
     }
 
     /**
@@ -393,7 +415,11 @@ class Vinti4Response
         ]);
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * Returns response data with sensitive card information masked.
+     *
+     * @return array<string, mixed>
+     */
     private function safeData(): array
     {
         $data = $this->data;
@@ -407,17 +433,38 @@ class Vinti4Response
         return $data;
     }
 
+    /**
+     * Masks a PAN while preserving values already masked by SISP.
+     */
     private static function maskPan(string $pan): string
     {
+        $pan = trim($pan);
+
+        if ($pan === '') {
+            return '';
+        }
+
+        if (str_contains($pan, '*')) {
+            return $pan;
+        }
+
         $digits = preg_replace('/\D+/', '', $pan) ?? '';
 
-        if (strlen($digits) < 10) {
+        if ($digits === '') {
+            return '';
+        }
+
+        if (strlen($digits) <= 4) {
             return str_repeat('*', strlen($digits));
+        }
+
+        if (strlen($digits) < 10) {
+            return str_repeat('*', strlen($digits) - 4)
+                . substr($digits, -4);
         }
 
         return substr($digits, 0, 6)
             . str_repeat('*', strlen($digits) - 10)
             . substr($digits, -4);
     }
-
 }
