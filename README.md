@@ -44,7 +44,7 @@ $billing = Billing::from([
 
 try {
     $vinti4
-        ->setMerchant(reference: 'PEDIDO00000001')
+        ->setMerchant(reference: 'PEDIDO000000001')
         ->preparePurchase(amount: 1500, billing: $billing);
 
     echo $vinti4->createPaymentForm(
@@ -72,7 +72,7 @@ O formulário é auto-submetido para a página da Rede Vinti4. `merchantRef` e `
 
 ```php
 $vinti4
-    ->setMerchant('SERVICO0000001')
+    ->setMerchant('SERVICO00000001')
     ->prepareServicePayment(
         amount: 2500,
         entity: 10001,
@@ -84,7 +84,7 @@ $vinti4
 
 ```php
 $vinti4
-    ->setMerchant('RECARGA0000001')
+    ->setMerchant('RECARGA00000001')
     ->prepareRecharge(
         amount: 500,
         entity: 10021,
@@ -96,7 +96,7 @@ $vinti4
 
 ```php
 $vinti4
-    ->setMerchant('REFUND00000001')
+    ->setMerchant('REFUND000000001')
     ->prepareRefund(
         amount: 1500,
         transactionID: 'TXN78901',
