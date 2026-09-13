@@ -19,7 +19,7 @@ class RefundTest extends TestCase
         $result = $this->refund->preparePayment([
             'amount' => 1500,
             'merchantRef' => 'REF000123456789',
-            'merchantSession' => 'SESS456',
+            'merchantSession' => 'S20260911102531',
             'transactionID' => 'TXN789',
             'clearingPeriod' => '2411',
             'urlMerchantResponse' => 'https://callback.example.com'
@@ -33,7 +33,7 @@ class RefundTest extends TestCase
         $this->assertEquals(1500, $fields['amount']);
         $this->assertEquals('4', $fields['transactionCode']);
         $this->assertEquals('REF000123456789', $fields['merchantRef']);
-        $this->assertEquals('SESS456', $fields['merchantSession']);
+        $this->assertEquals('S20260911102531', $fields['merchantSession']);
         $this->assertEquals('TXN789', $fields['transactionID']);
         $this->assertEquals('2411', $fields['clearingPeriod']);
         $this->assertArrayHasKey('fingerprint', $fields);

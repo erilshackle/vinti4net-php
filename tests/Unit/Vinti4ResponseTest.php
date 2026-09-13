@@ -195,7 +195,7 @@ class Vinti4ResponseTest extends TestCase
         ]);
 
         $this->assertFalse($response->dcc['enabled']);
-        $this->assertEquals('DCC inválido ou mal formatado', $response->dcc['error']);
+        $this->assertEquals('DCC inválido ou mal formatado.', $response->dcc['error']);
     }
 
     public function testGetClearingPeriodAndAdditionalErrorMessage()

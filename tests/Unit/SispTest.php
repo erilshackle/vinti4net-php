@@ -35,9 +35,9 @@ class ConcreteSisp extends Sisp
     }
     public function getBaseUrl(): string
     {
-        return $this->baseUrl;
+        return $this->endpoint('CardPayment');
     }
-    public function currencyToCode(string $currency): int
+    public function currencyToCode(string|int $currency): string
     {
         return parent::currencyToCode($currency);
     }
@@ -64,7 +64,7 @@ class SispTest extends TestCase
     {
         $this->assertEquals('TEST_POS_123', $this->sisp->getPosId());
         $this->assertEquals('TEST_AUTH_456', $this->sisp->getPosAuthCode());
-        $this->assertEquals(Sisp::DEFAULT_BASE_URL, $this->sisp->getBaseUrl());
+        $this->assertEquals(Sisp::DEFAULT_BASE_URL . '/CardPayment', $this->sisp->getBaseUrl());
     }
 
     public function testConstructorWithCustomEndpoint()
@@ -99,6 +99,7 @@ class SispTest extends TestCase
     {
         $postData = [
             'messageType' => '8',
+            'merchantResp' => 'C',
             'resultFingerPrint' => 'test_fingerprint_response',
             'merchantRespTimeStamp' => '2024-01-01 12:00:00'
         ];
@@ -124,6 +125,30 @@ class SispTest extends TestCase
         $this->assertFalse($result['success']);
         $this->assertFalse($result['fingerprint_valid']);
         $this->assertEquals('10', $result['message_type']);
+    }
+
+    public function testPurchaseWithoutConfirmationIsNotSuccessful()
+    {
+        $result = $this->sisp->processResponse([
+            'messageType' => '8',
+            'merchantResp' => '',
+            'resultFingerPrint' => 'test_fingerprint_response',
+        ]);
+
+        $this->assertFalse($result['success']);
+        $this->assertTrue($result['fingerprint_valid']);
+    }
+
+    public function testSuccessfulRefundDoesNotRequirePurchaseConfirmation()
+    {
+        $result = $this->sisp->processResponse([
+            'messageType' => '10',
+            'merchantResp' => '',
+            'resultFingerPrint' => 'test_fingerprint_response',
+        ]);
+
+        $this->assertTrue($result['success']);
+        $this->assertTrue($result['fingerprint_valid']);
     }
 
     public function testProcessResponseInvalidMessageType()
@@ -231,7 +256,7 @@ class SispTest extends TestCase
         $error = $method->invoke($this->sisp, $params);
 
         // Deve retornar o primeiro erro encontrado
-        $this->assertEquals("TransactionCode inválido. Valores permitidos: 1,2,3,4.", $error);
+        $this->assertEquals('TransactionCode não suportado. Valores válidos: 1,2,3,4.', $error);
     }
 
 

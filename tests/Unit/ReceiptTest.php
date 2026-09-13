@@ -20,7 +20,8 @@ final class ReceiptTest extends TestCase
         self::assertStringContainsString('Comprovativo de pagamento', $html);
         self::assertStringContainsString('Minha Empresa', $html);
         self::assertStringContainsString('PURCHASE-0001', $html);
-        self::assertStringContainsString('123456••••••3456', $html);
+        self::assertStringContainsString('•••• 3456', $html);
+        self::assertStringNotContainsString('1234567890123456', $html);
     }
 
     public function testLegacyHtmlMethodUsesTheNewReceiptClass(): void
@@ -81,7 +82,7 @@ final class ReceiptTest extends TestCase
                 'merchantRespPurchaseAmount' => '1000',
                 'merchantRespCurrency' => '132',
                 'merchantRespTimeStamp' => '2026-09-05 12:30:00',
-                'merchantRespPan' => '1234567890123456',
+                'merchantRespPan' => '************3456',
                 'merchantRespMessageID' => 'AUTH001',
             ],
             dcc: [

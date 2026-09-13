@@ -200,6 +200,6 @@ class Payment extends Vinti4Payment
     }
     public function getBaseUrl(): string
     {
-        return $this->baseUrl;
+        return $this->endpoint('CardPayment');
     }
 }

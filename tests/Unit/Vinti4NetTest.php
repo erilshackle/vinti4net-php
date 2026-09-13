@@ -25,8 +25,7 @@ class Vinti4NetTest extends TestCase
         $params = [
             'merchantRef' => 'CUSTOM_REF',
             'merchantSession' => 'CUSTOM_SESS',
-            'languageMessages' => 'en',
-            'email' => 'test@example.com'
+            'languageMessages' => 'en'
         ];
 
         $result = $this->vinti4net->setRequestParams($params);
