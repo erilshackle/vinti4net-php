@@ -12,8 +12,8 @@ use Erilshk\Sisp\Exceptions\Vinti4Exception;
  */
 abstract class Sisp
 {
-    public const DEFAULT_BASE_URL =
-    'https://mc.vinti4net.cv/BizMPIOnUsSisp/CardPayment';
+    public const DEFAULT_BASE_URL = 'https://mc.vinti4net.cv/BizMPIOnUsSisp';
+    public const DEFAULT_3DS_SERVER_URL = 'https://3dsteste.vinti4net.cv/3ds_middleware_php/public/3ds_init.php';
 
     public const TRANSACTION_TYPE_PURCHASE = '1';
     public const TRANSACTION_TYPE_SERVICE = '2';
@@ -25,7 +25,7 @@ abstract class Sisp
 
     protected string $posID;
     protected string $posAuthCode;
-    protected string $baseUrl;
+    protected ?string $endpoint;
 
     abstract protected function fingerprintRequest(array $data): string;
 
@@ -48,6 +48,7 @@ abstract class Sisp
     ) {
         $posID = trim($posID);
         $posAuthCode = trim($posAuthCode);
+        $endpoint = $endpoint !== null ? trim($endpoint) : null;
 
         if ($posID === '') {
             throw new Vinti4Exception(
@@ -55,24 +56,29 @@ abstract class Sisp
             );
         }
 
-        if (trim($posAuthCode) === '') {
+        if ($posAuthCode === '') {
             throw new Vinti4Exception(
                 'O código de autenticação não pode estar vazio.'
             );
         }
 
-        if (
-            $endpoint !== null &&
-            filter_var($endpoint, FILTER_VALIDATE_URL) === false
-        ) {
+        if ($endpoint !== null && filter_var($endpoint, FILTER_VALIDATE_URL) === false) {
             throw new Vinti4Exception(
-                'O endpoint da SISP deve ser uma URL válida.'
+                'A URL base da SISP deve ser válida.'
             );
         }
 
         $this->posID = $posID;
         $this->posAuthCode = $posAuthCode;
-        $this->baseUrl = $endpoint ?? self::DEFAULT_BASE_URL;
+        $this->endpoint = $endpoint;
+    }
+
+    /**
+     * Return a supplied endpoint or build the default operation URL.
+     */
+    protected function endpoint(string $path): string
+    {
+        return $this->endpoint ?? rtrim(self::DEFAULT_BASE_URL, '/') . '/' . ltrim($path, '/');
     }
 
     /**
@@ -83,6 +89,7 @@ abstract class Sisp
      * @return array{
      *     success: bool,
      *     fingerprint_valid: bool,
+     *     calculated_fingerprint: string|null,
      *     message_type: string,
      *     data: array<string, mixed>
      * }
@@ -99,6 +106,7 @@ abstract class Sisp
         $successType = in_array($messageType, self::SUCCESS_MESSAGE_TYPES, true);
         $transactionSuccessful = $successType;
 
+        // A documentação exige esta combinação para compras.
         if ($messageType === '8') {
             $transactionSuccessful =
                 ($postData['merchantResp'] ?? '') === 'C';
@@ -139,19 +147,19 @@ abstract class Sisp
     /**
      * Convert an ISO currency name or numeric code to the SISP code.
      */
-    protected function currencyToCode(string $currency): int
+    protected function currencyToCode(string|int $currency,): string
     {
-        $currency = strtoupper(trim($currency));
+        $currency = strtoupper(trim((string) $currency));
 
         return match ($currency) {
-            'CVE' => 132,
-            'USD' => 840,
-            'EUR' => 978,
-            'BRL' => 986,
-            'GBP' => 826,
-            'JPY' => 392,
+            'CVE' => '132',
+            'USD' => '840',
+            'EUR' => '978',
+            'BRL' => '986',
+            'GBP' => '826',
+            'JPY' => '392',
             default => preg_match('/^\d{3}$/', $currency)
-                ? (int) $currency
+                ? $currency
                 : throw new Vinti4Exception(
                     "Moeda inválida: {$currency}."
                 ),
@@ -295,16 +303,16 @@ abstract class Sisp
         $transactionCode = (string) ($params['transactionCode'] ?? '');
 
         if (!in_array($transactionCode, ['1', '2', '3', '4'], true)) {
-            return 'TransactionCode inválido. Valores permitidos: 1,2,3,4.';
+            return 'TransactionCode não suportado. Valores válidos: 1,2,3,4.';
         }
 
         $merchantRef = trim((string) ($params['merchantRef'] ?? ''));
-        if ($merchantRef === '' || strlen($merchantRef) != 15) {
-            return 'MerchantRef é obrigatório e deve ter 15 caracteres.';
+        if ($merchantRef === '' || strlen($merchantRef) > 15) {
+            return 'MerchantRef é obrigatório e deve ter até  15 caracteres.';
         }
 
         $merchantSession = trim((string) ($params['merchantSession'] ?? ''));
-        if ($merchantSession === '' || strlen($merchantSession) > 15) {
+        if ($merchantSession === '' || strlen($merchantSession) != 15) {
             return 'MerchantSession é obrigatório e deve ter 15 caracteres.';
         }
 
@@ -348,7 +356,7 @@ abstract class Sisp
                 return 'ClearingPeriod deve ter até 4 dígitos numéricos.';
             }
 
-            if (!preg_match('/^[A-Za-z0-9_]{1,8}$/', (string) ($params['transactionID'] ?? ''))) {
+            if (!preg_match('/^[A-Za-z0-9]{1,8}$/', (string) ($params['transactionID'] ?? ''))) {
                 return 'TransactionID deve ter até 8 caracteres alfanuméricos.';
             }
         }

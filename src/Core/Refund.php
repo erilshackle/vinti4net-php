@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Erilshk\Sisp\Core;
 
 use Erilshk\Sisp\Exceptions\Vinti4Exception;
@@ -9,11 +11,17 @@ use Erilshk\Sisp\Exceptions\Vinti4Exception;
  */
 class Refund extends Sisp
 {
+    private const ENDPOINTS = [
+        'refund' => '/CardPayment',
+        'history' => '/RequestRefundHistory',
+    ];
+
+
     /**
      * Gera o fingerprint da requisição de refund.
      * Segue a lógica SISP: apenas campos obrigatórios do estorno.
      */
-   protected function fingerprintRequest(array $data): string
+    protected function fingerprintRequest(array $data): string
     {
         $amountLong = $this->amountToLong($data['amount'] ?? null);
 
@@ -39,7 +47,7 @@ class Refund extends Sisp
     /**
      * Gera o fingerprint esperado na resposta de refund.
      */
-     protected function fingerprintResponse(array $data): string
+    protected function fingerprintResponse(array $data): string
     {
         $amountLong = $this->amountToLong(
             $data['merchantRespPurchaseAmount'] ?? null
@@ -73,6 +81,7 @@ class Refund extends Sisp
      *  amount: int|string, 
      *  amount: string, 
      *  merchantRef?: string, 
+     *  timeStamp?: string, 
      *  merchantSession?: string, 
      *  transactionID: string, 
      *  clearingPeriod: string, 
@@ -120,7 +129,7 @@ class Refund extends Sisp
             'transactionCode' => self::TRANSACTION_TYPE_REFUND,
             'urlMerchantResponse' => $params['urlMerchantResponse'],
             'languageMessages' => $params['languageMessages'] ?? 'pt',
-            'timeStamp' => date('Y-m-d H:i:s'),
+            'timeStamp' => $params['timeStamp'] ?? date('Y-m-d H:i:s'),
             'fingerprintversion' => '1',
             'entityCode' => '',
             'referenceNumber' => '',
@@ -137,10 +146,13 @@ class Refund extends Sisp
         // Gerar fingerprint
         $request['fingerprint'] = $this->fingerprintRequest($request);
 
-        $postUrl = $this->baseUrl . '?' . http_build_query([
+
+        $postUrl = $this->endpoint(
+            self::ENDPOINTS['refund']
+        ) . '?' . http_build_query([
             'FingerPrint' => $request['fingerprint'],
             'TimeStamp' => $request['timeStamp'],
-            'FingerPrintVersion' => $request['fingerprintversion']
+            'FingerPrintVersion' => $request['fingerprintversion'],
         ]);
 
         return [

@@ -91,20 +91,7 @@ class Vinti4Net
      *     merchantRef?: string,
      *     merchantSession?: string,
      *     languageMessages?: string,
-     *     entityCode?: int|string,
-     *     referenceNumber?: string,
      *     timeStamp?: string,
-     *     billing?: array,
-     *     currency?: string|int,
-     *     acctID?: string,
-     *     acctInfo?: array,
-     *     addrMatch?: string,
-     *     billAddrCountry?: string,
-     *     billAddrCity?: string,
-     *     billAddrLine1?: string,
-     *     billAddrPostCode?: string,
-     *     email?: string,
-     *     clearingPeriod?: string,
      *     ...
      * } $params
      *
@@ -119,20 +106,7 @@ class Vinti4Net
             'merchantRef',
             'merchantSession',
             'languageMessages',
-            'entityCode',
-            'referenceNumber',
             'timeStamp',
-            'billing',
-            'currency',
-            'acctID',
-            'acctInfo',
-            'addrMatch',
-            'billAddrCountry',
-            'billAddrCity',
-            'billAddrLine1',
-            'billAddrPostCode',
-            'email',
-            'clearingPeriod'
         ];
 
         foreach ($params as $key => $value) {
@@ -145,14 +119,22 @@ class Vinti4Net
         return $this;
     }
 
+    /**
+     * Generate a 15-character merchant reference.
+     */
+    public static function generateMerchantRef(): string
+    {
+        return 'R' . date('YmdHis');
+    }
+
 
     /**
      * Set the merchant reference and session. (15 chars max)
      *
      * Sets the merchant identifier/reference used by this client
      *
-     * @param string      $reference Non-empty merchant reference or transaction_id. up to 15 character maximun
-     * @param string|null $session   Optional session information (string). up to 15 character maximun
+     * @param string      $reference Non-empty merchant reference or transaction_id. exactly 15 characters
+     * @param string|null $session   Optional session information (string). exactly 15 characters
      * @return self                  Returns $this to allow method chaining.
      *
      */
@@ -184,17 +166,24 @@ class Vinti4Net
      * @return static
      *
      */
-    public function preparePurchase(float|string $amount, array|Billing $billing, string $currency = 'CVE'): static
+    public function preparePurchase(float|string $amount, array|Billing|null $billing, string $currency = 'CVE'): static
     {
         $this->prepared = true;
-        $billing = is_object($billing) ? $billing->toArray() : $billing;
 
-        $this->prepareRequest([
-            'transactionCode' => Sisp::TRANSACTION_TYPE_PURCHASE,
+        $request = [
+            'transactionCode' =>
+            Sisp::TRANSACTION_TYPE_PURCHASE,
             'amount' => $amount,
-            'billing' => $billing,
-            'currency' => $currency
-        ]);
+            'currency' => $currency,
+        ];
+
+        if ($billing !== null) {
+            $request['billing'] = $billing instanceof Billing
+                ? $billing->toArray()
+                : $billing;
+        }
+
+        $this->prepareRequest($request);
 
         return $this;
     }
@@ -299,7 +288,7 @@ class Vinti4Net
      * request to the Vinti4Net gateway.
      *
      * @param string $responseUrl URL where SISP will POST the transaction result.
-     * @param string $lang language Messages (default: pt).
+     * @param string|'pt'|'en'|'fr' $lang language Messages (default: pt).
      *
      * @return string HTML form with auto-submit enabled.
      *
@@ -357,7 +346,7 @@ class Vinti4Net
             <form method=\"post\" action=\"{$action}\">
                 {$html}
             </form>
-            <p>$processing>
+            <p>{$processing}</p>
         </body>
     </html>";
     }
@@ -368,25 +357,44 @@ class Vinti4Net
     // ------------------------------------------------------------------
 
     /**
-     * Processes the POST response sent by SISP after a payment or refund.
+     * Process a generic SISP callback.
      *
-     * Internally selects either Payment or Refund processor.
-     *
+     * Successful refund responses are identified by messageType 10.
+     * Error responses cannot identify their originating operation.
+     * 
      * @param array $postData Raw POST data received from SISP.
      *
      * @return Vinti4Response Standardized response object.
      */
     public function processResponse(array $postData): Vinti4Response
     {
-        $isRefund =
-            ($postData['transactionCode'] ?? '') === Sisp::TRANSACTION_TYPE_REFUND ||
-            ($postData['messageType'] ?? '') === '10';
+        return ($postData['messageType'] ?? '') === '10'
+            ? $this->processRefundResponse($postData)
+            : $this->processPaymentResponse($postData);
+    }
 
-        $result = $isRefund
-            ? $this->refund->processResponse($postData)
-            : $this->payment->processResponse($postData);
+    /**
+     * Process a payment, service payment or recharge callback.
+     */
+    private function processPaymentResponse(
+        array $postData,
+    ): Vinti4Response {
+        return Vinti4Response::fromProcessorResult(
+            $this->payment->processResponse($postData),
+            operation: 'payment',
+        );
+    }
 
-        return Vinti4Response::fromProcessorResult($result);
+    /**
+     * Process a refund callback.
+     */
+    private function processRefundResponse(
+        array $postData,
+    ): Vinti4Response {
+        return Vinti4Response::fromProcessorResult(
+            $this->refund->processResponse($postData),
+            operation: 'refund',
+        );
     }
 
     /**

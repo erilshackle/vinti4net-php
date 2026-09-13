@@ -11,9 +11,7 @@ use Erilshk\Sisp\Vinti4Response;
 final class Receipt
 {
     /** Create a receipt renderer for a processed response. */
-    public function __construct(private readonly Vinti4Response $response)
-    {
-    }
+    public function __construct(private readonly Vinti4Response $response) {}
 
     /**
      * Render the default receipt or a custom PHP/HTML template.
@@ -50,6 +48,47 @@ final class Receipt
         return $this->renderTemplate(
             __DIR__ . '/templates/default-dcc-receipt.php',
             $data,
+        );
+    }
+
+    /**
+     * Render a successful refund receipt.
+     *
+     * @param int|string $amount Original transaction amount.
+     * @param string|null $originalTransactionId Original SISP transaction ID.
+     * @param array<string, mixed> $data Custom template data.
+     *
+     * @throws Vinti4Exception
+     */
+    public function renderRefund(
+        int|string $amount,
+        ?string $originalTransactionId = null,
+        array $data = [],
+    ): string {
+        if (
+            !$this->response->isSuccess()
+            || ($this->response->data['messageType'] ?? '') !== '10'
+        ) {
+            throw new Vinti4Exception(
+                'O recibo de estorno exige uma resposta de estorno bem-sucedida.'
+            );
+        }
+
+        $amount = trim((string) $amount);
+
+        if (!preg_match('/^[1-9]\d{0,12}$/', $amount)) {
+            throw new Vinti4Exception(
+                'O valor do estorno deve ser um inteiro positivo.'
+            );
+        }
+
+        return $this->renderTemplate(
+            __DIR__ . '/templates/default-refund-receipt.php',
+            array_replace($data, [
+                'refundAmount' => $amount,
+                'originalTransactionId' =>
+                $originalTransactionId,
+            ]),
         );
     }
 
@@ -205,20 +244,18 @@ final class Receipt
         return $currency === '132' || $currency === '' ? 'CVE' : $currency;
     }
 
-    /** Mask a PAN while preserving the first six and last four digits. */
+    /** Return a safely masked PAN for receipt display. */
     private function maskPan(string $pan): string
     {
-        $digits = preg_replace('/\D+/', '', $pan) ?? '';
-        if ($digits === '') {
+        $pan = trim($pan);
+
+        if ($pan === '' || $pan === '0') {
             return '';
         }
-        if (strlen($digits) < 10) {
-            return str_repeat('•', strlen($digits));
-        }
 
-        return substr($digits, 0, 6)
-            . str_repeat('•', strlen($digits) - 10)
-            . substr($digits, -4);
+        $digits = preg_replace('/\D+/', '', $pan) ?? '';
+
+        return $digits === '' ? '' : '•••• ' . substr($digits, -4);
     }
 
     /** Escape a template value for HTML. */

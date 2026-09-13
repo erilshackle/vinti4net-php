@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Erilshk\Sisp\Core;
 
 use Erilshk\Sisp\Exceptions\Vinti4Exception;
@@ -10,6 +12,9 @@ use Erilshk\Sisp\Exceptions\Vinti4Exception;
  */
 class Payment extends Sisp
 {
+    private const ENDPOINT_PATH = '/CardPayment';
+
+
     /**
      * Gera fingerprint para requisição de pagamento.
      */
@@ -72,8 +77,9 @@ class Payment extends Sisp
      * 
      * @param array{
      *  transactionCode: string, 
-     *  urlMerchantResponse: string, 
-     *  amount: string, 
+     *  urlMerchantResponse?: string, 
+     *  timeStamp?: string, 
+     *  amount?: string, 
      *  currency?: string, 
      *  merchantRef?: string, 
      *  merchantSession?: string,
@@ -103,16 +109,16 @@ class Payment extends Sisp
             'posID' => $this->posID,
             'merchantRef' => $params['merchantRef'] ?? 'R' . date('YmdHis'),
             'merchantSession' => $params['merchantSession'] ?? 'S' . date('YmdHis'),
-            'amount' => $this->normalizeRequestAmount($params['amount']),
+            'amount' => $this->normalizeRequestAmount($params['amount'] ?? ''),
             'currency' => $currencyCode,
             'transactionCode' => $params['transactionCode'],
             'languageMessages' => $params['languageMessages'] ?? 'pt',
             'entityCode' => $params['entityCode'] ?? '',
             'referenceNumber' => $params['referenceNumber'] ?? '',
-            'timeStamp' => date('Y-m-d H:i:s'),
+            'timeStamp' => $params['timeStamp'] ?? date('Y-m-d H:i:s'),
             'fingerprintversion' => '1',
             'is3DSec' => '1',
-            'urlMerchantResponse' => $params['urlMerchantResponse'],
+            'urlMerchantResponse' => $params['urlMerchantResponse'] ?? '',
         ];
 
         // Adiciona billing se for transação de compra
@@ -128,11 +134,12 @@ class Payment extends Sisp
 
         $request['fingerprint'] = $this->fingerprintRequest($request);
 
-        $postUrl = $this->baseUrl . '?' . http_build_query([
-            'FingerPrint' => $request['fingerprint'],
-            'TimeStamp' => $request['timeStamp'],
-            'FingerPrintVersion' => $request['fingerprintversion']
-        ]);
+        $postUrl = $this->endpoint(self::ENDPOINT_PATH) .
+            '?' . http_build_query([
+                'FingerPrint' => $request['fingerprint'],
+                'TimeStamp' => $request['timeStamp'],
+                'FingerPrintVersion' => $request['fingerprintversion'],
+            ]);
 
         return [
             'postUrl' => $postUrl,

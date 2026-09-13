@@ -35,6 +35,7 @@ class Vinti4Response
      * @param array       $dcc      DCC (Dynamic Currency Conversion) information if available.
      * @param array       $debug    Debug data (only populated for fingerprint errors).
      * @param string|null $detail   Optional detailed error description.
+     * @param string|null $operation
      */
     public function __construct(
         public readonly string $status,
@@ -43,7 +44,8 @@ class Vinti4Response
         public readonly array $data = [],
         public readonly array $dcc = [],
         public readonly array $debug = [],
-        public readonly ?string $detail = null
+        public readonly ?string $detail = null,
+        public readonly ?string $operation = null,
     ) {}
 
     /**
@@ -52,9 +54,19 @@ class Vinti4Response
      * @param array $result  Raw processor result.
      * @return self
      */
-    public static function fromProcessorResult(array $result): self
+    public static function fromProcessorResult(array $result, ?string $operation = null): self
     {
         $data = $result['data'] ?? [];
+
+        if ($operation === null) {
+            $operation = match ($data['messageType'] ?? '') {
+                '10' => 'refund',
+                '8' => 'purchase',
+                'P' => 'service_payment',
+                'M' => 'recharge',
+                default => $operation,
+            };
+        }
 
         return new self(
             status: self::determineStatus($result, $data),
@@ -63,7 +75,8 @@ class Vinti4Response
             data: $data,
             dcc: self::extractDcc($data),
             debug: self::extractDebug($result, $data),
-            detail: self::extractDetail($data)
+            detail: self::extractDetail($data),
+            operation: $operation
         );
     }
 
@@ -261,7 +274,8 @@ class Vinti4Response
             'data' => $this->safeData(),
             'dcc' => $this->dcc,
             'debug' => $this->debug,
-            'detail' => $this->detail
+            'detail' => $this->detail,
+            'operation' => $this->operation,
         ];
     }
 
@@ -395,7 +409,30 @@ class Vinti4Response
     }
 
     /**
+     * Render a receipt for a successful refund.
+     *
+     * SISP returns zero as the response amount for refunds, so the original
+     * transaction amount must be supplied by the merchant application.
+     *
+     * @param int|string $amount Original transaction amount.
+     * @param string|null $originalTransactionId Original SISP transaction ID.
+     * @param array<string, mixed> $data Custom template data.
+     */
+    public function renderRefundReceipt(
+        int|string $amount,
+        ?string $originalTransactionId = null,
+        array $data = [],
+    ): string {
+        return (new Receipt($this))->renderRefund(
+            amount: $amount,
+            originalTransactionId: $originalTransactionId,
+            data: $data,
+        );
+    }
+
+    /**
      * Generate the default HTML receipt using the legacy v2 API.
+     * @deprecated v2.1
      */
     public function generateReceiptHtml(?string $companyName = null, bool $styled = true): string
     {
@@ -407,6 +444,7 @@ class Vinti4Response
 
     /**
      * Generate a plain-text receipt using the legacy v2 API.
+     * @deprecated v2.1
      */
     public function generateReceiptText(?string $companyName = null): string
     {
@@ -425,46 +463,31 @@ class Vinti4Response
         $data = $this->data;
 
         if (isset($data['merchantRespPan'])) {
-            $data['merchantRespPan'] = self::maskPan(
-                (string) $data['merchantRespPan'],
-            );
+            $data['merchantRespPan'] = $this->getMaskedPan();
         }
 
         return $data;
     }
 
     /**
-     * Masks a PAN while preserving values already masked by SISP.
+     * Returns the masked card number for display.
      */
-    private static function maskPan(string $pan): string
+    public function getMaskedPan(): ?string
     {
-        $pan = trim($pan);
+        $pan = trim(
+            (string) ($this->data['merchantRespPan'] ?? '')
+        );
 
-        if ($pan === '') {
-            return '';
-        }
-
-        if (str_contains($pan, '*')) {
-            return $pan;
+        if ($pan === '' || $pan === '0') {
+            return null;
         }
 
         $digits = preg_replace('/\D+/', '', $pan) ?? '';
 
         if ($digits === '') {
-            return '';
+            return null;
         }
 
-        if (strlen($digits) <= 4) {
-            return str_repeat('*', strlen($digits));
-        }
-
-        if (strlen($digits) < 10) {
-            return str_repeat('*', strlen($digits) - 4)
-                . substr($digits, -4);
-        }
-
-        return substr($digits, 0, 6)
-            . str_repeat('*', strlen($digits) - 10)
-            . substr($digits, -4);
+        return '•••• ' . substr($digits, -4);
     }
 }

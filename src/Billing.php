@@ -31,9 +31,8 @@ final class Billing
         'addrMatch' => null,
     ];
 
-    private function __construct()
-    {
-    }
+    /** Prevent direct construction; use make() or from(). */
+    private function __construct() {}
 
     /**
      * Create an empty billing builder.
@@ -46,7 +45,53 @@ final class Billing
     /**
      * Create a billing builder from an array.
      *
-     * @param array<string, mixed> $data Billing and 3D Secure customer data.
+     * Friendly names and their SISP equivalents are both accepted. Unknown keys
+     * are ignored for backward compatibility. The billing country defaults to
+     * "132" (Cabo Verde).
+     *
+     * When billing is used for a purchase, email, city, address and postal code
+     * must be supplied; the country may use its default.
+     *
+     * Phone numbers may be given as a local subscriber number or as an array
+     * with separate country code and subscriber number.
+     *
+     * @param array{
+     *     email?: string,
+     *     country?: string,
+     *     billAddrCountry?: string,
+     *     city?: string,
+     *     billAddrCity?: string,
+     *     address?: string,
+     *     billAddrLine1?: string,
+     *     address2?: string,
+     *     billAddrLine2?: string,
+     *     address3?: string,
+     *     billAddrLine3?: string,
+     *     postalCode?: string,
+     *     billAddrPostCode?: string,
+     *     state?: string,
+     *     billAddrState?: string,
+     *     shipCountry?: string,
+     *     shipAddrCountry?: string,
+     *     shipCity?: string,
+     *     shipAddrCity?: string,
+     *     shipAddress?: string,
+     *     shipAddrLine1?: string,
+     *     shipPostalCode?: string,
+     *     shipAddrPostCode?: string,
+     *     shipState?: string,
+     *     shipAddrState?: string,
+     *     phone?: string|int|array{cc?: string|int, subscriber?: string|int},
+     *     mobilePhone?: string|int|array{cc?: string|int, subscriber?: string|int},
+     *     workPhone?: string|int|array{cc?: string|int, subscriber?: string|int},
+     *     accountId?: string,
+     *     acctID?: string,
+     *     accountInfo?: array<string, mixed>,
+     *     acctInfo?: array<string, mixed>,
+     *     addressMatchesShipping?: bool,
+     *     addrMatch?: bool|string,
+     *     suspicious?: bool
+     * } $data Billing and 3D Secure customer data.
      */
     public static function from(array $data): self
     {
@@ -148,121 +193,165 @@ final class Billing
         return $this;
     }
 
+    /** Set the cardholder email required when billing is supplied. */
     public function email(string $value): self
     {
         $this->data['email'] = trim($value);
         return $this;
     }
 
+    /** Set the billing country code; defaults to "132" (Cabo Verde). */
     public function country(string $value): self
     {
         $this->data['billAddrCountry'] = trim($value);
         return $this;
     }
 
+    /** Set the billing city required when billing is supplied. */
     public function city(string $value): self
     {
         $this->data['billAddrCity'] = trim($value);
         return $this;
     }
 
+    /** Set the first billing address line required when billing is supplied. */
     public function address(string $value): self
     {
         $this->data['billAddrLine1'] = trim($value);
         return $this;
     }
 
+    /** Set the optional second billing address line. */
     public function address2(string $value): self
     {
         $this->data['billAddrLine2'] = trim($value);
         return $this;
     }
 
+    /** Set the optional third billing address line. */
     public function address3(string $value): self
     {
         $this->data['billAddrLine3'] = trim($value);
         return $this;
     }
 
+    /** Set the billing postal code required when billing is supplied. */
     public function postalCode(string $value): self
     {
         $this->data['billAddrPostCode'] = trim($value);
         return $this;
     }
 
+    /** Set the billing state or region. */
     public function state(string $value): self
     {
         $this->data['billAddrState'] = trim($value);
         return $this;
     }
 
+    /** Set the shipping country code. */
     public function shipCountry(string $value): self
     {
         $this->data['shipAddrCountry'] = trim($value);
         return $this;
     }
 
+    /** Set the shipping city. */
     public function shipCity(string $value): self
     {
         $this->data['shipAddrCity'] = trim($value);
         return $this;
     }
 
+    /** Set the first shipping address line. */
     public function shipAddress(string $value): self
     {
         $this->data['shipAddrLine1'] = trim($value);
         return $this;
     }
 
+    /** Set the shipping postal code. */
     public function shipPostalCode(string $value): self
     {
         $this->data['shipAddrPostCode'] = trim($value);
         return $this;
     }
 
+    /** Set the shipping state or region. */
     public function shipState(string $value): self
     {
         $this->data['shipAddrState'] = trim($value);
         return $this;
     }
 
+    /** Record whether billing and shipping addresses match (Y or N). */
     public function addressMatchesShipping(bool $matches = true): self
     {
         $this->data['addrMatch'] = $matches ? 'Y' : 'N';
         return $this;
     }
 
-    /** @deprecated 2.2.0 Use addressMatchesShipping(). */
+    /**
+     * Set whether billing and shipping addresses match.
+     *
+     * @deprecated 2.2.0 Use addressMatchesShipping().
+     */
     public function addrMatch(bool $value): self
     {
         return $this->addressMatchesShipping($value);
     }
 
+    /**
+     * Set the mobile phone with country code and local subscriber separately.
+     *
+     * Non-digits are stripped; a blank subscriber omits the phone number.
+     *
+     * @param string $cc Country calling code, e.g. "238".
+     * @param string $subscriber Local subscriber number, without the country code.
+     */
     public function mobilePhone(string $cc, string $subscriber): self
     {
         $this->data['mobilePhone'] = $this->phone($cc, $subscriber);
         return $this;
     }
 
+    /**
+     * Set the work phone with country code and local subscriber separately.
+     *
+     * @param string $cc Country calling code, e.g. "238".
+     * @param string $subscriber Local subscriber number, without the country code.
+     */
     public function workPhone(string $cc, string $subscriber): self
     {
         $this->data['workPhone'] = $this->phone($cc, $subscriber);
         return $this;
     }
 
+    /** Set the cardholder account identifier (acctID). */
     public function accountId(string $value): self
     {
         $this->data['acctID'] = trim($value);
         return $this;
     }
 
-    /** @deprecated 2.2.0 Use accountId(). */
+    /**
+     * Set the cardholder account identifier.
+     *
+     * @deprecated 2.2.0 Use accountId().
+     */
     public function acctID(string $value): self
     {
         return $this->accountId($value);
     }
 
-    /** @param array<string, mixed> $info */
+    /**
+     * Set 3D Secure account information using SISP acctInfo field names.
+     *
+     * Missing age, password-change and suspicious-activity indicators receive
+     * the class defaults. Date values are not converted; supply YYYYMMDD.
+     *
+     * @param array<string, mixed> $info Account information (e.g. chAccDate).
+     */
     public function accountInfo(array $info): self
     {
         $this->data['acctInfo'] = array_filter(
@@ -290,6 +379,7 @@ final class Billing
         return $this->accountInfo($info);
     }
 
+    /** Set the account suspicious-activity indicator (02 if true, 01 otherwise). */
     public function suspicious(bool $suspicious = true): self
     {
         $info = $this->data['acctInfo'];
@@ -298,13 +388,17 @@ final class Billing
         return $this->accountInfo($info);
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * Return SISP field names, omitting empty strings, nulls and empty arrays.
+     *
+     * @return array<string, mixed>
+     */
     public function toArray(): array
     {
         return array_filter(
             $this->data,
             static fn(mixed $value): bool =>
-                $value !== null && $value !== '' && $value !== [],
+            $value !== null && $value !== '' && $value !== [],
         );
     }
 
@@ -346,7 +440,13 @@ final class Billing
         ]);
     }
 
-    /** @return array{cc: string, subscriber: string}|null */
+    /**
+     * Normalize a local phone or a {cc, subscriber} pair.
+     *
+     * Plain strings use calling code 238; international prefixes are not parsed.
+     *
+     * @return array{cc: string, subscriber: string}|null
+     */
     private function normalizePhone(mixed $value): ?array
     {
         if (is_string($value) || is_int($value)) {
@@ -363,7 +463,11 @@ final class Billing
         );
     }
 
-    /** @return array{cc: string, subscriber: string}|null */
+    /**
+     * Strip non-digits and omit a phone without a subscriber number.
+     *
+     * @return array{cc: string, subscriber: string}|null
+     */
     private function phone(string $cc, string $subscriber): ?array
     {
         $cc = preg_replace('/\D+/', '', $cc) ?? '';
@@ -379,6 +483,7 @@ final class Billing
         ];
     }
 
+    /** Convert a legacy user date to YYYYMMDD, or return an empty string. */
     private static function dateValue(mixed $value): string
     {
         if (!is_string($value) || trim($value) === '') {
