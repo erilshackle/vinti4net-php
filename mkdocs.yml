@@ -3,8 +3,8 @@ site_description: SDK PHP para integração com a Rede Vinti4 / SISP em Cabo Ver
 site_url: https://erilshackle.github.io/vinti4net-php/
 repo_url: https://github.com/erilshackle/vinti4net-php
 repo_name: erilshackle/vinti4net-php
-edit_uri: edit/main/mkdocs/
-docs_dir: mkdocs
+edit_uri: edit/main/docs/
+docs_dir: docs
 site_dir: site
 strict: true
 
@@ -69,6 +69,6 @@ nav:
       - Recibo DCC: dcc.md
   - Referência da API: api.md
   - Segurança: security.md
-  - Perguntas frequentes: faq.md
+  - FAQ: faq.md
   - Atualização 2.1 → 2.2: upgrade-2.2.md
   - Sobre: about.md
