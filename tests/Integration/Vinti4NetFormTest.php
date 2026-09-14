@@ -29,9 +29,22 @@ class Vinti4NetFormTest extends TestCase
         $html = $this->vinti->createPaymentForm('https://response.test');
 
         $this->assertStringContainsString('<form', $html);
-        $this->assertStringContainsString('Avenida Cidade da Praia, 45', $html);
-        $this->assertStringContainsString('customer@test.com', $html);
+        $this->assertStringNotContainsString("name='billAddrLine1'", $html);
+        $this->assertStringNotContainsString("name='email'", $html);
+
+        $this->assertSame(1, preg_match("/name='purchaseRequest' value='([^']+)'/", $html, $matches));
+        $purchaseRequest = json_decode(base64_decode($matches[1], true), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame('Avenida Cidade da Praia, 45', $purchaseRequest['billAddrLine1']);
+        $this->assertSame('customer@test.com', $purchaseRequest['email']);
         $this->assertStringContainsString('https://response.test', $html);
+    }
+
+    public function testPurchaseWithoutBillingOmitsPurchaseRequest(): void
+    {
+        $this->vinti->preparePurchase(1000, []);
+        $html = $this->vinti->createPaymentForm('https://response.test');
+
+        $this->assertStringNotContainsString("name='purchaseRequest'", $html);
     }
 
     public function testCreatePaymentFormThrowsExceptionIfNotPrepared(): void

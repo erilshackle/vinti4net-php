@@ -78,7 +78,8 @@ class Vinti4Net
      *     merchantRef?: string,
      *     merchantSession?: string,
      *     languageMessages?: 'pt'|'en'|'fr',
-     *     timeStamp?: string
+     *     timeStamp?: string,
+     *     ...
      * } $params Supported options. The timestamp uses Y-m-d H:i:s.
      *
      * @return self
@@ -352,9 +353,13 @@ class Vinti4Net
      */
     public function processResponse(array $postData): Vinti4Response
     {
-        return ($postData['messageType'] ?? '') === '10'
-            ? $this->processRefundResponse($postData)
-            : $this->processPaymentResponse($postData);
+        return match ($postData['messageType'] ?? '') {
+            '10' => $this->processRefundResponse($postData),
+            '8', 'P', 'M' => $this->processPaymentResponse($postData),
+            default => Vinti4Response::fromProcessorResult(
+                $this->payment->processResponse($postData),
+            ),
+        };
     }
 
     /**
@@ -364,7 +369,8 @@ class Vinti4Net
         array $postData,
     ): Vinti4Response {
         return Vinti4Response::fromProcessorResult(
-            $this->payment->processResponse($postData)
+            $this->payment->processResponse($postData),
+            operation: 'payment',
         );
     }
 

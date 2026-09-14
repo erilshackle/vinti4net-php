@@ -66,6 +66,19 @@ class Vinti4ResponseTest extends TestCase
         $this->assertFalse($response->success);
     }
 
+    public function testInvalidFingerprintTakesPriorityOverCancellationFlag(): void
+    {
+        $response = Vinti4Response::fromProcessorResult([
+            'success' => false,
+            'fingerprint_valid' => false,
+            'message_type' => '8',
+            'data' => ['messageType' => '8', 'UserCancelled' => 'true'],
+        ]);
+
+        $this->assertTrue($response->hasInvalidFingerprint());
+        $this->assertFalse($response->isCancelled());
+    }
+
     public function testFromProcessorResultWithDcc()
     {
         $processorResult = [

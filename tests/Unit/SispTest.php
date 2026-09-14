@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use Erilshk\Sisp\Core\Sisp;
+use Erilshk\Sisp\Core\Payment;
 use Erilshk\Sisp\Exceptions\Vinti4Exception;
 use PHPUnit\Framework\TestCase;
 
@@ -41,10 +42,15 @@ class ConcreteSisp extends Sisp
     {
         return parent::currencyToCode($currency);
     }
+}
+
+class BillingPaymentForSispTest extends Payment
+{
     public function normalizeBilling(array $billing): array
     {
         return parent::normalizeBilling($billing);
     }
+
     public function generatePurchaseRequest(array $billing): string
     {
         return parent::generatePurchaseRequest($billing);
@@ -54,10 +60,12 @@ class ConcreteSisp extends Sisp
 class SispTest extends TestCase
 {
     private ConcreteSisp $sisp;
+    private BillingPaymentForSispTest $payment;
 
     protected function setUp(): void
     {
         $this->sisp = new ConcreteSisp('TEST_POS_123', 'TEST_AUTH_456');
+        $this->payment = new BillingPaymentForSispTest('TEST_POS_123', 'TEST_AUTH_456');
     }
 
     public function testConstructorSetsProperties()
@@ -179,7 +187,7 @@ class SispTest extends TestCase
         $this->expectException(Vinti4Exception::class);
         $this->expectExceptionMessage('Erro ao gerar JSON de billing.');
 
-        $this->sisp->generatePurchaseRequest($billing);
+        $this->payment->generatePurchaseRequest($billing);
     }
 
     public function testNormalizeBilling()
@@ -196,7 +204,7 @@ class SispTest extends TestCase
         ];
 
 
-        $normalized = $this->sisp->normalizeBilling($billing);
+        $normalized = $this->payment->normalizeBilling($billing);
 
         $this->assertEquals('test@example.com', $normalized['email']);
         $this->assertEquals('132', $normalized['billAddrCountry']);
@@ -270,7 +278,9 @@ class SispTest extends TestCase
             'billAddrPostCode' => '7600'
         ];
 
-        $purchaseRequest = $this->sisp->generatePurchaseRequest($billing);
+        $purchaseRequest = $this->payment->generatePurchaseRequest(
+            $this->payment->normalizeBilling($billing)
+        );
 
         $this->assertIsString($purchaseRequest);
         $this->assertNotEmpty($purchaseRequest);

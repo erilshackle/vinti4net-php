@@ -205,7 +205,6 @@ class Payment extends Sisp
         // Adiciona billing se for transação de compra
         if ($params['transactionCode'] === self::TRANSACTION_TYPE_PURCHASE && !empty($params['billing'])) {
             $billing = $this->normalizeBilling($params['billing']);
-            $request = array_merge($request, $billing);
             $request['purchaseRequest'] = $this->generatePurchaseRequest($billing);
         }
 

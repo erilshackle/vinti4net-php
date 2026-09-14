@@ -91,15 +91,15 @@ class Vinti4Response
      */
     private static function determineStatus(array $result, array $data): string
     {
+        if (($result['fingerprint_valid'] ?? null) === false) {
+            return self::INVALID_FINGERPRINT;
+        }
+
         if (filter_var(
             $data['UserCancelled'] ?? false,
             FILTER_VALIDATE_BOOLEAN,
         )) {
             return self::CANCELLED;
-        }
-
-        if (($result['fingerprint_valid'] ?? null) === false) {
-            return self::INVALID_FINGERPRINT;
         }
 
         if ($result['success'] ?? false) {

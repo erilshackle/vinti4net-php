@@ -16,6 +16,18 @@ class Vinti4NetResponseTest extends TestCase
         $this->vinti = new Vinti4Net('POS123', 'AUTH456', 'https://fake-endpoint.test');
     }
 
+    public function testErrorCallbackDoesNotGuessItsOperation(): void
+    {
+        $response = $this->vinti->processResponse([
+            'messageType' => '6',
+            'merchantRespMerchantRef' => 'REF000000000001',
+            'merchantRespErrorDescription' => 'Transação recusada.',
+        ]);
+
+        $this->assertFalse($response->isSuccess());
+        $this->assertNull($response->operation);
+    }
+
     public function testProcessResponsePaymentSuccess(): void
     {
         $postData = [
