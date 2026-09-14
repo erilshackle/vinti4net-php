@@ -11,10 +11,7 @@ use Erilshk\Sisp\Exceptions\Vinti4Exception;
  */
 class Refund extends Sisp
 {
-    private const ENDPOINTS = [
-        'refund' => '/CardPayment',
-        'history' => '/RequestRefundHistory',
-    ];
+    private const ENDPOINT_PATH = '/CardPayment';
 
 
     /**
@@ -148,7 +145,7 @@ class Refund extends Sisp
 
 
         $postUrl = $this->endpoint(
-            self::ENDPOINTS['refund']
+            self::ENDPOINT_PATH
         ) . '?' . http_build_query([
             'FingerPrint' => $request['fingerprint'],
             'TimeStamp' => $request['timeStamp'],

@@ -43,6 +43,14 @@ final class Billing
     }
 
     /**
+     * Create an empty billing without 3DS integration.
+     */
+    public static function without3DS(): array
+    {
+        return [];
+    }
+
+    /**
      * Create a billing builder from an array.
      *
      * Friendly names and their SISP equivalents are both accepted. Unknown keys

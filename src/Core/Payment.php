@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Erilshk\Sisp\Core;
 
+use Erilshk\Sisp\Billing;
 use Erilshk\Sisp\Exceptions\Vinti4Exception;
 
 /**
@@ -73,6 +74,86 @@ class Payment extends Sisp
     }
 
     /**
+     * Normalize Billing instances, SISP fields and legacy `user` data.
+     *
+     * @param array<string, mixed> $billing
+     *
+     * @return array<string, mixed>
+     */
+    protected function normalizeBilling(array $billing): array
+    {
+        $user = $billing['user'] ?? [];
+        unset($billing['user']);
+
+        if (is_object($user)) {
+            $user = get_object_vars($user);
+        }
+
+        $legacy = is_array($user) && $user !== []
+            ? Billing::fromUser($user)->toArray()
+            : [];
+
+        $explicit = Billing::from($billing)->toArray();
+        $normalized = array_replace($legacy, $explicit);
+
+        if (isset($legacy['acctInfo'], $explicit['acctInfo'])) {
+            $normalized['acctInfo'] = array_replace(
+                $legacy['acctInfo'],
+                $explicit['acctInfo'],
+            );
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * Generate the Base64-encoded 3D Secure purchase request.
+     *
+     * @param array<string, mixed> $billing
+     */
+    protected function generatePurchaseRequest(array $billing): string
+    {
+        $required = [
+            'email',
+            'billAddrCountry',
+            'billAddrCity',
+            'billAddrLine1',
+            'billAddrPostCode',
+        ];
+
+        $missing = array_filter(
+            $required,
+            static fn(string $field): bool =>
+            !isset($billing[$field]) || trim((string) $billing[$field]) === '',
+        );
+
+        if ($missing !== []) {
+            throw new Vinti4Exception(
+                'Campos obrigatórios ausentes em billing: ' .
+                    implode(', ', $missing) . '.'
+            );
+        }
+
+        try {
+            $json = json_encode(
+                $billing,
+                JSON_UNESCAPED_SLASHES |
+                    JSON_UNESCAPED_UNICODE |
+                    JSON_THROW_ON_ERROR,
+            );
+        } catch (\JsonException $exception) {
+            throw new Vinti4Exception(
+                'Erro ao gerar JSON de billing.',
+                0,
+                $exception,
+            );
+        }
+
+        return base64_encode($json);
+    }
+
+
+    /**
      * Prepara uma requisição de pagamento (compra, serviço, recarga).
      * 
      * @param array{
@@ -83,7 +164,7 @@ class Payment extends Sisp
      *  currency?: string, 
      *  merchantRef?: string, 
      *  merchantSession?: string,
-     *  billing?: array, 
+     *  billing: array, 
      *  languageMessages?: string, 
      *  entityCode?: string, 
      *  referenceNumber?: string
@@ -123,9 +204,9 @@ class Payment extends Sisp
 
         // Adiciona billing se for transação de compra
         if ($params['transactionCode'] === self::TRANSACTION_TYPE_PURCHASE && !empty($params['billing'])) {
-            $request['billing'] = $params['billing'];
-            $request = array_merge($request, $params['billing']);
-            $request['purchaseRequest'] = $this->generatePurchaseRequest($params['billing']);
+            $billing = $this->normalizeBilling($params['billing']);
+            $request = array_merge($request, $billing);
+            $request['purchaseRequest'] = $this->generatePurchaseRequest($billing);
         }
 
         if ($error = $this->validateParams($request)) {

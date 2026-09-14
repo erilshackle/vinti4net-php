@@ -72,28 +72,14 @@ class Vinti4Net
      * - **merchantRef**        Merchant reference for identifying the transaction.
      * - **merchantSession**    Unique session identifier for the merchant.
      * - **languageMessages**   Language code for SISP UI messages (e.g. "pt", "en").
-     * - **entityCode**         Entity code for service or recharge payments.
-     * - **referenceNumber**    Reference number for service or recharge.
      * - **timeStamp**          Optional timestamp override.
-     * - **billing**            Billing section (3DS 2.x fields).
-     * - **currency**           ISO currency or SISP numeric currency code.
-     * - **acctID**             3DS2: Cardholder account ID.
-     * - **acctInfo**           3DS2: Account info JSON block.
-     * - **addrMatch**          3DS2: Indicates if billing/shipping match ("Y" or "N").
-     * - **billAddrCountry**    3DS2 billing country (ISO 3166-1 alpha-2).
-     * - **billAddrCity**       3DS2 billing city.
-     * - **billAddrLine1**      3DS2 billing address line 1.
-     * - **billAddrPostCode**   3DS2 billing postal code.
-     * - **email**              Customer email.
-     * - **clearingPeriod**     Required for refund operations.
      *
      * @param array{
      *     merchantRef?: string,
      *     merchantSession?: string,
-     *     languageMessages?: string,
-     *     timeStamp?: string,
-     *     ...
-     * } $params
+     *     languageMessages?: 'pt'|'en'|'fr',
+     *     timeStamp?: string
+     * } $params Supported options. The timestamp uses Y-m-d H:i:s.
      *
      * @return self
      *
@@ -166,7 +152,7 @@ class Vinti4Net
      * @return static
      *
      */
-    public function preparePurchase(float|string $amount, array|Billing|null $billing, string $currency = 'CVE'): static
+    public function preparePurchase(float|string $amount, array|Billing $billing, string $currency = 'CVE'): static
     {
         $this->prepared = true;
 
@@ -176,12 +162,10 @@ class Vinti4Net
             'amount' => $amount,
             'currency' => $currency,
         ];
+        $request['billing'] = $billing instanceof Billing
+            ? $billing->toArray()
+            : $billing;
 
-        if ($billing !== null) {
-            $request['billing'] = $billing instanceof Billing
-                ? $billing->toArray()
-                : $billing;
-        }
 
         $this->prepareRequest($request);
 
@@ -380,8 +364,7 @@ class Vinti4Net
         array $postData,
     ): Vinti4Response {
         return Vinti4Response::fromProcessorResult(
-            $this->payment->processResponse($postData),
-            operation: 'payment',
+            $this->payment->processResponse($postData)
         );
     }
 
