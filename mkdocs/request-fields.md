@@ -7,16 +7,16 @@ A biblioteca monta o pedido, gera o fingerprint e cria o formulário. Normalment
 | Campo | Origem | Regra |
 | --- | --- | --- |
 | `posID` | Construtor | Fornecido pela SISP |
-| `merchantRef` | `setMerchant()` | Obrigatório, máximo 15 caracteres |
-| `merchantSession` | `setMerchant()` | Obrigatório, máximo 15 caracteres |
+| `merchantRef` | `setMerchant()` ou geração automática | Obrigatório; o validador aceita até 15 caracteres, mas use 15 |
+| `merchantSession` | `setMerchant()` ou geração automática | Obrigatório, exatamente 15 caracteres |
 | `amount` | Método `prepare...()` | Inteiro positivo, máximo 13 dígitos |
 | `currency` | Compra/configuração | Código ISO numérico com 3 dígitos |
 | `transactionCode` | Método usado | `1`, `2`, `3` ou `4` |
 | `languageMessages` | `createPaymentForm()` | `pt`, `en` ou `fr` |
-| `timeStamp` | Biblioteca | `Y-m-d H:i:s` |
+| `timeStamp` | Biblioteca ou `setRequestParams()` | `Y-m-d H:i:s` |
 | `fingerprintversion` | Biblioteca | `1` |
 | `is3DSec` | Biblioteca | `1` |
-| `urlMerchantResponse` | `createPaymentForm()` | URL válida e pública do callback |
+| `urlMerchantResponse` | `createPaymentForm()` | URL sintaticamente válida; HTTPS acessível em produção |
 | `fingerprint` | Biblioteca | SHA-512/Base64 conforme a SISP |
 
 ## Código da transação
@@ -52,7 +52,7 @@ Também é aceito um código numérico ISO 4217 com três dígitos. Reembolsos u
 
 | Campo | Regra |
 | --- | --- |
-| `transactionID` | Até 8 caracteres: letras, números ou `_` |
+| `transactionID` | Até 8 caracteres alfanuméricos |
 | `clearingPeriod` | Numérico, até 4 dígitos |
 | `reversal` | Enviado como `R` pela biblioteca |
 

@@ -1,6 +1,6 @@
 # Pagamentos
 
-O SDK oferece três tipos de pagamento: compra com 3D Secure, pagamento de serviço e recarga.
+O SDK oferece três tipos de pagamento: compra, pagamento de serviço e recarga. A compra aceita dados adicionais de billing/3DS, mas também pode ser preparada sem eles.
 
 Antes de preparar qualquer pagamento, crie o cliente e defina uma referência:
 
@@ -12,7 +12,7 @@ $sdk = new Vinti4Net(
     posAuthCode: $_ENV['VINTI4_AUTH_CODE'],
 );
 
-$sdk->setMerchant('PEDIDO00000001');
+$sdk->setMerchant('PEDIDO000000001');
 ```
 
 `setMerchant()` também aceita uma sessão personalizada. Se ela não for informada, a biblioteca gera uma sessão no formato `S` + `YmdHis`.
@@ -41,12 +41,18 @@ $sdk->preparePurchase(
 );
 ```
 
-O Billing pode ser um objeto `Billing` ou um array com os campos SISP. Consulte [Billing 3DS](billing.md) para todos os campos.
+O Billing pode ser um objeto `Billing` ou um array. Para não enviar dados de billing, use um array vazio:
+
+```php
+$sdk->preparePurchase(1500, []);
+```
+
+Um Billing parcialmente preenchido não é equivalente a `[]`: se houver dados, os campos necessários para gerar `purchaseRequest` serão verificados. Quando presente, o billing é enviado somente dentro de `purchaseRequest` (JSON em Base64), e não como inputs individuais. Consulte [Billing 3DS](billing.md).
 
 | Parâmetro | Tipo | Obrigatório | Descrição |
 | --- | --- | --- | --- |
 | `amount` | `float|string` | Sim | Montante inteiro positivo, até 13 dígitos |
-| `billing` | `array|Billing` | Sim | Dados do cliente exigidos pelo 3DS |
+| `billing` | `array|Billing` | Sim, argumento explícito | Dados opcionais de billing; passe `[]` para não os enviar |
 | `currency` | `string` | Não | Moeda da operação; o padrão é `CVE` |
 
 Embora a assinatura mantenha `float` por compatibilidade da v2, o valor precisa chegar como inteiro. Use `1500`, não `1500.00` nem `13,51`.
@@ -60,7 +66,7 @@ Use para pagamentos associados a uma entidade e uma referência de serviço:
 ```php
 $sdk->prepareServicePayment(
     amount: 2000,
-    entity: 341,
+    entity: $serviceEntityCode,
     number: '123456789',
 );
 ```
@@ -82,7 +88,7 @@ Use para recargas associadas a uma entidade e um número de telefone ou conta:
 ```php
 $sdk->prepareRecharge(
     amount: 500,
-    entity: 341,
+    entity: $rechargeEntityCode,
     number: '987654321',
 );
 ```

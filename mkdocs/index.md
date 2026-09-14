@@ -16,6 +16,7 @@ composer require erilshk/vinti4net:^2.2
 - processamento e validação do callback;
 - mensagens claras para erro e cancelamento;
 - recibo padrão, personalizado e DCC.
+- recibo de estorno com valor original fornecido pela aplicação.
 
 ## Fluxo básico
 
@@ -33,7 +34,7 @@ $billing = Billing::make()
     ->postalCode('7600');
 
 $vinti4
-    ->setMerchant('PEDIDO00000001')
+    ->setMerchant('PEDIDO000000001')
     ->preparePurchase(1500, $billing);
 
 echo $vinti4->createPaymentForm(
@@ -41,6 +42,8 @@ echo $vinti4->createPaymentForm(
     'pt',
 );
 ```
+
+Se não quiser fornecer billing, use `preparePurchase(1500, [])`: o segundo argumento é obrigatório, mas os dados 3DS são opcionais.
 
 No callback:
 

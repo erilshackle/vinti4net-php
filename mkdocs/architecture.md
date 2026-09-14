@@ -7,7 +7,7 @@
 - `Core\\Sisp`: validações comuns, fingerprint e processamento da resposta.
 - `Billing`: normalização dos dados 3DS.
 - `Vinti4Response`: interpretação segura do callback.
-- `Receipt\\Receipt`: recibos padrão, personalizados e DCC.
+- `Receipt\\Receipt`: recibos padrão, personalizados, DCC e estorno.
 
 Aplicações devem depender principalmente de `Vinti4Net`, `Billing`, `Vinti4Response` e `Vinti4Exception`. As classes de `Core` são detalhes internos sensíveis ao contrato da SISP.
 

@@ -16,7 +16,7 @@ Não use `1500.00`, `13,51`, zero ou valor negativo.
 
 ## Referência ou sessão inválida
 
-Ambos são obrigatórios e aceitam no máximo 15 caracteres. Use `setMerchant()` antes de preparar ou enviar a transação.
+Ambos são obrigatórios. O validador exige exatamente 15 caracteres para `merchantSession` e aceita até 15 para `merchantRef`; o ambiente SISP pode recusar uma referência com menos de 15. Use referências de 15 caracteres e `setMerchant()` para controlar a sessão.
 
 ## URL de callback inválida
 
@@ -26,7 +26,7 @@ Passe uma URL absoluta:
 https://loja.example.cv/pagamentos/vinti4/callback
 ```
 
-Em testes reais, a SISP precisa conseguir acessar essa URL. `localhost` não é público.
+Em produção use uma URL HTTPS acessível pelo fluxo configurado pela SISP. Nos testes com middleware/redirecionamento pelo navegador, `localhost` pode funcionar; confirme como o callback é entregue no seu ambiente.
 
 ## Código incorreto aparece como fingerprint inválido
 

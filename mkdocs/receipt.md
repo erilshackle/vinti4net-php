@@ -12,6 +12,18 @@ echo $response->renderReceipt(data: [
 
 O template padrão mostra estado, data, identificação da transação, referência, valor, moeda e cartão mascarado quando existir.
 
+Para estornos aprovados use `renderRefundReceipt()`, não o recibo de pagamento. A SISP pode devolver `merchantRespPurchaseAmount=0`; recupere o valor original no seu banco e forneça-o explicitamente:
+
+```php
+echo $response->renderRefundReceipt(
+    amount: $originalAmount,
+    originalTransactionId: $originalTransactionId,
+    data: ['companyName' => 'Minha Empresa, Lda.'],
+);
+```
+
+Esse método exige uma resposta validada com `messageType=10` e um montante inteiro positivo. Veja [Reembolsos](refunds.md).
+
 ## Template PHP
 
 ```php
@@ -70,6 +82,8 @@ Os placeholders são escapados para HTML. Caminhos com ponto acessam valores ani
 | `reloadCode` | Código de recarga |
 | `pan` | Cartão mascarado |
 | `dcc` | Dados DCC normalizados |
+
+O cartão é apresentado como `•••• 3456`, nunca com os primeiros dígitos do PAN. Em estornos, `merchantRespPan=0` não representa um cartão e é omitido.
 
 ## Texto simples
 

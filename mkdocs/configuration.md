@@ -19,7 +19,7 @@ $vinti4 = new Vinti4Net(
 | --- | --- | --- |
 | `posID` | Sim | Identificador do POS fornecido pela SISP |
 | `posAuthCode` | Sim | Código secreto de autenticação fornecido pela SISP |
-| `endpoint` | Não | URL alternativa do gateway |
+| `endpoint` | Não | URL completa alternativa do gateway; se fornecida, é usada sem anexar `/CardPayment` |
 
 O endpoint usado por padrão é:
 
@@ -27,13 +27,13 @@ O endpoint usado por padrão é:
 https://mc.vinti4net.cv/BizMPIOnUsSisp/CardPayment
 ```
 
-Use `endpoint` somente quando a SISP fornecer outro endereço:
+Use `endpoint` somente com uma URL **completa** para a operação pretendida (por exemplo, o middleware 3DS de testes, se aplicável). O SDK não acrescenta `/CardPayment` a um endpoint personalizado:
 
 ```php
 $vinti4 = new Vinti4Net(
     posID: $_ENV['VINTI4_POS_ID'],
     posAuthCode: $_ENV['VINTI4_AUTH_CODE'],
-    endpoint: $_ENV['VINTI4_ENDPOINT'],
+    endpoint: $_ENV['VINTI4_ENDPOINT'], // URL completa, não apenas a URL base
 );
 ```
 
@@ -46,7 +46,7 @@ $vinti4 = new Vinti4Net(
 
 ```php
 $vinti4->setRequestParams([
-    'merchantRef' => 'PEDIDO00000001',
+    'merchantRef' => 'PEDIDO000000001',
     'merchantSession' => 'S20260906133152',
     'languageMessages' => 'pt',
 ]);

@@ -6,7 +6,7 @@
 - Composer;
 - extensão Hash, normalmente habilitada no PHP;
 - credenciais Vinti4Net fornecidas pela SISP;
-- uma URL HTTPS pública para receber o callback.
+- uma URL HTTPS acessível no ambiente de produção para receber o callback.
 
 ## Composer
 

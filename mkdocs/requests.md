@@ -18,44 +18,27 @@ Os dados de faturação podem ser enviados como array ou objeto `Billing`.
 
 ## Parâmetros gerais
 
-`setRequestParams()` aceita somente as chaves abaixo:
+`setRequestParams()` aceita **somente** as quatro chaves abaixo. Os demais dados são argumentos dos métodos `prepare...()` ou são campos internos do `Billing`:
 
 | Parâmetro | Tipo | Obrigatoriedade | Descrição |
 | --- | --- | --- | --- |
-| `merchantRef` | `string` | Obrigatório no envio | Referência do comerciante, até 15 caracteres |
-| `merchantSession` | `string` | Obrigatório no envio | Sessão do comerciante, até 15 caracteres |
+| `merchantRef` | `string` | Obrigatório no envio | Referência do comerciante; o validador aceita até 15 caracteres, mas use 15 |
+| `merchantSession` | `string` | Obrigatório no envio | Sessão do comerciante com exatamente 15 caracteres |
 | `languageMessages` | `string` | Não | Idioma da página SISP: `pt`, `en` ou `fr` |
-| `entityCode` | `int|string` | Serviço/recarga | Código numérico da entidade |
-| `referenceNumber` | `string` | Serviço/recarga | Referência numérica, até 9 dígitos |
 | `timeStamp` | `string` | Não | Timestamp da requisição |
-| `billing` | `array` | Compra | Dados de faturação e 3DS |
-| `currency` | `string|int` | Não | Moeda ISO ou código numérico, como `CVE` ou `132` |
-| `acctID` | `string` | Não | ID da conta do titular, até 64 caracteres |
-| `acctInfo` | `array` | Não | Informações da conta para 3DS2 |
-| `addrMatch` | `string` | Não | `Y` ou `N`, indica se cobrança e entrega coincidem |
-| `billAddrCountry` | `string` | Compra | País de faturação |
-| `billAddrCity` | `string` | Compra | Cidade de faturação |
-| `billAddrLine1` | `string` | Compra | Endereço principal |
-| `billAddrPostCode` | `string` | Compra | Código postal |
-| `email` | `string` | Compra | E-mail do cliente |
-| `clearingPeriod` | `string` | Reembolso | Período contabilístico retornado pela SISP |
 
 Alguns campos dependem do tipo de operação. A biblioteca valida o conjunto final quando `createPaymentForm()` é chamado.
 
 ### Exemplo
 
 ```php
-$sdk->setRequestParams([
-    'merchantRef' => 'PEDIDO00000001',
-    'merchantSession' => 'S20260906133152',
-    'languageMessages' => 'pt',
-]);
+$sdk->setRequestParams(['merchantRef' => 'PEDIDO000000001']);
 ```
 
 Para referência e sessão, o uso mais simples é:
 
 ```php
-$sdk->setMerchant('PEDIDO00000001');
+$sdk->setMerchant('PEDIDO000000001'); // gera uma sessão de 15 caracteres
 ```
 
 Uma chave não permitida lança `Vinti4Exception`.
@@ -100,7 +83,7 @@ $billing = Billing::make()
     ->postalCode('7600');
 
 echo $payment
-    ->setMerchant('REF123')
+    ->setMerchant('PEDIDO000000001')
     ->preparePurchase(1500, $billing)
     ->createPaymentForm('https://minha-loja.cv/response');
 ```
@@ -109,8 +92,8 @@ echo $payment
 
 ```php
 echo $payment
-    ->setMerchant('REF456')
-    ->prepareServicePayment(2000, 10001, '123456')
+    ->setMerchant('SERVICO00000001')
+    ->prepareServicePayment(2000, $serviceEntityCode, '123456')
     ->createPaymentForm('https://minha-loja.cv/response');
 ```
 
@@ -118,8 +101,8 @@ echo $payment
 
 ```php
 echo $payment
-    ->setMerchant('REF789')
-    ->prepareRecharge(500, 10021, '99123456')
+    ->setMerchant('RECARGA00000001')
+    ->prepareRecharge(500, $rechargeEntityCode, '99123456')
     ->createPaymentForm('https://minha-loja.cv/response');
 ```
 
@@ -127,10 +110,12 @@ echo $payment
 
 ```php
 echo $payment
-    ->setMerchant('REFUND001')
+    ->setMerchant('ESTORNO00000001')
     ->prepareRefund(1000, 'TX119922', '1125')
     ->createPaymentForm('https://minha-loja.cv/refund/callback');
 ```
+
+Os códigos de entidade devem vir da SISP ou da entidade prestadora; `$serviceEntityCode` e `$rechargeEntityCode` são valores da sua aplicação, não constantes fornecidas pelo SDK. Para compra sem dados de billing, chame `preparePurchase(1500, [])`. Com billing, os dados 3DS são enviados apenas dentro de `purchaseRequest` (JSON em Base64), não como inputs separados.
 
 ---
 

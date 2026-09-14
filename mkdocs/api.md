@@ -36,12 +36,13 @@ new Vinti4Net(
 | --- | --- | --- |
 | `setRequestParams(array $params)` | `self` | Configura parâmetros permitidos |
 | `setMerchant(string $reference, ?string $session = null)` | `self` | Define referência e sessão |
-| `preparePurchase(float|string $amount, array|Billing $billing, string $currency = 'CVE')` | `static` | Prepara compra 3DS |
+| `generateMerchantRef()` (estático) | `string` | Gera `R` + timestamp (`YmdHis`); não garante unicidade |
+| `preparePurchase(float|string $amount, array|Billing $billing, string $currency = 'CVE')` | `static` | Prepara compra; passe `[]` para não enviar billing |
 | `prepareServicePayment(float|string $amount, int $entity, string $number)` | `static` | Prepara pagamento de serviço |
 | `prepareRecharge(float|string $amount, int $entity, string $number)` | `static` | Prepara recarga |
 | `prepareRefund(float|string $amount, string $transactionID, string $clearingPeriod)` | `static` | Prepara reembolso |
 | `createPaymentForm(string $responseUrl, string $lang = 'pt')` | `string` | Gera o formulário auto-submit |
-| `processResponse(array $postData)` | `Vinti4Response` | Processa o retorno da SISP |
+| `processResponse(array $postData)` | `Vinti4Response` | Processa o retorno da SISP; `10` indica estorno bem-sucedido |
 | `getRequest()` | `array` | Retorna a requisição preparada |
 
 ### Exemplo de compra
@@ -56,10 +57,12 @@ $billing = \Erilshk\Sisp\Billing::from([
 ]);
 
 echo $vinti4
-    ->setMerchant('REF12345')
+    ->setMerchant('PEDIDO000000001')
     ->preparePurchase(1500, $billing)
     ->createPaymentForm('https://meusite.cv/retorno');
 ```
+
+Sem billing, a chamada é `preparePurchase(1500, [])`. A assinatura requer o segundo argumento mesmo quando não há dados de billing. Com billing, o formulário envia apenas o campo `purchaseRequest` (JSON em Base64), sem inputs individuais para os dados 3DS. `setRequestParams()` aceita somente `merchantRef`, `merchantSession`, `languageMessages` e `timeStamp`; entidade, referência de serviço e billing são passados nos métodos próprios.
 
 ---
 
@@ -79,6 +82,8 @@ $billing = Billing::make()
     ->mobilePhone('238', '9912345')
     ->accountId('12345');
 ```
+
+O país de faturação usa `132` por padrão. Se enviar billing, forneça email, cidade, morada e código postal; se não quiser enviar billing, passe `[]` a `preparePurchase()`.
 
 ### Criação e conversão
 
@@ -149,6 +154,7 @@ if ($response->isSuccess()) {
 | `dcc` | `array` | Dados DCC normalizados |
 | `debug` | `array` | Dados de diagnóstico do fingerprint |
 | `detail` | `?string` | Detalhe do erro, quando disponível |
+| `operation` | `?string` | `refund` para `10`; `payment` para `8`, `P` e `M`; `null` para erro `6` ou cancelamento sem operação identificável |
 
 ### Métodos de estado
 
@@ -157,7 +163,7 @@ if ($response->isSuccess()) {
 | `isSuccess()` | Confirma sucesso validado |
 | `isCancelled()` | Confirma cancelamento |
 | `hasInvalidFingerprint()` | Detecta fingerprint inválido |
-| `hasFailed()` | Detecta falha que não seja cancelamento |
+| `hasFailed()` | Detecta apenas estado `ERROR`, sem incluir fingerprint inválido |
 
 ### Métodos de dados
 
@@ -169,6 +175,7 @@ if ($response->isSuccess()) {
 | `getAmount()` | `?float` | `merchantRespPurchaseAmount` |
 | `getCurrency()` | `?string` | `merchantRespCurrency` |
 | `getAdditionalErrorMessage()` | `string` | `merchantRespAdditionalErrorMessage` |
+| `getMaskedPan()` | `?string` | Exibe apenas os últimos quatro dígitos |
 | `toArray()` | `array` | Resposta normalizada com PAN mascarado |
 | `toJson()` | `string` | JSON formatado com PAN mascarado |
 
@@ -177,6 +184,7 @@ if ($response->isSuccess()) {
 | Método | Descrição |
 | --- | --- |
 | `renderReceipt()` | Recibo padrão ou template personalizado |
+| `renderRefundReceipt(int|string $amount, ?string $originalTransactionId = null, array $data = [])` | Recibo de estorno aprovado; valor e ID original são fornecidos pela aplicação |
 | `renderDccReceipt()` | Recibo DCC com dados retornados pela SISP |
 | `generateReceiptHtml()` | Compatibilidade da API v2 |
 | `generateReceiptText()` | Recibo em texto simples |

@@ -5,10 +5,12 @@
 Antes de chamar a biblioteca, guarde referência única, sessão, montante, moeda, cliente e estado `pendente`.
 
 ```php
-$reference = 'PEDIDO00000001';
+$reference = 'PEDIDO000000001';
 $session = 'S' . date('YmdHis');
 $amount = 1500;
 ```
+
+Use uma referência de 15 caracteres e garanta unicidade na sua base de dados. As referências geradas apenas com `date('YmdHis')` podem colidir no mesmo segundo.
 
 ## 2. Preparar a transação
 
@@ -18,6 +20,8 @@ $vinti4
     ->setMerchant($reference, $session)
     ->preparePurchase($amount, $billing);
 ```
+
+Se não quiser enviar dados de billing, substitua `$billing` por `[]`: `preparePurchase($amount, [])`. O segundo argumento continua explícito. Quando houver billing, o formulário envia esses dados exclusivamente no campo `purchaseRequest` (Base64), não como campos HTML separados.
 
 Use um método `prepare...()` por envio. Outro `prepare...()` substitui os dados específicos da transação anterior.
 
@@ -61,7 +65,9 @@ if ($response->hasFailed()) {
 | Montante | `getAmount()` | total esperado |
 | Estado | `isSuccess()` | ainda pendente |
 
-Só confirme a compra quando tudo estiver correto.
+Só confirme a compra quando tudo estiver correto. `getCurrency()` pode ser `null` se a resposta não trouxer moeda; compare a moeda quando houver esse campo e use a moeda guardada no pedido para o restante da validação.
+
+Para estornos, não compare `getAmount()` com o valor original: o callback aprovado pode trazer `0`. Recupere o montante do estorno guardado na aplicação. Um erro `messageType=6` também não identifica por si só se veio de pagamento ou estorno.
 
 ## 6. Guardar dados para reembolso
 

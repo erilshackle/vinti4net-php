@@ -40,15 +40,15 @@ if ($response->isSuccess()) {
 | `ERROR` | `hasFailed()` | Recusa ou erro devolvido pela SISP |
 | `INVALID_FINGERPRINT` | `hasInvalidFingerprint()` | Resposta de sucesso com validação inválida |
 
-`hasFailed()` também é verdadeiro para fingerprint inválido. Por isso, verifique `hasInvalidFingerprint()` primeiro.
+`hasFailed()` só é verdadeiro para `ERROR`. Verifique `hasInvalidFingerprint()` separadamente e antes de qualquer lógica de confirmação.
 
 ## Mensagens de erro
 
 A v2.2 procura, nesta ordem:
 
-1. `merchantRespErrorDescription`;
+1. `merchantRespAdditionalErrorMessage`;
 2. `merchantRespErrorDetail`;
-3. `merchantRespAdditionalErrorMessage`;
+3. `merchantRespErrorDescription`;
 4. mensagem genérica.
 
 ```php
@@ -68,6 +68,8 @@ $currency = $response->getCurrency();
 
 Todos podem retornar `null` quando o campo não existir naquele tipo de resposta.
 
+Uma resposta de compra `messageType=8` só é sucesso se `merchantResp=C` e o fingerprint for válido. Um estorno aprovado usa `messageType=10` e fingerprint válido; não exige `merchantResp=C`. Erros `messageType=6` não identificam a operação original: `operation` fica `null`. Localize a compra ou o estorno pendente pela referência guardada na sua aplicação. Um cancelamento normal retorna `isCancelled()=true`; se um payload de sucesso tiver fingerprint inválido e também indicar cancelamento, prevalece `hasInvalidFingerprint()`.
+
 ## Array e JSON seguros
 
 ```php
@@ -81,7 +83,7 @@ Esses métodos mascaram `merchantRespPan`. A propriedade `$response->data` mant�
 
 ```php
 [
-    'merchantRef' => 'PEDIDO00000001',
+    'merchantRef' => 'PEDIDO000000001',
     'merchantSession' => 'S20260906133152',
     'UserCancelled' => 'true',
 ]

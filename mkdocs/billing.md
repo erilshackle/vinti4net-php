@@ -1,6 +1,6 @@
 # Billing (3DS Support)
 
-O helper `Billing` normaliza os dados necessários para compras 3DS e evita que a aplicação monte manualmente a estrutura esperada pela SISP.
+O helper `Billing` normaliza os dados opcionais de faturação para uma compra. Para não enviar billing, passe `[]` explicitamente em `preparePurchase($amount, [])`.
 
 Ele cobre:
 
@@ -96,7 +96,7 @@ $billing = Billing::make()
 | `billAddrLine1` | `address` | `string` | Endereço principal |
 | `billAddrPostCode` | `postalCode` | `string` | Código postal |
 
-Se algum deles estiver vazio, `preparePurchase()` falha ao gerar o `purchaseRequest`.
+`billAddrCountry` usa `132` por padrão; quando o billing é enviado, forneça email, cidade, morada e código postal. Um billing parcial não vazio falha ao gerar o `purchaseRequest`. `[]` não gera `purchaseRequest`. Quando houver billing, o formulário envia somente `purchaseRequest` (JSON em Base64); `email` e os restantes campos de billing não aparecem como inputs separados.
 
 ## Campos opcionais de faturação
 
@@ -139,6 +139,15 @@ A estrutura final é:
 
 Ao usar `Billing::from()`, também pode passar apenas o número. Nesse caso, a biblioteca usa `238` como código padrão.
 
+```php
+Billing::from([
+    'phone' => '9911122',
+    // Ou: 'mobilePhone' => ['cc' => '238', 'subscriber' => '9911122'],
+]);
+```
+
+Para `+2389911122` ou números de outros países, informe `cc` e `subscriber` separadamente. A classe retira caracteres não numéricos, mas **não** interpreta automaticamente um prefixo internacional; `+2389911122` passado como uma string inteira duplicaria o indicativo.
+
 ---
 
 ## Dados da conta
@@ -167,6 +176,8 @@ $billing->accountInfo([
 
 Quando não informados, `chAccAgeInd`, `chAccPwChangeInd` e `suspiciousAccActivity` recebem valores padrão.
 
+As datas de `acctInfo` são enviadas como fornecidas; use o formato `YYYYMMDD`. `created_at` e `updated_at` não são aliases de `Billing::from()` e serão ignorados. Mapeie campos do seu `$user` explicitamente para as chaves SISP. `fromUser()` permanece apenas para compatibilidade.
+
 ### Atividade suspeita
 
 ```php
@@ -192,6 +203,36 @@ Billing::from([
 ```
 
 Campos desconhecidos são ignorados para manter compatibilidade com a linha v2.
+
+Um payload 3DS já no formato SISP também pode ser passado diretamente:
+
+```php
+$billing = Billing::from([
+    'email' => 'cliente@example.cv',
+    'billAddrCountry' => '132',
+    'billAddrCity' => 'Praia',
+    'billAddrLine1' => 'Rua Principal, 1',
+    'billAddrPostCode' => '7600',
+    'addrMatch' => 'N',
+    'mobilePhone' => ['cc' => '238', 'subscriber' => '9912345'],
+    'acctInfo' => ['chAccDate' => '20220328'],
+]);
+```
+
+Para dados da sua aplicação, faça o mapeamento com nomes explícitos:
+
+```php
+$billing = Billing::from([
+    'email' => $user['email'],
+    'city' => $user['city'],
+    'address' => $user['address'],
+    'postalCode' => $user['postal_code'],
+    'accountId' => (string) $user['id'],
+    'mobilePhone' => ['cc' => '238', 'subscriber' => $user['phone']],
+]);
+```
+
+Nesse exemplo, `$user['phone']` deve conter o número local, sem `+238`. O `Billing` não garante que os valores recebidos correspondem a um telefone, país ou endereço válidos: essa verificação pertence à aplicação.
 
 ---
 

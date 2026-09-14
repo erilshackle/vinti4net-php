@@ -2,7 +2,7 @@
 
 ## Antes de enviar o pagamento
 
-1. Gere a referência no servidor.
+1. Gere uma referência única de 15 caracteres no servidor. `generateMerchantRef()` usa o segundo atual e não assegura unicidade em concorrência.
 2. Leia o montante do seu banco de dados, não do formulário do cliente.
 3. Guarde referência, sessão, montante, moeda e estado `pendente`.
 4. Só então gere o formulário Vinti4Net.
@@ -13,7 +13,7 @@
 2. Interrompa se `hasInvalidFingerprint()` for verdadeiro.
 3. Trate cancelamento e erro sem confirmar o pedido.
 4. Em sucesso, localize o pedido pela referência.
-5. Compare sessão, montante e moeda.
+5. Compare sessão e dados da operação guardada, incluindo o montante de uma compra. No estorno, o callback pode trazer montante `0`: confira o valor original no pedido que você enviou à SISP, não contra `getAmount()` do estorno.
 6. Confirme uma única vez, dentro de uma transação no banco.
 7. Guarde `transactionId` e `clearingPeriod`.
 

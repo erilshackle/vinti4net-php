@@ -9,7 +9,7 @@ O SDK oferece uma interface para:
 - recargas;
 - reembolsos;
 - validação das respostas;
-- recibos normais e DCC.
+- recibos de pagamento, DCC e estorno.
 
 ---
 

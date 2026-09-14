@@ -17,7 +17,7 @@ O callback da SISP pode variar conforme o resultado e o tipo da operação. Nem 
 
 | Campo SISP | Uso |
 | --- | --- |
-| `merchantRespPurchaseAmount` | `getAmount()` |
+| `merchantRespPurchaseAmount` | `getAmount()`; pode ser `0` num estorno aprovado |
 | `merchantRespCurrency` | `getCurrency()` |
 | `merchantRespEntityCode` | Entidade de serviço/recarga |
 | `merchantRespReferenceNumber` | Referência do serviço/recarga |
@@ -35,6 +35,8 @@ O callback da SISP pode variar conforme o resultado e o tipo da operação. Nem 
 | `merchantRespAdditionalErrorMessage` | Mensagem complementar |
 
 A v2.2 escolhe a primeira mensagem descritiva não vazia e a expõe em `$response->message`.
+
+A prioridade real é `merchantRespAdditionalErrorMessage`, depois `merchantRespErrorDetail` e, por último, `merchantRespErrorDescription`.
 
 ## Segurança e recibo
 

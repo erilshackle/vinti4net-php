@@ -14,7 +14,12 @@ A v2.2 mantém o fluxo público da linha v2 e concentra as melhorias em normaliz
 - Erros descritivos da SISP ficam disponíveis em `message` e `detail`.
 - `renderReceipt()` unifica recibo padrão e template personalizado.
 - `renderDccReceipt()` gera o recibo DCC com os valores originais da SISP.
+- `renderRefundReceipt()` gera recibo de estorno com montante original fornecido pela aplicação.
 - `toArray()` e `toJson()` mascaram o PAN.
+
+`preparePurchase()` exige o argumento `billing` (`array|Billing`). Para comprar sem dados adicionais de billing, passe um array vazio: `preparePurchase(1500, [])`. `setRequestParams()` aceita apenas `merchantRef`, `merchantSession`, `languageMessages` e `timeStamp`.
+
+Quando informado, o billing é normalizado e codificado em Base64 no campo `purchaseRequest`. Os seus campos individuais não são enviados como inputs separados do formulário. Com `[]`, o campo `purchaseRequest` não é enviado.
 
 ## APIs deprecated
 

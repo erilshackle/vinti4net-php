@@ -29,11 +29,13 @@ Os tipos tratados como sucesso são:
 8, 10, P, M
 ```
 
-Uma resposta desses tipos só vira `SUCCESS` quando o fingerprint recebido existe e é válido.
+Uma resposta desses tipos só vira `SUCCESS` quando o fingerprint recebido existe e é válido. Compra (`8`) também exige `merchantResp=C`; estorno (`10`) não exige esse campo.
 
 ## Cancelamento e erro
 
 O cálculo de resposta bem-sucedida não é aplicado a payloads de cancelamento ou erro. Eles são classificados como `CANCELLED` ou `ERROR`, nunca como sucesso.
+
+Nesses casos, `fingerprint_valid=true` significa apenas que **não foi aplicada a fórmula de sucesso**; não é prova de autenticidade do payload de erro. Nunca marque uma operação como paga ou estornada com base num erro ou cancelamento. Confirme o estado financeiro pela referência guardada e pelo fluxo de conciliação aplicável.
 
 Isso é importante porque uma recusa como “Unable validate secure password” pode trazer `resultFingerPrint`, mas não usa necessariamente o mesmo conjunto de campos de uma resposta aprovada.
 

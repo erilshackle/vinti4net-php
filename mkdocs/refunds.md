@@ -13,7 +13,7 @@ $vinti4->prepareRefund(
 Antes disso, defina uma referência para o reembolso e, opcionalmente, uma sessão:
 
 ```php
-$vinti4->setMerchant('REFUND00000001');
+$vinti4->setMerchant('REFUND000000001');
 ```
 
 Depois, gere o formulário:
@@ -50,10 +50,12 @@ O `clearingPeriod` é o período contabilístico no qual a transação ocorreu. 
 | Parâmetro | Tipo | Regra |
 | --- | --- | --- |
 | `amount` | `float|string` | Inteiro positivo, até 13 dígitos |
-| `transactionID` | `string` | Até 8 letras, números ou `_` |
+| `transactionID` | `string` | Até 8 caracteres alfanuméricos |
 | `clearingPeriod` | `string` | Numérico, até 4 dígitos |
 
 O reembolso usa CVE, código `132`. A biblioteca envia `transactionCode=4` e `reversal=R`.
+
+O montante deve ser o **total da transação original**; a SISP não suporta estorno parcial neste fluxo. Guarde esse montante no seu banco e não o extraia da resposta do estorno, que pode trazer `merchantRespPurchaseAmount=0`.
 
 ---
 
@@ -84,8 +86,15 @@ if ($response->hasInvalidFingerprint()) {
 }
 
 if ($response->isSuccess()) {
-    // Marque o reembolso como concluído uma única vez.
+    // Localize pela referência um estorno pendente, confira a sessão
+    // e marque-o como concluído uma única vez.
+
+    echo $response->renderRefundReceipt(
+        amount: $originalAmount, // valor guardado para a transação original
+        originalTransactionId: $originalTransactionId,
+        data: ['companyName' => 'Minha Empresa'],
+    );
 }
 ```
 
-Antes de reembolsar, confirme no seu banco que a transação original foi aprovada e ainda permite a devolução solicitada.
+O estorno pode retornar diretamente à URL de callback, sem apresentar uma página intermediária ao cliente. Erros `messageType=6` não revelam se eram de estorno: associe a referência recebida ao estorno pendente guardado na aplicação. Antes de reembolsar, confirme no seu banco que a transação original foi aprovada e ainda permite a devolução solicitada.

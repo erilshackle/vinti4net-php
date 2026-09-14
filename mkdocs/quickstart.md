@@ -24,9 +24,11 @@ $billing = Billing::from([
     'postalCode' => '7600',
 ]);
 
+// Sem dados de billing, passe [] explicitamente a preparePurchase(1500, []).
+
 try {
     $vinti4
-        ->setMerchant('PEDIDO00000001')
+        ->setMerchant('PEDIDO000000001')
         ->preparePurchase(1500, $billing);
 
     echo $vinti4->createPaymentForm(
@@ -72,7 +74,8 @@ $transactionId = $response->getTransactionId();
 $clearingPeriod = $response->getClearingPeriod();
 $amount = $response->getAmount();
 
-// Localize o pedido, compare os dados e confirme uma única vez.
+// Localize o pedido pela referência e confirme que é uma compra pendente.
+// Compare a sessão e o montante guardados; confirme uma única vez.
 
 echo $response->renderReceipt(data: [
     'companyName' => 'Minha Empresa, Lda.',
