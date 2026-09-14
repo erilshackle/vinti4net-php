@@ -1,10 +1,10 @@
-# Atualização da v2.1 para v2.2
+# Atualização da v2.1 para v2.3
 
 ```bash
-composer require erilshk/vinti4net:^2.2
+composer require erilshk/vinti4net:^2.3
 ```
 
-A v2.2 mantém o fluxo público da linha v2 e concentra as melhorias em normalização, segurança, respostas e recibos.
+A v2.3 mantém o fluxo público da linha v2 e concentra as melhorias em normalização, segurança, respostas e recibos.
 
 ## Principais mudanças
 
@@ -14,7 +14,6 @@ A v2.2 mantém o fluxo público da linha v2 e concentra as melhorias em normaliz
 - Erros descritivos da SISP ficam disponíveis em `message` e `detail`.
 - `renderReceipt()` unifica recibo padrão e template personalizado.
 - `renderDccReceipt()` gera o recibo DCC com os valores originais da SISP.
-- `renderRefundReceipt()` gera recibo de estorno com montante original fornecido pela aplicação.
 - `toArray()` e `toJson()` mascaram o PAN.
 
 `preparePurchase()` exige o argumento `billing` (`array|Billing`). Para comprar sem dados adicionais de billing, passe um array vazio: `preparePurchase(1500, [])`. `setRequestParams()` aceita apenas `merchantRef`, `merchantSession`, `languageMessages` e `timeStamp`.
@@ -23,7 +22,7 @@ Quando informado, o billing é normalizado e codificado em Base64 no campo `purc
 
 ## APIs deprecated
 
-| API anterior | Preferir na v2.2 |
+| API anterior | Preferir na v2.3 |
 | --- | --- |
 | `Billing::create()` | `Billing::from(...)->toArray()` |
 | `addrMatch()` | `addressMatchesShipping()` |
@@ -31,7 +30,7 @@ Quando informado, o billing é normalizado e codificado em Base64 no campo `purc
 | `acctInfo()` | `accountInfo()` |
 | `fromUser()` | mapeamento explícito com `Billing::from()` |
 
-Esses métodos continuam disponíveis em v2.2 para reduzir quebras. Não há necessidade de migrar para o namespace planejado da v3 nesta release.
+Esses métodos continuam disponíveis em v2.3 para reduzir quebras. Não há necessidade de migrar para o namespace planejado da v3 nesta release.
 
 ## Checklist
 

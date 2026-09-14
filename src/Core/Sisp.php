@@ -74,6 +74,28 @@ abstract class Sisp
     }
 
     /**
+     * Generate a 15-character merchant reference.
+     *
+     * By default, the reference contains a date followed by a random suffix:
+     * R + ymdHis + 2 random alphanumeric characters.
+     *
+     * When $random is true, the reference is generated using 14 random
+     * hexadecimal characters after the "R" prefix for more security preference.
+     *
+     * @param bool $random Generate a fully random reference.
+     */
+    public static function generateReference(bool $random = false): string
+    {
+        if ($random) {
+            return 'R' . strtoupper(bin2hex(random_bytes(7)));
+        }
+
+        $characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $suffix = $characters[random_int(0, 35)] . $characters[random_int(0, 35)];
+        return 'R' . date('ymdHis') . $suffix;
+    }
+
+    /**
      * Return a supplied endpoint or build the default operation URL.
      */
     protected function endpoint(string $path): string
@@ -228,8 +250,8 @@ abstract class Sisp
         }
 
         $merchantRef = trim((string) ($params['merchantRef'] ?? ''));
-        if ($merchantRef === '' || strlen($merchantRef) > 15) {
-            return 'MerchantRef é obrigatório e deve ter até  15 caracteres.';
+        if (strlen($merchantRef) !== 15) {
+            return 'MerchantRef é obrigatório e deve ter exatamente 15 caracteres.';
         }
 
         $merchantSession = trim((string) ($params['merchantSession'] ?? ''));

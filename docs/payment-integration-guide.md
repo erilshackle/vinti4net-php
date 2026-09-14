@@ -10,7 +10,22 @@ $session = 'S' . date('YmdHis');
 $amount = 1500;
 ```
 
-Use uma referência de 15 caracteres e garanta unicidade na sua base de dados. As referências geradas apenas com `date('YmdHis')` podem colidir no mesmo segundo.
+Use uma referência única de exatamente 15 caracteres e guarde-a antes de enviar
+o pagamento à SISP:
+
+```php
+$reference = Vinti4Net::generateMerchantRef();
+
+$sdk->setMerchant($reference);
+```
+
+Por padrão, o SDK utiliza R + ymdHis + dois caracteres alfanuméricos
+aleatórios. Para gerar uma referência totalmente aleatória:
+
+```php
+$reference = Vinti4Net::generateMerchantRef(random: true);
+```
+
 
 ## 2. Preparar a transação
 

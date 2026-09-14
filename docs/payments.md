@@ -13,11 +13,13 @@ $sdk = new Vinti4Net(
     posID: $_ENV['VINTI4_POS_ID'],
     posAuthCode: $_ENV['VINTI4_AUTH_CODE'],
 );
-$reference = 'R' . date('YmdHis');
+$reference = Vinti4Net::generateMerchantRef();
 $sdk->setMerchant($reference);
 ```
+Use `generateMerchantRef(random: true)` para gerar uma referência totalmente
+aleatória, sem incluir a data.
 
-`setMerchant()` também aceita uma sessão personalizada. Se ela não for informada, a biblioteca gera uma sessão no formato `S` + `YmdHis`.
+`setMerchant()` também aceita uma sessão personalizada. Se ela não for informada, a biblioteca gera uma sessão no formato `S` + `ymdHis` + `XX`.
 
 ---
 
@@ -43,7 +45,7 @@ $sdk->preparePurchase(
 );
 ```
 
-O Billing pode ser um objeto `Billing` ou um array. Para não enviar dados de billing, use um array vazio:
+O Billing pode ser um objeto `Billing` ou um array. Para não enviar dados de billing, use `Billing::without3DS()` ou um array vazio:
 
 ```php
 $sdk->preparePurchase(1500, []);

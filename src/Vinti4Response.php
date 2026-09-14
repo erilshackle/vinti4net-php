@@ -15,7 +15,8 @@ use Erilshk\Sisp\Receipt\Receipt;
  * - A human-friendly message
  * - Parsed data (including DCC information)
  * - Debug information when fingerprint validation fails
- *
+ * 
+ * @version 2.3.0
  * @package Erilshk\Vinti4Net
  */
 class Vinti4Response

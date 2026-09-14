@@ -13,7 +13,7 @@ SDK PHP comunitário para integração com a **Rede Vinti4 / SISP**, em Cabo Ver
 ## Instalação
 
 ```bash
-composer require erilshk/vinti4net:^2.2
+composer require erilshk/vinti4net:^2.3
 ```
 
 Requer PHP 8.1 ou superior.
@@ -57,7 +57,9 @@ try {
 }
 ```
 
-O formulário é auto-submetido para a página da Rede Vinti4. `merchantRef` e `merchantSession` aceitam no máximo 15 caracteres.
+O formulário é auto-submetido para a página da Rede Vinti4. `merchantRef` e `merchantSession` devem ter exatamente 15 caracteres. Guarde uma referência única para cada operação; `generateMerchantRef()` adiciona aleatoriedade para reduzir colisões, mas a aplicação ainda deve garantir a unicidade da referência na base de dados.
+
+Para comprar sem enviar billing, passe `Billing::without3DS()` como segundo argumento de `preparePurchase()`; esta opção só se aplica à compra.
 
 ## Tipos de transação
 
@@ -99,7 +101,7 @@ $vinti4
     ->setMerchant('REFUND000000001')
     ->prepareRefund(
         amount: 1500,
-        transactionID: 'TXN78901',
+        transactionID: '3456',
         clearingPeriod: '2411',
     );
 
@@ -165,6 +167,18 @@ echo $response->renderReceipt(data: [
 ]);
 ```
 
+### Recibo de reembolso
+
+Após confirmar o reembolso e validar o fingerprint, recupere o valor original na sua aplicação. A SISP pode devolver montante zero na resposta de reembolso.
+
+```php
+echo $response->renderRefundReceipt(
+    amount: '1500',
+    originalTransactionId: '3456',
+    data: ['companyName' => 'Minha Empresa, Lda.'],
+);
+```
+
 ### Template próprio
 
 ```php
@@ -179,14 +193,14 @@ Templates `.php`, `.html` e `.htm` são aceitos. Templates PHP recebem `$receipt
 ### Recibo DCC
 
 ```php
-if (($response->dcc['enabled'] ?? false) === true) {
+if ($response->isDccEnabled()) {
     echo $response->renderDccReceipt();
 }
 ```
 
 O recibo DCC exibe exatamente os valores validados enviados pela SISP. A biblioteca não recalcula `amount`, não arredonda `rate` e não acrescenta `%` a `markup`.
 
-Os métodos antigos continuam disponíveis na v2.2:
+Os métodos antigos continuam disponíveis na v2.3:
 
 ```php
 $response->generateReceiptHtml('Minha Empresa');
@@ -216,15 +230,14 @@ composer test-coverage
 
 ## Atualização
 
-Consulte [UPGRADE-2.2.md](UPGRADE-2.2.md) antes de atualizar a partir da v2.1.
+Consulte o [guia de atualização da v2.1 para v2.2](https://erilshackle.github.io/vinti4net-php/upgrade-2.2/) e as [alterações da v2.3](CHANGELOG.md) antes de atualizar.
 
 ## Links
 
 - [Documentação](https://erilshackle.github.io/vinti4net-php/)
 - [Packagist](https://packagist.org/packages/erilshk/vinti4net)
 - [SISP](https://www.sisp.cv)
-- [Exemplos](examples/)
 
 ## Licença
 
-Distribuído sob a licença MIT. Consulte [LICENSE](LICENSE).
+Distribuído sob a licença MIT. Consulte a licença do repositório.

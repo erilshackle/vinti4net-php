@@ -39,8 +39,10 @@ $billing = Billing::from([
     'mobilePhone' => ['cc' => '238', 'subscriber' => '9912345'],
 ]);
 
+$reference = Vinti4Net::generateMerchantRef();
+
 $vinti4
-    ->setMerchant('PEDIDO000000001')
+    ->setMerchant($reference)
     ->preparePurchase(1500, $billing);
 
 echo $vinti4->createPaymentForm(
@@ -63,7 +65,7 @@ $vinti4->prepareRefund(1000, $originalTransactionId, $clearingPeriod);
 
 Estas chamadas preparam operações alternativas: use apenas uma por formulário. Serviço e recarga exigem código numérico de entidade (`int`) e referência/número com até 9 dígitos. Os códigos de entidade são fornecidos pela SISP ou pela entidade prestadora, não pelo SDK. `prepareRefund()` usa o montante integral da operação original, `transactionID` e `clearingPeriod` retornados no pagamento aprovado. O estorno é em CVE; a SISP não aceita devolução parcial neste fluxo.
 
-Antes de enviar cada operação, defina e guarde uma referência própria de 15 caracteres com `setMerchant($reference, $session = null)`. O SDK também pode gerar uma referência no momento do envio; `Vinti4Net::generateMerchantRef()` devolve `R` mais data/hora, sem garantir unicidade para transações no mesmo segundo. `setRequestParams()` aceita apenas `merchantRef`, `merchantSession`, `languageMessages` e `timeStamp`. Depois da preparação, use `createPaymentForm($callbackUrl, 'pt')`.
+Antes de enviar cada operação, defina e guarde uma referência própria de 15 caracteres com `setMerchant($reference, $session = null)`. O SDK também pode gerar uma referência no momento do envio; `Vinti4Net::generateMerchantRef($random)` devolve `R` mais data/hora, garantindo unicidade para transações no mesmo segundo, onde random `false` gera _R + ymdHis + 2 random alphanumeric characters_ e `true` gera _R + 14 random hexadecimal characters_. `setRequestParams()` aceita apenas `merchantRef`, `merchantSession`, `languageMessages` e `timeStamp`. Depois da preparação, use `createPaymentForm($callbackUrl, 'pt')`.
 
 O estorno pode levar o cliente diretamente à URL de resposta. Consulte: https://erilshackle.github.io/vinti4net-php/payments/ e https://erilshackle.github.io/vinti4net-php/refunds/ .
 

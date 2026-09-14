@@ -25,7 +25,7 @@ use Erilshk\Sisp\Exceptions\Vinti4Exception;
  * - Refund
  *
  * @author  Eril TS Carvalho <erilandocarvalho@gmail.com>
- * @version 2.2.0
+ * @version 2.3.0
  * 
  * @package Erilshk\Sisp
  * @link https://erilshackle.github.io/vinti4net-php Documentation
@@ -108,15 +108,21 @@ class Vinti4Net
 
     /**
      * Generate a 15-character merchant reference.
+     *
+     * By default, the reference contains a date followed by a random suffix:
+     * R + ymdHis + 2 random alphanumeric characters.
+     * 
+     * @param bool $random Generate a fully random reference instead of using
+     *                     the date with a random suffix.
      */
-    public static function generateMerchantRef(): string
+    public static function generateMerchantRef(bool $random = false): string
     {
-        return 'R' . date('YmdHis');
+        return Sisp::generateReference($random);
     }
 
 
     /**
-     * Set the merchant reference and session. (15 chars max)
+     * Set the merchant reference and session (exactly 15 characters each).
      *
      * Sets the merchant identifier/reference used by this client
      *

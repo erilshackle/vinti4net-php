@@ -3,6 +3,23 @@
 All notable changes to this project are documented in this file.
 
 
+## [2.3.0] - 2026-09-14
+
+### Added
+
+- `Billing::without3DS()` for purchases without additional billing data.
+- `Vinti4Net::generateMerchantRef()` as a 15-character timestamp-based + 2 sufix reference helper.
+- `Vinti4Response::renderRefundReceipt()` and a dedicated refund receipt template.
+- `Vinti4Response::isDccEnabled()` and `getClearingPeriod()` helpers.
+- Expanded payment, refund, DCC and receipt documentation.
+
+### Changed
+
+- Merchant reference generation now includes randomness to reduce collisions between transactions created in the same second.
+- Merchant references and sessions must contain exactly 15 characters. Applications that previously supplied a shorter reference must update their reference generation.
+- Refund receipts take the original amount from the merchant application because the provider may return zero.
+
+
 ## [2.2.1] - 2026-09-06
 
 ### Added

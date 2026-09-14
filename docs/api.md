@@ -36,7 +36,7 @@ new Vinti4Net(
 | --- | --- | --- |
 | `setRequestParams(array $params)` | `self` | Configura parâmetros permitidos |
 | `setMerchant(string $reference, ?string $session = null)` | `self` | Define referência e sessão |
-| `generateMerchantRef()` (estático) | `string` | Gera `R` + timestamp (`YmdHis`); não garante unicidade |
+| `generateMerchantRef(bool $random = false)` (estático) | `string` | Gera uma referência de exatamente 15 caracteres |
 | `preparePurchase(float|string $amount, array|Billing $billing, string $currency = 'CVE')` | `static` | Prepara compra; passe `[]` para não enviar billing |
 | `prepareServicePayment(float|string $amount, int $entity, string $number)` | `static` | Prepara pagamento de serviço |
 | `prepareRecharge(float|string $amount, int $entity, string $number)` | `static` | Prepara recarga |
@@ -45,9 +45,27 @@ new Vinti4Net(
 | `processResponse(array $postData)` | `Vinti4Response` | Processa o retorno da SISP; `10` indica estorno bem-sucedido |
 | `getRequest()` | `array` | Retorna a requisição preparada |
 
+
+### Gerar uma referência
+
+```php
+// R + ymdHis + dois caracteres aleatórios
+$reference = Vinti4Net::generateMerchantRef();
+
+// R + 14 caracteres hexadecimais aleatórios
+$reference = Vinti4Net::generateMerchantRef(random: true);
+```
+O formato padrão preserva uma parte cronológica e adiciona um sufixo aleatório.
+O modo totalmente aleatório não expõe a data da criação.
+
+
 ### Exemplo de compra
 
 ```php
+// R + ymdHis + dois caracteres aleatórios
+$reference = Vinti4Net::generateMerchantRef();
+
+
 $billing = \Erilshk\Sisp\Billing::from([
     'email' => 'cliente@exemplo.cv',
     'country' => '132',
@@ -57,7 +75,7 @@ $billing = \Erilshk\Sisp\Billing::from([
 ]);
 
 echo $vinti4
-    ->setMerchant('PEDIDO000000001')
+    ->setMerchant($reference)
     ->preparePurchase(1500, $billing)
     ->createPaymentForm('https://meusite.cv/retorno');
 ```

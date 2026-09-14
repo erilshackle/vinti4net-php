@@ -7,4 +7,4 @@ O projeto é desenvolvido por [Eril TS Carvalho (@erilshackle)](https://github.c
 !!! warning "Projeto independente"
     Este SDK não é oficial nem representa a SISP. Para utilizar os serviços, o comerciante precisa das suas próprias credenciais e deve respeitar as condições e orientações fornecidas pela SISP.
 
-Esta documentação descreve a série **2.2.x** do pacote `erilshk/vinti4net`, no namespace `Erilshk\Sisp`.
+Esta documentação descreve a série **2.3.x** do pacote `erilshk/vinti4net`, no namespace `Erilshk\Sisp`.

@@ -1,9 +1,9 @@
-# Vinti4Net PHP SDK 2.2
+# Vinti4Net PHP SDK 2.3
 
 SDK PHP para integrar pagamentos da Rede Vinti4/SISP em aplicações de Cabo Verde.
 
 ```bash
-composer require erilshk/vinti4net:^2.2
+composer require erilshk/vinti4net:^2.3
 ```
 
 ## O que a biblioteca faz
