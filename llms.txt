@@ -1,27 +1,34 @@
-# Vinti4Net PHP SDK 2.2
+# Vinti4Net PHP SDK
 
-> SDK PHP comunitário para a Rede Vinti4 / SISP, Cabo Verde. Não é um SDK oficial da SISP.
+> SDK PHP comunitário para compras, pagamentos de serviço, recargas e estornos na Rede Vinti4/SISP em Cabo Verde. Pacote `erilshk/vinti4net`, documentação da série 2.2.x, namespace `Erilshk\Sisp`. Projeto independente, não oficial da SISP.
 
-## Referências
+Comece pelo [guia rápido](https://erilshackle.github.io/vinti4net-php/quickstart/) para preparar um pagamento e tratar o callback. Em compras sem dados 3DS adicionais, o argumento billing é obrigatório e recebe `[]`: `preparePurchase(1500, [])`.
 
-- [README](README.md): instalação e fluxo principal.
-- [Guia de atualização](UPGRADE-2.2.md): diferenças entre 2.1 e 2.2.
-- [Changelog](CHANGELOG.md): alterações da versão.
-- [Referência completa](llms-full.txt): API, regras e exemplos.
-- [Exemplos](examples/): pagamento e callback.
+## Começar
 
-## Instruções
+- [Instalação](https://erilshackle.github.io/vinti4net-php/installation/): requisitos, Composer e credenciais.
+- [Configuração](https://erilshackle.github.io/vinti4net-php/configuration/): cliente, endpoint e idioma.
+- [Guia rápido](https://erilshackle.github.io/vinti4net-php/quickstart/): compra e callback.
+- [Integração completa](https://erilshackle.github.io/vinti4net-php/payment-integration-guide/): persistência do pedido e confirmação.
 
-- Instale com `composer require erilshk/vinti4net:^2.2`.
-- Use o namespace `Erilshk\Sisp` e a facade `Vinti4Net`.
-- Configure credenciais por ambiente; nunca escreva POS ID ou auth code no código.
-- Defina referência e sessão com `setMerchant()`; ambas aceitam no máximo 15 caracteres.
-- Use `preparePurchase()`, `prepareServicePayment()`, `prepareRecharge()` ou `prepareRefund()`.
-- Gere o formulário auto-submit com `createPaymentForm(returnUrl, lang)`.
-- Processe callbacks com `processResponse($_POST)`.
-- Trate `hasInvalidFingerprint()` antes de confiar nos dados.
-- Confirme referência, valor e idempotência no banco da aplicação.
-- Capture `Erilshk\Sisp\Exceptions\Vinti4Exception`.
-- Use `renderReceipt()` para recibos normais e `renderDccReceipt()` para DCC.
-- Nunca recalcule ou arredonde valores DCC nem trate `dccMarkup` como percentagem.
-- Não registre o payload bruto do callback, pois ele pode conter PAN.
+## Operações
+
+- [Pagamentos](https://erilshackle.github.io/vinti4net-php/payments/): compra, serviço e recarga.
+- [Billing 3DS](https://erilshackle.github.io/vinti4net-php/billing/): dados de faturação, contactos, entrega e conta.
+- [Estornos](https://erilshackle.github.io/vinti4net-php/refunds/): devolução integral e recibo de estorno.
+- [Respostas](https://erilshackle.github.io/vinti4net-php/responses/): sucesso, erro, cancelamento e validação.
+- [Campos da resposta](https://erilshackle.github.io/vinti4net-php/response-fields/): dados úteis retornados pela SISP.
+- [Recibos](https://erilshackle.github.io/vinti4net-php/receipt/): recibo padrão, personalizado e de estorno.
+- [Recibo DCC](https://erilshackle.github.io/vinti4net-php/dcc/): conversão de moeda e recibo DCC.
+
+## Referência e apoio
+
+- [Referência da API](https://erilshackle.github.io/vinti4net-php/api/): métodos, assinaturas e retornos públicos.
+- [Segurança](https://erilshackle.github.io/vinti4net-php/security/): validação, dados sensíveis e idempotência.
+- [Perguntas frequentes](https://erilshackle.github.io/vinti4net-php/faq/): dúvidas comuns de integração.
+- [Atualização 2.1 → 2.2](https://erilshackle.github.io/vinti4net-php/upgrade-2.2/): diferenças entre versões.
+- [Sobre o projeto](https://erilshackle.github.io/vinti4net-php/about/): autoria e aviso de independência.
+
+## Referência consolidada
+
+- [llms-full.txt](https://erilshackle.github.io/vinti4net-php/llms-full.txt): guia de uso autocontido para assistentes e indexadores.
