@@ -24,11 +24,10 @@ $billing = Billing::from([
     'postalCode' => '7600',
 ]);
 
-// Sem dados de billing, passe [] explicitamente a preparePurchase(1500, []).
 
 try {
     $vinti4
-        ->setMerchant('PEDIDO000000001')
+        ->setMerchant('R' . date('YmdHis'))
         ->preparePurchase(1500, $billing);
 
     echo $vinti4->createPaymentForm(
@@ -42,6 +41,8 @@ try {
 ```
 
 O HTML retornado contém um formulário auto-submit. Não altere seus campos.
+
+Para uma compra sem dados 3DS adicionais, passe `[]` no lugar de `$billing`.
 
 ## Processar o callback
 

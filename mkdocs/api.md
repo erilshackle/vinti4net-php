@@ -1,6 +1,6 @@
 # API Reference – Vinti4Net PHP SDK
 
-Esta página descreve a API pública da versão 2.2 do SDK para integração com Vinti4/SISP.
+Consulte aqui as assinaturas, retornos e parâmetros públicos do SDK para integração com Vinti4/SISP.
 
 ---
 
@@ -62,7 +62,7 @@ echo $vinti4
     ->createPaymentForm('https://meusite.cv/retorno');
 ```
 
-Sem billing, a chamada é `preparePurchase(1500, [])`. A assinatura requer o segundo argumento mesmo quando não há dados de billing. Com billing, o formulário envia apenas o campo `purchaseRequest` (JSON em Base64), sem inputs individuais para os dados 3DS. `setRequestParams()` aceita somente `merchantRef`, `merchantSession`, `languageMessages` e `timeStamp`; entidade, referência de serviço e billing são passados nos métodos próprios.
+Sem billing, use `preparePurchase(1500, [])`. O segundo argumento é obrigatório. `setRequestParams()` aceita somente `merchantRef`, `merchantSession`, `languageMessages` e `timeStamp`; os restantes dados são passados ao método da operação.
 
 ---
 
@@ -134,10 +134,10 @@ $response = $vinti4->processResponse($_POST);
 
 if ($response->isSuccess()) {
     echo 'Aprovada: ' . $response->getAmount();
-} elseif ($response->isCancelled()) {
-    echo 'Cancelada pelo utilizador.';
 } elseif ($response->hasInvalidFingerprint()) {
     echo 'Resposta inválida.';
+} elseif ($response->isCancelled()) {
+    echo 'Cancelada pelo utilizador.';
 } else {
     echo $response->message;
 }
@@ -217,5 +217,5 @@ try {
 }
 ```
 
-Na v2.2, as falhas da biblioteca usam essa exceção pública.
+As falhas da biblioteca usam essa exceção pública.
 

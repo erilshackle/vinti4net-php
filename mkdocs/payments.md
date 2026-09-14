@@ -2,6 +2,10 @@
 
 O SDK oferece três tipos de pagamento: compra, pagamento de serviço e recarga. A compra aceita dados adicionais de billing/3DS, mas também pode ser preparada sem eles.
 
+![Exemplo do formulário de pagamento da Vinti4](assets/formulario-pagamento.svg)
+
+*Imagem ilustrativa: substitua este ficheiro pela captura do formulário de pagamento.*
+
 Antes de preparar qualquer pagamento, crie o cliente e defina uma referência:
 
 ```php
@@ -11,8 +15,8 @@ $sdk = new Vinti4Net(
     posID: $_ENV['VINTI4_POS_ID'],
     posAuthCode: $_ENV['VINTI4_AUTH_CODE'],
 );
-
-$sdk->setMerchant('PEDIDO000000001');
+$reference = 'R' . date('YmdHis');
+$sdk->setMerchant($reference);
 ```
 
 `setMerchant()` também aceita uma sessão personalizada. Se ela não for informada, a biblioteca gera uma sessão no formato `S` + `YmdHis`.
@@ -47,13 +51,13 @@ O Billing pode ser um objeto `Billing` ou um array. Para não enviar dados de bi
 $sdk->preparePurchase(1500, []);
 ```
 
-Um Billing parcialmente preenchido não é equivalente a `[]`: se houver dados, os campos necessários para gerar `purchaseRequest` serão verificados. Quando presente, o billing é enviado somente dentro de `purchaseRequest` (JSON em Base64), e não como inputs individuais. Consulte [Billing 3DS](billing.md).
+Se passar dados de billing, informe os campos necessários de faturação. Consulte [Billing 3DS](billing.md).
 
 | Parâmetro | Tipo | Obrigatório | Descrição |
 | --- | --- | --- | --- |
 | `amount` | `float|string` | Sim | Montante inteiro positivo, até 13 dígitos |
 | `billing` | `array|Billing` | Sim, argumento explícito | Dados opcionais de billing; passe `[]` para não os enviar |
-| `currency` | `string` | Não | Moeda da operação; o padrão é `CVE` |
+| `currency` | `string` | Não | Moeda da operação; o padrão é `CVE` `(132)` |
 
 Embora a assinatura mantenha `float` por compatibilidade da v2, o valor precisa chegar como inteiro. Use `1500`, não `1500.00` nem `13,51`.
 
@@ -118,7 +122,7 @@ sequenceDiagram
     participant Callback
     Loja->>SDK: preparePurchase / service / recharge
     Loja->>SDK: createPaymentForm()
-    SDK->>Vinti4: Formulário e fingerprint
+    SDK->>Vinti4: Formulário de pagamento
     Vinti4->>Callback: Resultado da operação
     Callback->>SDK: processResponse()
 ```

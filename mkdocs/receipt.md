@@ -4,6 +4,10 @@ Os recibos são gerados a partir de um `Vinti4Response` já processado.
 
 ## Recibo padrão
 
+![Exemplo do recibo de pagamento](assets/recibo-pagamento.svg)
+
+*Imagem ilustrativa: substitua este ficheiro pela captura do recibo de pagamento.*
+
 ```php
 echo $response->renderReceipt(data: [
     'companyName' => 'Minha Empresa, Lda.',

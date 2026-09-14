@@ -1,5 +1,9 @@
 # Recibo DCC
 
+![Exemplo do recibo DCC](assets/recibo-dcc.svg)
+
+*Imagem ilustrativa: substitua este ficheiro pela captura do recibo DCC.*
+
 DCC permite que o titular veja e aceite o pagamento na moeda apresentada pela SISP.
 
 ## Detectar DCC

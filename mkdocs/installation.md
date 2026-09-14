@@ -43,11 +43,4 @@ VINTI4_CALLBACK_URL=https://loja.example.cv/pagamentos/vinti4/callback
 
 Não envie o `.env` ao Git.
 
-## Atualizar da v2.1
-
-```bash
-composer require erilshk/vinti4net:^2.2 --with-all-dependencies
-```
-
-O namespace continua `Erilshk\Sisp` e o fluxo principal da v2 foi mantido. Consulte [Atualização 2.1 → 2.2](upgrade-2.2.md).
 

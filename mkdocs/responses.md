@@ -44,7 +44,7 @@ if ($response->isSuccess()) {
 
 ## Mensagens de erro
 
-A v2.2 procura, nesta ordem:
+A mensagem apresentada usa, quando disponível, o primeiro destes campos:
 
 1. `merchantRespAdditionalErrorMessage`;
 2. `merchantRespErrorDetail`;
@@ -68,7 +68,7 @@ $currency = $response->getCurrency();
 
 Todos podem retornar `null` quando o campo não existir naquele tipo de resposta.
 
-Uma resposta de compra `messageType=8` só é sucesso se `merchantResp=C` e o fingerprint for válido. Um estorno aprovado usa `messageType=10` e fingerprint válido; não exige `merchantResp=C`. Erros `messageType=6` não identificam a operação original: `operation` fica `null`. Localize a compra ou o estorno pendente pela referência guardada na sua aplicação. Um cancelamento normal retorna `isCancelled()=true`; se um payload de sucesso tiver fingerprint inválido e também indicar cancelamento, prevalece `hasInvalidFingerprint()`.
+Em compras aprovadas, o SDK exige a confirmação `merchantResp=C` e um fingerprint válido. Em estornos aprovados, o tipo de resposta é `10`; o campo `merchantResp` não precisa de ser `C`. Um erro de resposta não identifica necessariamente a operação: `operation` fica `null`. Consulte a compra ou o estorno pendente pela referência guardada. Se o fingerprint de uma resposta de sucesso for inválido, `hasInvalidFingerprint()` tem prioridade sobre um sinal de cancelamento.
 
 ## Array e JSON seguros
 
@@ -79,17 +79,5 @@ $json = $response->toJson();
 
 Esses métodos mascaram `merchantRespPan`. A propriedade `$response->data` mantém o payload original e deve ser tratada como sensível.
 
-## Exemplo de cancelamento
-
-```php
-[
-    'merchantRef' => 'PEDIDO000000001',
-    'merchantSession' => 'S20260906133152',
-    'UserCancelled' => 'true',
-]
-```
-
-## Exemplo de erro
-
-Uma autenticação recusada permanece em `ERROR` e pode expor uma mensagem como `Unable validate secure password. Please try again later.`. Ela não deve ser apresentada como fingerprint inválido.
+Para dúvidas sobre erros e cancelamentos, consulte [Perguntas frequentes](faq.md).
 

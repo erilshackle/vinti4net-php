@@ -292,6 +292,7 @@ class Vinti4Response
         return $json === false ? '{}' : $json;
     }
 
+
     /**
      * Checks whether the transaction was successful.
      */
@@ -377,6 +378,14 @@ class Vinti4Response
     public function getCurrency(): ?string
     {
         return $this->data['merchantRespCurrency'] ?? null;
+    }
+
+    /**
+     * Checks whether the Dynamic Currency Conversion is enabled or not.
+     */
+    public function isDccEnabled(): bool
+    {
+        return $this->dcc['enabled'] ?? false;
     }
 
     /**

@@ -21,7 +21,7 @@ $vinti4
     ->preparePurchase($amount, $billing);
 ```
 
-Se não quiser enviar dados de billing, substitua `$billing` por `[]`: `preparePurchase($amount, [])`. O segundo argumento continua explícito. Quando houver billing, o formulário envia esses dados exclusivamente no campo `purchaseRequest` (Base64), não como campos HTML separados.
+Se não quiser enviar dados de billing, use `preparePurchase($amount, [])`.
 
 Use um método `prepare...()` por envio. Outro `prepare...()` substitui os dados específicos da transação anterior.
 
@@ -34,7 +34,7 @@ echo $vinti4->createPaymentForm(
 );
 ```
 
-O método valida o pedido, normaliza valores, cria os dados 3DS quando necessário, calcula o fingerprint e retorna o formulário auto-submit.
+O método retorna o formulário que encaminha o cliente para a Vinti4.
 
 ## 4. Receber e classificar o callback
 
@@ -58,10 +58,10 @@ if ($response->hasFailed()) {
 
 ## 5. Validar contra o seu banco
 
-| Dado | Callback | Seu banco |
+| Dado | Callback | Seu backend (db) |
 | --- | --- | --- |
 | Referência | `getMerchantRef()` | referência do pedido |
-| Sessão | `data['merchantRespMerchantSession']` | sessão da tentativa |
+| Sessão | `getMerchantSession()` | sessão da tentativa |
 | Montante | `getAmount()` | total esperado |
 | Estado | `isSuccess()` | ainda pendente |
 
@@ -79,7 +79,7 @@ $clearingPeriod = $response->getClearingPeriod();
 ## 7. Mostrar o recibo
 
 ```php
-echo ($response->dcc['enabled'] ?? false)
+echo $response->isDccEnabled()
     ? $response->renderDccReceipt()
     : $response->renderReceipt(data: [
         'companyName' => 'Minha Empresa, Lda.',

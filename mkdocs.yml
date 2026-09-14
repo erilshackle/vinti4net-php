@@ -59,21 +59,16 @@ nav:
       - Guia rápido: quickstart.md
       - Integração completa: payment-integration-guide.md
   - Pagamentos: payments.md
-  - Requisições: requests.md
   - Billing 3DS: billing.md
   - Reembolsos: refunds.md
-  - Respostas: responses.md
+  - Respostas:
+      - Processar respostas: responses.md
+      - Campos da resposta: response-fields.md
   - Recibos:
       - Recibo padrão e personalizado: receipt.md
       - Recibo DCC: dcc.md
   - Referência da API: api.md
-  - Guias técnicos:
-      - Referência e sessão: merchant-data.md
-      - Campos enviados: request-fields.md
-      - Campos recebidos: response-fields.md
-      - Fingerprint: fingerprint.md
-      - Segurança: security.md
-      - Erros e diagnóstico: troubleshooting.md
+  - Segurança: security.md
+  - Perguntas frequentes: faq.md
   - Atualização 2.1 → 2.2: upgrade-2.2.md
-  - Internals: architecture.md
   - Sobre: about.md

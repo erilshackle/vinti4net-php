@@ -42,14 +42,6 @@ Para obter o array normalizado:
 $data = $billing->toArray();
 ```
 
-`Billing::create()` continua disponível na v2.2, mas está deprecated. O substituto é:
-
-```php
-$data = Billing::from($dados)->toArray();
-```
-
----
-
 ## Exemplo completo com chaining
 
 ```php
@@ -96,7 +88,7 @@ $billing = Billing::make()
 | `billAddrLine1` | `address` | `string` | Endereço principal |
 | `billAddrPostCode` | `postalCode` | `string` | Código postal |
 
-`billAddrCountry` usa `132` por padrão; quando o billing é enviado, forneça email, cidade, morada e código postal. Um billing parcial não vazio falha ao gerar o `purchaseRequest`. `[]` não gera `purchaseRequest`. Quando houver billing, o formulário envia somente `purchaseRequest` (JSON em Base64); `email` e os restantes campos de billing não aparecem como inputs separados.
+`billAddrCountry` usa `132` por padrão. Se informar billing, forneça email, cidade, morada e código postal. Para não enviar dados 3DS adicionais, passe `[]` em `preparePurchase()`.
 
 ## Campos opcionais de faturação
 
@@ -202,7 +194,7 @@ Billing::from([
 ]);
 ```
 
-Campos desconhecidos são ignorados para manter compatibilidade com a linha v2.
+Campos desconhecidos são ignorados.
 
 Um payload 3DS já no formato SISP também pode ser passado diretamente:
 
@@ -236,30 +228,4 @@ Nesse exemplo, `$user['phone']` deve conter o número local, sem `+238`. O `Bill
 
 ---
 
-## Métodos deprecated na v2.2
-
-| Método antigo | Substituto |
-| --- | --- |
-| `Billing::create()` | `Billing::from(...)->toArray()` |
-| `addrMatch()` | `addressMatchesShipping()` |
-| `acctID()` | `accountId()` |
-| `acctInfo()` | `accountInfo()` |
-| `fromUser()` | Mapeamento explícito com `Billing::from()` |
-
-Eles continuam funcionais na v2.2 e podem ser migrados gradualmente.
-
----
-
-## Fluxo do Billing
-
-```mermaid
-flowchart TD
-    A[Dados do cliente] --> B{Como criar?}
-    B -->|Array| C[Billing::from]
-    B -->|Chaining| D[Billing::make]
-    C --> E[preparePurchase]
-    D --> E
-    E --> F[purchaseRequest em Base64]
-    F --> G[createPaymentForm]
-```
 

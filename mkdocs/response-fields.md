@@ -34,7 +34,7 @@ O callback da SISP pode variar conforme o resultado e o tipo da operação. Nem 
 | `merchantRespErrorDetail` | Detalhe adicional |
 | `merchantRespAdditionalErrorMessage` | Mensagem complementar |
 
-A v2.2 escolhe a primeira mensagem descritiva não vazia e a expõe em `$response->message`.
+A primeira mensagem descritiva não vazia fica disponível em `$response->message`.
 
 A prioridade real é `merchantRespAdditionalErrorMessage`, depois `merchantRespErrorDetail` e, por último, `merchantRespErrorDescription`.
 
