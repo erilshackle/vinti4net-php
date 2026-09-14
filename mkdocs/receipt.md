@@ -4,13 +4,11 @@ Os recibos são gerados a partir de um `Vinti4Response` já processado.
 
 ## Recibo padrão
 
-![Exemplo do recibo de pagamento](assets/recibo-pagamento.svg)
-
-*Imagem ilustrativa: substitua este ficheiro pela captura do recibo de pagamento.*
+![Exemplo do recibo de pagamento](assets/recibo-pagamento.png)
 
 ```php
 echo $response->renderReceipt(data: [
-    'companyName' => 'Minha Empresa, Lda.',
+    'companyName' => 'Minha Loja.',
 ]);
 ```
 
@@ -18,11 +16,13 @@ O template padrão mostra estado, data, identificação da transação, referên
 
 Para estornos aprovados use `renderRefundReceipt()`, não o recibo de pagamento. A SISP pode devolver `merchantRespPurchaseAmount=0`; recupere o valor original no seu banco e forneça-o explicitamente:
 
+![Exemplo do recibo de Devolução](assets/recibo-estorno.png)
+
 ```php
 echo $response->renderRefundReceipt(
     amount: $originalAmount,
     originalTransactionId: $originalTransactionId,
-    data: ['companyName' => 'Minha Empresa, Lda.'],
+    data: ['companyName' => 'Minha Loja.'],
 );
 ```
 

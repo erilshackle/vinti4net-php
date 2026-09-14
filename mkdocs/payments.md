@@ -2,9 +2,7 @@
 
 O SDK oferece três tipos de pagamento: compra, pagamento de serviço e recarga. A compra aceita dados adicionais de billing/3DS, mas também pode ser preparada sem eles.
 
-![Exemplo do formulário de pagamento da Vinti4](assets/formulario-pagamento.svg)
-
-*Imagem ilustrativa: substitua este ficheiro pela captura do formulário de pagamento.*
+![Exemplo do formulário de pagamento da Vinti4](assets/formulario-pagamento.png)
 
 Antes de preparar qualquer pagamento, crie o cliente e defina uma referência:
 

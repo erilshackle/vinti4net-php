@@ -30,4 +30,4 @@ A SISP pode devolver `merchantRespPurchaseAmount=0` mesmo num estorno aprovado. 
 
 ## Por que o recibo DCC não aparece?
 
-Confirme que `$response->dcc['enabled']` é `true` e que o retorno contém montante, moeda, taxa e câmbio. Sem esses dados, `renderDccReceipt()` lança `Vinti4Exception`.
+Confirme que `$response->isDccEnabled()` é `true` e que o retorno contém montante, moeda, taxa e câmbio. Sem esses dados, `renderDccReceipt()` lança `Vinti4Exception`.
