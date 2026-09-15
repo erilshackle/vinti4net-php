@@ -323,7 +323,7 @@ abstract class Sisp
     public static function generateSession(): string
     {
         $characters = '0123456789';
-        $suffix = $characters[random_int(0, 10)] . $characters[random_int(0, 10)];
+        $suffix = $characters[random_int(0, 9)] . $characters[random_int(0, 9)];
         return 'S' . date('ymdHis') . $suffix;
     }
 }
