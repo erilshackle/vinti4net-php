@@ -109,10 +109,11 @@ abstract class Sisp
         $transactionSuccessful = $successType;
 
         // A documentação exige esta combinação para compras.
-        if ($messageType === '8') {
-            $transactionSuccessful =
-                ($postData['merchantResp'] ?? '') === 'C';
-        }
+        $transactionSuccessful = match ($messageType) {
+            '8', 'P', 'M' => ($postData['merchantResp'] ?? '') === 'C',
+            '10' => true,
+            default => false,
+        };
 
         // Error and cancellation responses do not use the successful
         // transaction fingerprint formula.
