@@ -47,7 +47,8 @@
             "@analyse"
         ],
         "test": "phpunit --colors=always",
-        "analyse": "phpstan analyse"
+        "analyse": "phpstan analyse",
+        "run-examples": "php -S localhost:8000 -t examples"
     },
     "minimum-stability": "stable",
     "prefer-stable": true

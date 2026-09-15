@@ -70,8 +70,8 @@
         <div class="panel" role="tabpanel" id="panel-refund" aria-labelledby="tab-refund" hidden>
             <form action="refund_example.php" method="post">
                 <div class="field"><label for="refund-amount">Valor integral da compra (CVE)</label><input id="refund-amount" name="amount" type="number" min="1" step="1" required></div>
-                <div class="field"><label for="refund-transaction">Transaction ID original</label><input id="refund-transaction" name="transaction_id" required></div>
                 <div class="field"><label for="refund-period">Clearing Period original</label><input id="refund-period" name="clearing_period" inputmode="numeric" required></div>
+                <div class="field"><label for="refund-transaction">Transaction ID original</label><input id="refund-transaction" name="transaction_id" required></div>
                 <p class="hint">Use os três valores da mesma compra aprovada e ainda não estornada.</p>
                 <button class="submit" type="submit">Solicitar estorno</button>
             </form>
