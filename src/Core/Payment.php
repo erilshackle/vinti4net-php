@@ -189,7 +189,7 @@ class Payment extends Sisp
         $request = [
             'posID' => $this->posID,
             'merchantRef' => $params['merchantRef'] ?? static::generateReference(),
-            'merchantSession' => $params['merchantSession'] ?? 'S' . date('YmdHis'),
+            'merchantSession' => $params['merchantSession'] ?? static::generateSession(),
             'amount' => $this->normalizeRequestAmount($params['amount'] ?? ''),
             'currency' => $currencyCode,
             'transactionCode' => $params['transactionCode'],

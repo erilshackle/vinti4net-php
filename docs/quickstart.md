@@ -24,10 +24,11 @@ $billing = Billing::from([
     'postalCode' => '7600',
 ]);
 
+$reference = 'R' . date('YmdHis');
 
 try {
     $vinti4
-        ->setMerchant('R' . date('YmdHis'))
+        ->setMerchant($reference)
         ->preparePurchase(1500, $billing);
 
     echo $vinti4->createPaymentForm(

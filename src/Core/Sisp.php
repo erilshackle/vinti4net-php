@@ -73,27 +73,7 @@ abstract class Sisp
         $this->endpoint = $endpoint;
     }
 
-    /**
-     * Generate a 15-character merchant reference.
-     *
-     * By default, the reference contains a date followed by a random suffix:
-     * R + ymdHis + 2 random alphanumeric characters.
-     *
-     * When $random is true, the reference is generated using 14 random
-     * hexadecimal characters after the "R" prefix for more security preference.
-     *
-     * @param bool $random Generate a fully random reference.
-     */
-    public static function generateReference(bool $random = false): string
-    {
-        if ($random) {
-            return 'R' . strtoupper(bin2hex(random_bytes(7)));
-        }
 
-        $characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        $suffix = $characters[random_int(0, 35)] . $characters[random_int(0, 35)];
-        return 'R' . date('ymdHis') . $suffix;
-    }
 
     /**
      * Return a supplied endpoint or build the default operation URL.
@@ -309,5 +289,41 @@ abstract class Sisp
         }
 
         return null;
+    }
+
+    /**
+     * Generate a 15-character merchant reference.
+     *
+     * By default, the reference contains a date followed by a random suffix:
+     * R + ymdHis + 2 random alphanumeric characters.
+     *
+     * When $random is true, the reference is generated using 14 random
+     * hexadecimal characters after the "R" prefix for more security preference.
+     *
+     * @param bool $random Generate a fully random reference.
+     */
+    public static function generateReference(bool $random = false): string
+    {
+        if ($random) {
+            return 'R' . strtoupper(bin2hex(random_bytes(7)));
+        }
+
+        $characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $suffix = $characters[random_int(0, 35)] . $characters[random_int(0, 35)];
+        return 'R' . date('ymdHis') . $suffix;
+    }
+
+    /**
+     * Generate a 15-character merchant session.
+     *
+     * The session reference contains a date followed by a random suffix:
+     * R + ymdHis + 2 random numbers.
+     *
+     */
+    public static function generateSession(): string
+    {
+        $characters = '0123456789';
+        $suffix = $characters[random_int(0, 10)] . $characters[random_int(0, 10)];
+        return 'S' . date('ymdHis') . $suffix;
     }
 }

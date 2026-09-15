@@ -135,7 +135,7 @@ class Vinti4Net
     {
         return $this->setRequestParams([
             'merchantRef' => $reference,
-            'merchantSession' => $session ?? 'S' . date('YmdHis'),
+            'merchantSession' => $session ?? Sisp::generateSession()
         ]);
     }
 

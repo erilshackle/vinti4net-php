@@ -19,7 +19,7 @@ $sdk->setMerchant($reference);
 Use `generateMerchantRef(random: true)` para gerar uma referência totalmente
 aleatória, sem incluir a data.
 
-`setMerchant()` também aceita uma sessão personalizada. Se ela não for informada, a biblioteca gera uma sessão no formato `S` + `ymdHis` + `XX`.
+`setMerchant()` também aceita uma sessão personalizada. Se ela não for informada, a biblioteca gera uma sessão no formato `S` + `ymdHis` + `##`.
 
 ---
 

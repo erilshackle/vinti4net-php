@@ -5,7 +5,7 @@
 Antes de chamar a biblioteca, guarde referência única, sessão, montante, moeda, cliente e estado `pendente`.
 
 ```php
-$reference = 'PEDIDO000000001';
+$reference = 'R' . date('YmdHis');
 $session = 'S' . date('YmdHis');
 $amount = 1500;
 ```

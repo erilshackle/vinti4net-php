@@ -99,6 +99,7 @@ class PaymentTest extends TestCase
 
         $this->payment->preparePayment([
             'transactionCode' => '4', // Estorno
+            'MerchantSession' => 'SESSION00000001',
             'amount' => 500,
             'currency' => '840',      // USD inválido para estorno
             'urlMerchantResponse' => 'https://callback.example.com'

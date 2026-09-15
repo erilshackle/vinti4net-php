@@ -118,8 +118,8 @@ class Refund extends Sisp
 
         $request = [
             'posID' => $this->posID,
-            'merchantRef' => $params['merchantRef'] ?? 'R' . date('YmdHis'),
-            'merchantSession' => $params['merchantSession'] ?? 'S' . date('YmdHis'),
+            'merchantRef' => $params['merchantRef'] ?? static::generateReference(),
+            'merchantSession' => $params['merchantSession'] ?? static::generateSession(),
             'amount' => $this->normalizeRequestAmount($params['amount']),
             'currency' => self::CURRENCY_CVE,
             'is3DSec' => 1,
