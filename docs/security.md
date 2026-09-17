@@ -1,10 +1,11 @@
 # Segurança
 
 ## Antes de enviar o pagamento
-1. Gere uma referência única de exatamente 15 caracteres no servidor com `Vinti4Net::generateMerchantRef()` e aplique uma restrição `UNIQUE` na base de dados.
-2. Leia o montante do seu banco de dados, não do formulário do cliente.
-3. Guarde referência, sessão, montante, moeda e estado `pendente`.
-4. Só então gere o formulário Vinti4Net.
+
+1. Gere uma referência única, de exatamente 15 caracteres, no servidor com `Vinti4Net::generateMerchantRef()` e aplique uma restrição `UNIQUE` na base de dados.
+2. Leia o montante (amount) do sua base de dados, não do formulário do cliente.
+3. Guarde a referência*, sessão, montante*, moeda e estado `pendente`.
+4. Só então chame pelo formulário Vinti4Net.
 
 ## Ao receber o callback
 
@@ -13,8 +14,8 @@
 3. Trate cancelamento e erro sem confirmar o pedido.
 4. Em sucesso, localize o pedido pela referência.
 5. Compare sessão e dados da operação guardada, incluindo o montante de uma compra. No estorno, o callback pode trazer montante `0`: confira o valor original no pedido que você enviou à SISP, não contra `getAmount()` do estorno.
-6. Confirme uma única vez, dentro de uma transação no banco.
-7. Guarde `transactionId` e `clearingPeriod`.
+6. Confirme uma única vez, dentro de uma transação no base de dados.
+7. Guarde `transactionId` e `clearingPeriod` para caso precisar fazer estornos.
 
 ## Idempotência
 
@@ -30,10 +31,10 @@ if ($payment->status === 'paid') {
 
 ## Dados sensíveis
 
-- Nunca salve o `posAuthCode` no código-fonte.
+- Nunca salve o `posAuthCode` no código-fonte (use .env).
 - Não envie credenciais ao navegador.
 - Não registre o payload bruto sem filtrar.
-- Não armazene o PAN completo.
+- Não armazene o PAN (card number) completo.
 - Use HTTPS no callback.
 - Não confie em parâmetros enviados pelo cliente para definir o valor.
 
