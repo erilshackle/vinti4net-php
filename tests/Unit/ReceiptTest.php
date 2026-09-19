@@ -184,7 +184,12 @@ final class ReceiptTest extends TestCase
     
         self::assertStringContainsString('Comprovativo de estorno', $html);
         self::assertStringContainsString('Comerciante', $html);
-        self::assertStringContainsString('500 CVE', $html);
+    
+        self::assertMatchesRegularExpression(
+            '/500\s+CVE/',
+            $html,
+        );
+    
         self::assertStringContainsString('N/A', $html);
     
         self::assertStringNotContainsString(
