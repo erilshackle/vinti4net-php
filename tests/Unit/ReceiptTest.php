@@ -98,7 +98,9 @@ final class ReceiptTest extends TestCase
 
     public function testItRendersATextReceipt(): void
     {
-        $text = $this->response()->renderTextReceipt([
+        $receipt = new Receipt($this->response());
+    
+        $text = $receipt->renderText([
             'companyName' => 'Minha Empresa',
         ]);
     
@@ -106,37 +108,30 @@ final class ReceiptTest extends TestCase
             '==== RECIBO DE TRANSAÇÃO ====',
             $text,
         );
-    
         self::assertStringContainsString(
             'Empresa: Minha Empresa',
             $text,
         );
-    
         self::assertStringContainsString(
             'Data/Hora: 2026-09-05 12:30:00',
             $text,
         );
-    
         self::assertStringContainsString(
             'Status: APROVADA',
             $text,
         );
-    
         self::assertStringContainsString(
             'Transação ID: TX123456',
             $text,
         );
-    
         self::assertStringContainsString(
             'Referência: PURCHASE-0001',
             $text,
         );
-    
         self::assertStringContainsString(
             'Valor: 1000 CVE',
             $text,
         );
-    
         self::assertStringContainsString(
             'Cartão: •••• 3456',
             $text,
@@ -146,17 +141,14 @@ final class ReceiptTest extends TestCase
             '=== DCC (Moeda Estrangeira) ===',
             $text,
         );
-    
         self::assertStringContainsString(
             'Taxa de conversão: 1 USD = 92.65882 CVE',
             $text,
         );
-    
         self::assertStringContainsString(
             'Taxa do serviço DCC: 0.31 USD',
             $text,
         );
-    
         self::assertStringContainsString(
             'Total DCC: 10.58 USD',
             $text,
@@ -252,28 +244,26 @@ final class ReceiptTest extends TestCase
             ],
         );
     
-        $text = $response->generateReceiptText();
+        $receipt = new Receipt($response);
+    
+        $text = $receipt->renderText();
     
         self::assertStringContainsString(
             'Empresa: Comerciante/Entidade',
             $text,
         );
-    
         self::assertStringContainsString(
             'Data/Hora: N/A',
             $text,
         );
-    
         self::assertStringContainsString(
             'Transação ID: N/A',
             $text,
         );
-    
         self::assertStringContainsString(
             'Referência: N/A',
             $text,
         );
-    
         self::assertStringContainsString(
             'Valor: 500 CVE',
             $text,
