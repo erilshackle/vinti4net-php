@@ -120,6 +120,45 @@ class PaymentTest extends TestCase
         ]);
     }
 
+    public function testPreparePurchaseThrowsExceptionForMissingBillingFields()
+    {
+        $this->expectException(Vinti4Exception::class);
+        $this->expectExceptionMessage(
+            'Campos obrigatórios ausentes em billing: billAddrCity, billAddrLine1, billAddrPostCode.'
+        );
+    
+        $this->payment->preparePayment([
+            'amount' => 1500,
+            'transactionCode' => '1',
+            'currency' => 'CVE',
+            'urlMerchantResponse' => 'https://callback.example.com',
+            'billing' => [
+                'email' => 'test@example.com',
+                'billAddrCountry' => '132',
+            ],
+        ]);
+    }
+
+    public function testPreparePurchaseThrowsExceptionForEmptyBillingField()
+    {
+        $this->expectException(Vinti4Exception::class);
+        $this->expectExceptionMessage(
+            'Campos obrigatórios ausentes em billing: email.'
+        );
+    
+        $this->payment->preparePayment([
+            'amount' => 1500,
+            'transactionCode' => '1',
+            'urlMerchantResponse' => 'https://callback.example.com',
+            'billing' => [
+                'email' => '   ',
+                'billAddrCountry' => '132',
+                'billAddrCity' => 'Praia',
+                'billAddrLine1' => 'Rua Teste',
+                'billAddrPostCode' => '7600',
+            ],
+        ]);
+    }
 
     public function testFingerprintRequestForPurchase()
     {
