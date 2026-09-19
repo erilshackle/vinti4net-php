@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit;
 
 use Erilshk\Sisp\Exceptions\Vinti4Exception;
+use Erilshk\Sisp\Receipt\Receipt;
 use Erilshk\Sisp\Vinti4Response;
 use PHPUnit\Framework\TestCase;
 
