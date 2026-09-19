@@ -18,7 +18,7 @@ class Vinti4ResponseTest extends TestCase
                 'transactionCode' => '1',
                 'merchantRespPurchaseAmount' => 1500.00,
                 'merchantRespCurrency' => 'CVE',
-                'merchantRespTid' => 'TXN123'
+                'merchantRespTid' => '7123'
             ]
         ];
 
@@ -160,7 +160,7 @@ class Vinti4ResponseTest extends TestCase
                 'messageType' => '8',
                 'merchantRespMerchantRef' => 'REF123',
                 'merchantRespTimeStamp' => '2024-01-01 12:00:00',
-                'merchantRespTid' => 'TXN456',
+                'merchantRespTid' => '7456',
                 'merchantRespPurchaseAmount' => 1500.00,
                 'merchantRespCurrency' => 'CVE',
                 'merchantRespPan' => '1234567890123456',
@@ -207,7 +207,7 @@ class Vinti4ResponseTest extends TestCase
             'data' => $data
         ]);
 
-        $this->assertFalse($response->dcc['enabled']);
+        $this->assertFalse($response->isDccEnabled());
         $this->assertEquals('DCC inválido ou mal formatado.', $response->dcc['error']);
     }
 
@@ -265,7 +265,7 @@ class Vinti4ResponseTest extends TestCase
     {
         $data = [
             'merchantRespMerchantRef' => 'REF123',
-            'merchantRespTid' => 'TXN456'
+            'merchantRespTid' => '7456'
         ];
 
         $response = new Vinti4Response(
@@ -276,24 +276,26 @@ class Vinti4ResponseTest extends TestCase
         );
 
         $this->assertEquals('REF123', $response->getMerchantRef());
-        $this->assertEquals('TXN456', $response->getTransactionId());
+        $this->assertEquals('7456', $response->getTransactionId());
     }
 
-    // public function testRecpeitInstantiation()
-    // {
-    //     $data = [
-    //         'merchantRespMerchantRef' => 'REF123',
-    //         'merchantRespTid' => 'TXN456'
-    //     ];
-    //     $response = Vinti4Response::success(
-    //         'SUCCESS',
-    //         $data
-    //     );
+    public function testGetMeskedPanForCreditCardNumber()
+    {
+        $data = [
+            'messageType' => '8',
+            'merchantRespMerchantRef' => 'REF123',
+            'merchantRespPan' => '4411223355667788',
+        ];
 
-    //     $recepit = $response->receipt('My COmpany');
+        $response = new Vinti4Response(
+            'SUCCESS',
+            'Transação válida',
+            true,
+            $data
+        );
 
-    //     // $this->assertInstanceOf(Erilshk\Sisp\Receipt::class, $recepit);
-    // }
+        $this->assertEquals('•••• 7788', $response->getMaskedPan());
+    }
 
     public function testStaticConstructors()
     {
