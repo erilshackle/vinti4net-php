@@ -192,7 +192,7 @@ if ($response->isSuccess()) {
 | `getClearingPeriod()` | `?string` | `merchantRespCP` |
 | `getMerchantRef()` | `?string` | `merchantRespMerchantRef` |
 | `getAmount()` | `?float` | `merchantRespPurchaseAmount` |
-| `getCurrency()` | `?string` | Depreciado na v2.3.3; use a moeda guardada no pedido. Para DCC, use `dcc['currency']` |
+| `getCurrency()` | `?string` | Depreciado na v2.4.0; use a moeda guardada no pedido. Para DCC, use `dcc['currency']` |
 | `getAdditionalErrorMessage()` | `string` | `merchantRespAdditionalErrorMessage` |
 | `getMaskedPan()` | `?string` | Exibe apenas os últimos quatro dígitos |
 | `toArray()` | `array` | Resposta normalizada com PAN mascarado |

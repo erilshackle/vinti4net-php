@@ -90,6 +90,6 @@ O tipo `6` é autenticado com sua fórmula própria: erros adulterados ou sem
 fingerprint resultam em `INVALID_FINGERPRINT`.
 
 
-`getCurrency()` está depreciado desde a v2.3.3: a resposta documentada não
+`getCurrency()` está depreciado desde a v2.4.0: a resposta documentada não
 retorna a moeda do pedido. Use a moeda guardada no pedido original.
 Para a moeda DCC, use `$response->dcc['currency'] ?? null`.

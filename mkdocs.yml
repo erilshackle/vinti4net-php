@@ -1,4 +1,4 @@
-site_name: Vinti4Net PHP SDK 2.3
+site_name: Vinti4Net PHP SDK 2.4.0
 site_description: SDK PHP para integração com a Rede Vinti4 / SISP em Cabo Verde
 site_url: https://erilshackle.github.io/vinti4net-php/
 repo_url: https://github.com/erilshackle/vinti4net-php
@@ -70,5 +70,5 @@ nav:
   - Referência da API: api.md
   - Segurança: security.md
   - FAQ: faq.md
-  - Atualização 2.1 → 2.2: upgrade-2.2.md
+  - Novidades da linha v2: changes.md
   - Sobre: about.md

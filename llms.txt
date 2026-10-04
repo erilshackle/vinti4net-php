@@ -26,7 +26,7 @@ Comece pelo [guia rápido](https://erilshackle.github.io/vinti4net-php/quickstar
 - [Referência da API](https://erilshackle.github.io/vinti4net-php/api/): métodos, assinaturas e retornos públicos.
 - [Segurança](https://erilshackle.github.io/vinti4net-php/security/): validação, dados sensíveis e idempotência.
 - [Perguntas frequentes](https://erilshackle.github.io/vinti4net-php/faq/): dúvidas comuns de integração.
-- [Atualização 2.1 → 2.2](https://erilshackle.github.io/vinti4net-php/upgrade-2.2/): diferenças entre versões.
+- [Novidades da linha v2](https://erilshackle.github.io/vinti4net-php/changes/): diferenças entre versões.
 - [Sobre o projeto](https://erilshackle.github.io/vinti4net-php/about/): autoria e aviso de independência.
 
 ## Referência consolidada

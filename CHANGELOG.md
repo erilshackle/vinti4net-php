@@ -2,12 +2,48 @@
 
 All notable changes to this project are documented in this file.
 
+## [2.4.0] - 2026-10-04
+
+### Added
+
+- `Billing::account()` with named account parameters; address matching also accepts SISP `Y`/`N` strings.
+
+- `Currency` string constants and `Currency::toNumeric()` for ISO 4217 name-to-code conversion.
+- `Entity` integer constants for service payments and recharges, with `Entity::all()` listing names and codes and filtering by category.
+- A Composer-free integration in `dist/standalone.php` for PHP 8.1+.
+- Regression tests for signed errors, unsigned cancellations, injected cancellation flags, currency conversion, entities and receipt rendering.
+
+### Fixed
+
+- Preserve legacy billing country and account fields when merging explicit inputs.
+- Stop inventing account-age/password-age indicators or treating profile updates as password changes.
+- Normalize address matching and copy billing fields to shipping for `addrMatch=Y`.
+- Validate required billing fields, email and nested account ID before generating `purchaseRequest`, without restricting optional field formats.
+- Apply documented billing line 2 and unknown postal-code fallbacks.
+
+- Validate error callbacks (`messageType=6`) with the dedicated error fingerprint formula. Missing or invalid fingerprints now produce `INVALID_FINGERPRINT`.
+- Prevent `UserCancelled` from overriding a signed success or error callback. Cancellation is recognized without `messageType`, using `merchantRef`, `merchantSession` and `UserCancelled`.
+
+### Changed
+
+- The default purchase currency is now `Currency::CVE` (`'132'`). The gateway payload is unchanged, but `getRequest()['currency']` now contains `'132'` instead of `'CVE'` when no currency is supplied.
+- Expanded currency, entity and callback security documentation.
+
+### Deprecated
+
+- `Vinti4Response::getCurrency()`: documented callbacks do not return the order currency. Use the stored order currency, or `dcc['currency']` for the DCC currency.
+
+### Compatibility
+
+- PHP remains `^8.1`. Currency arguments remain strings and entity arguments remain integers.
+- Existing payment methods remain available. Currency constants do not imply support by the gateway; the documented SISP protocol uses CVE.
+- Applications must check `hasInvalidFingerprint()` before acting on errors as well as successful transactions.
+
 
 ## [2.3.0] - 2026-09-14
 
 ### Added
 
-- `Billing::without3DS()` for purchases without additional billing data.
 - `Vinti4Net::generateMerchantRef()` as a 15-character timestamp-based + 2 sufix reference helper.
 - `Vinti4Response::renderRefundReceipt()` and a dedicated refund receipt template.
 - `Vinti4Response::isDccEnabled()` and `getClearingPeriod()` helpers.

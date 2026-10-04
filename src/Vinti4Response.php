@@ -16,7 +16,7 @@ use Erilshk\Sisp\Receipt\Receipt;
  * - Parsed data (including DCC information)
  * - Debug information when fingerprint validation fails
  * 
- * @version 2.3.3
+ * @version 2.4
  * @package Erilshk\Vinti4Net
  */
 class Vinti4Response
@@ -406,7 +406,7 @@ class Vinti4Response
     /**
      * Legacy accessor for merchantRespCurrency; absent from documented callbacks.
      *
-     * @deprecated 2.3.3 Use the currency stored with the original order.
+     * @deprecated 2.4.0 Use the currency stored with the original order.
      *             For DCC, use $response->dcc['currency'].
      * @return string|null Supplied raw field, usually null; not an authenticated currency.
      */

@@ -25,7 +25,7 @@ use Erilshk\Sisp\Exceptions\Vinti4Exception;
  * - Refund
  *
  * @author  Eril TS Carvalho <erilandocarvalho@gmail.com>
- * @version 2.3.3
+ * @version 2.4
  * 
  * @package Erilshk\Sisp
  * @link https://erilshackle.github.io/vinti4net-php Documentation
@@ -147,11 +147,11 @@ class Vinti4Net
      * Prepares a standard **purchase (3D Secure)** payment request.
      *
      * @param float|string  $amount   Transaction amount.
-     * @param array|Billing $billing  Customer billing data.
+     * @param array|Billing $billing  Customer billing data for Purchase Request.
      *  > __Required Params__:     
      *  -   **email**             - Customer email 
      *  -   **billAddrCountry**   - Country ISO 3166-1  (eg. 132)
-     *  -   **billAddrCity**      - City (eg. Praia)
+     *  -   **billAddrCity**      - City (eg. PR - Praia)
      *  -   **billAddrLine1**     - Address (eg. Avenida Cidade da Praia, 45)
      *  -   **billAddrPostCode**  - Postal Code (eg. 7600)
      * @param 'CVE'|'132'|'EUR'|'978'|'USD'|'840'|string $currency ISO 4217 name or numeric code (default: 132).
