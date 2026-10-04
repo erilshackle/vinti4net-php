@@ -37,6 +37,8 @@ class Vinti4ResponseTest extends TestCase
             'fingerprint_valid' => true,
             'message_type' => '',
             'data' => [
+                'merchantRef' => 'R20261003214916',
+                'merchantSession' => 'S20261003214916',
                 'UserCancelled' => 'true'
             ]
         ];

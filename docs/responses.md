@@ -38,7 +38,7 @@ if ($response->isSuccess()) {
 | `SUCCESS` | `isSuccess()` | Tipo de sucesso e fingerprint válido |
 | `CANCELLED` | `isCancelled()` | Utilizador cancelou |
 | `ERROR` | `hasFailed()` | Recusa ou erro devolvido pela SISP |
-| `INVALID_FINGERPRINT` | `hasInvalidFingerprint()` | Resposta de sucesso com validação inválida |
+| `INVALID_FINGERPRINT` | `hasInvalidFingerprint()` | Resposta assinada com fingerprint ausente ou inválido |
 
 `hasFailed()` só é verdadeiro para `ERROR`. Verifique `hasInvalidFingerprint()` separadamente e antes de qualquer lógica de confirmação.
 
@@ -81,3 +81,10 @@ Esses métodos mascaram `merchantRespPan`. A propriedade `$response->data` mant�
 
 Para dúvidas sobre erros e cancelamentos, consulte [Perguntas frequentes](faq.md).
 
+
+
+O cancelamento retorna `merchantRef`, `merchantSession` e `UserCancelled`, sem
+`messageType` nem fingerprint. Esse callback resulta em `CANCELLED`; a flag não
+substitui o estado de uma resposta de sucesso ou erro que tenha `messageType`.
+O tipo `6` é autenticado com sua fórmula própria: erros adulterados ou sem
+fingerprint resultam em `INVALID_FINGERPRINT`.

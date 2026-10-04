@@ -129,3 +129,46 @@ sequenceDiagram
 
 O retorno deve ser tratado conforme descrito em [Respostas](responses.md).
 
+
+## Constantes de moeda
+
+O parâmetro `currency` continua sendo `string`. Use `Currency::CVE` (`132`),
+`Currency::USD` (`840`), `Currency::EUR` (`978`), `Currency::BRL` (`986`),
+`Currency::GBP` (`826`) ou `Currency::JPY` (`392`).
+`Currency::toNumeric('cve')` retorna `'132'`; códigos de três dígitos são
+preservados, incluindo zeros à esquerda. Nomes desconhecidos lançam
+`Vinti4Exception`.
+
+```php
+use Erilshk\Sisp\Currency;
+
+$sdk->preparePurchase('1500', $billing, Currency::CVE);
+$code = Currency::toNumeric('EUR'); // '978'
+```
+
+Referência: [ISO 4217](https://www.iso.org/iso-4217-currency-codes.html).
+As constantes identificam moedas; não garantem suporte do gateway.
+O protocolo SISP documentado usa CVE (`132`).
+
+
+## Constantes de entidade
+
+`Entity` fornece códigos inteiros para `prepareServicePayment()` e
+`prepareRecharge()`. Os nomes usam `SERVICE_` para serviços e `RECHARGE_` para
+recargas, por exemplo `Entity::SERVICE_ALOU_LANDLINE`,
+`Entity::SERVICE_AGUAS_SANTIAGO` e `Entity::RECHARGE_ALOU`.
+
+```php
+use Erilshk\Sisp\Entity;
+
+$sdk->prepareRecharge('500', Entity::RECHARGE_ALOU, '9912345');
+$entities = Entity::all(); // ['RECHARGE_ALOU' => 2, ...]
+$water = Entity::all('water');
+$recharges = Entity::all('recharge');
+```
+
+Categorias: `recharge`, `electricity`, `water`, `insurance`, `internet`,
+`transport` e `telephone`. Uma entidade pode pertencer a mais de uma categoria:
+Águas e Energia pertence a água e eletricidade; recargas Electra pertencem a
+recarga e eletricidade. O filtro preserva as chaves com os nomes das constantes.
+Categorias desconhecidas lançam `Vinti4Exception`.

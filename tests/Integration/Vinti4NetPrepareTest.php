@@ -5,6 +5,7 @@ namespace  Tests\Integration;
 use PHPUnit\Framework\TestCase;
 use Erilshk\Sisp\Vinti4Net;
 use Erilshk\Sisp\Billing;
+use Erilshk\Sisp\Currency;
 
 class Vinti4NetPrepareTest extends TestCase
 {
@@ -31,7 +32,7 @@ class Vinti4NetPrepareTest extends TestCase
 
         $this->assertEquals('1', $request['transactionCode']);
         $this->assertEquals(1000, $request['amount']);
-        $this->assertEquals('CVE', $request['currency']);
+        $this->assertSame(Currency::CVE, $request['currency']);
         $this->assertArrayHasKey('billing', $request);
         // $this->assertArrayHasKey('purchaseRequest', $request);
     }
