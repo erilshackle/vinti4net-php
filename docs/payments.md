@@ -39,7 +39,7 @@ $billing = Billing::from([
 ]);
 
 $sdk->preparePurchase(
-    amount: 1500,
+    amount: '1500',
     billing: $billing,
     currency: 'CVE',
 );
@@ -57,7 +57,7 @@ Se passar dados de billing, informe os campos necessários de faturação. Consu
 | --- | --- | --- | --- |
 | `amount` | `float|string` | Sim | Montante inteiro positivo, até 13 dígitos |
 | `billing` | `array|Billing` | Sim, argumento explícito | Dados opcionais de billing; passe `[]` para não os enviar |
-| `currency` | `string` | Não | Moeda da operação; o padrão é `CVE` `(132)` |
+| `currency` | `string` | Não | Moeda da operação; o padrão é `Currency::CVE` (`'132'`) |
 
 Embora a assinatura mantenha `float` por compatibilidade da v2, o valor precisa chegar como inteiro. Use `1500`, não `1500.00` nem `13,51`.
 
@@ -69,8 +69,8 @@ Use para pagamentos associados a uma entidade e uma referência de serviço:
 
 ```php
 $sdk->prepareServicePayment(
-    amount: 2000,
-    entity: $serviceEntityCode,
+    amount: '2000',
+    entity: \Erilshk\Sisp\Entity::SERVICE_ALOU_LANDLINE,
     number: '123456789',
 );
 ```
@@ -91,9 +91,9 @@ Use para recargas associadas a uma entidade e um número de telefone ou conta:
 
 ```php
 $sdk->prepareRecharge(
-    amount: 500,
-    entity: $rechargeEntityCode,
-    number: '987654321',
+    amount: '500',
+    entity: \Erilshk\Sisp\Entity::RECHARGE_ALOU,
+    number: '9912345',
 );
 ```
 

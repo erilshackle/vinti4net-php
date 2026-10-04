@@ -37,7 +37,7 @@ new Vinti4Net(
 | `setRequestParams(array $params)` | `self` | Configura parâmetros permitidos |
 | `setMerchant(string $reference, ?string $session = null)` | `self` | Define referência e sessão |
 | `generateMerchantRef(bool $random = false)` (estático) | `string` | Gera uma referência de exatamente 15 caracteres |
-| `preparePurchase(float|string $amount, array|Billing $billing, string $currency = 'CVE')` | `static` | Prepara compra; passe `[]` para não enviar billing |
+| `preparePurchase(float|string $amount, array|Billing $billing, string $currency = Currency::CVE)` | `static` | Prepara compra; passe `[]` para não enviar billing |
 | `prepareServicePayment(float|string $amount, int $entity, string $number)` | `static` | Prepara pagamento de serviço |
 | `prepareRecharge(float|string $amount, int $entity, string $number)` | `static` | Prepara recarga |
 | `prepareRefund(float|string $amount, string $transactionID, string $clearingPeriod)` | `static` | Prepara reembolso |

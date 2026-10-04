@@ -3,7 +3,7 @@
 SDK PHP para integrar pagamentos da Rede Vinti4/SISP em aplicações de Cabo Verde.
 
 ```bash
-composer require erilshk/vinti4net:^2.3
+composer require erilshk/vinti4net:^2.4.0
 ```
 
 ## O que a biblioteca faz
@@ -34,7 +34,7 @@ $billing = Billing::make()
     ->postalCode('7600');
 
 $vinti4
-    ->setMerchant('PEDIDO000000001')
+    ->setMerchant(Vinti4Net::generateMerchantRef())
     ->preparePurchase(1500, $billing);
 
 echo $vinti4->createPaymentForm(
@@ -60,8 +60,10 @@ if ($response->isSuccess()) {
 }
 ```
 
-[Ver o guia completo](payment-integration-guide.md){ .md-button .md-button--primary }
+[Ver o guia completo](payment-integration-guide.md)
 
-!!! warning
-    Este é um SDK comunitário. O contrato e as credenciais fornecidos pela SISP continuam sendo a fonte oficial para o seu estabelecimento.
+::: warning
+Este é um SDK comunitário. O contrato e as credenciais fornecidos pela SISP continuam sendo a fonte oficial para o seu estabelecimento.
+
+:::
 

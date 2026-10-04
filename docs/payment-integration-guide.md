@@ -5,27 +5,21 @@
 Antes de chamar a biblioteca, guarde referência única, sessão, montante, moeda, cliente e estado `pendente`.
 
 ```php
-$reference = 'R' . date('YmdHis');
-$session = 'S' . date('YmdHis');
-$amount = 1500;
-```
+use Erilshk\Sisp\Vinti4Net;
 
-Use uma referência única de exatamente 15 caracteres e guarde-a antes de enviar
-o pagamento à SISP:
-
-```php
+$vinti4 = new Vinti4Net($posID, $authCode);
 $reference = Vinti4Net::generateMerchantRef();
+$vinti4->setMerchant($reference);
+$session = $vinti4->getRequest()['merchantSession'];
+$amount = '1500';
+$currency = '132';
 
-$sdk->setMerchant($reference);
+// Guarde estes valores na tentativa de pagamento antes de enviar o formulário.
 ```
 
-Por padrão, o SDK utiliza R + ymdHis + dois caracteres alfanuméricos
-aleatórios. Para gerar uma referência totalmente aleatória:
-
-```php
-$reference = Vinti4Net::generateMerchantRef(random: true);
-```
-
+A referência padrão combina data e sufixo aleatório. Para uma referência
+inteiramente aleatória, use `Vinti4Net::generateMerchantRef(random: true)`.
+A sessão gerada e a referência têm exatamente 15 caracteres.
 
 ## 2. Preparar a transação
 
@@ -33,7 +27,7 @@ $reference = Vinti4Net::generateMerchantRef(random: true);
 
 $vinti4
     ->setMerchant($reference, $session)
-    ->preparePurchase($amount, $billing);
+    ->preparePurchase($amount, $billing, $currency);
 ```
 
 Se não quiser enviar dados de billing, use `preparePurchase($amount, [])`.
@@ -76,11 +70,11 @@ if ($response->hasFailed()) {
 | Dado | Callback | Seu backend (db) |
 | --- | --- | --- |
 | Referência | `getMerchantRef()` | referência do pedido |
-| Sessão | `getMerchantSession()` | sessão da tentativa |
+| Sessão | `$response->data['merchantRespMerchantSession']` | sessão da tentativa |
 | Montante | `getAmount()` | total esperado |
 | Estado | `isSuccess()` | ainda pendente |
 
-Só confirme a compra quando tudo estiver correto. `getCurrency()` pode ser `null` se a resposta não trouxer moeda; compare a moeda quando houver esse campo e use a moeda guardada no pedido para o restante da validação.
+Só confirme a compra quando tudo estiver correto. A resposta não devolve a moeda original: use a moeda guardada no pedido. `getCurrency()` está depreciado; a moeda DCC, quando presente, é consultada separadamente.
 
 Para estornos, não compare `getAmount()` com o valor original: o callback aprovado pode trazer `0`. Recupere o montante do estorno guardado na aplicação. Um erro `messageType=6` também não identifica por si só se veio de pagamento ou estorno.
 

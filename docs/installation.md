@@ -11,7 +11,7 @@
 ## Composer
 
 ```bash
-composer require erilshk/vinti4net:^2.3
+composer require erilshk/vinti4net:^2.4.0
 ```
 
 Carregue o autoload:

@@ -1,20 +1,19 @@
 # Refunds
 
-Use `prepareRefund()` para reembolsar uma transação existente:
+Defina uma referência própria para o estorno e recupere os dados da compra
+aprovada guardada na aplicação:
 
 ```php
-$vinti4->prepareRefund(
-    amount: 1000,
-    transactionID: 'TX119922',
-    clearingPeriod: '1125',
-);
+$vinti4
+    ->setMerchant(\Erilshk\Sisp\Vinti4Net::generateMerchantRef())
+    ->prepareRefund(
+        amount: $order['amount'], // inteiro ou string com o total original
+        transactionID: $order['transaction_id'], // string devolvida pela SISP
+        clearingPeriod: $order['clearing_period'], // string devolvida pela SISP
+    );
 ```
 
-Antes disso, defina uma referência para o reembolso e, opcionalmente, uma sessão:
-
-```php
-$vinti4->setMerchant('REFUND000000001');
-```
+`$order` representa a compra original; adapte as chaves ao seu modelo.
 
 Depois, gere o formulário:
 

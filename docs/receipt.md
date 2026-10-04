@@ -67,7 +67,7 @@ echo $response->renderReceipt(
 );
 ```
 
-Os placeholders são escapados para HTML. Caminhos com ponto acessam valores aninhados, como `{{ dcc.amount }}`.
+Os placeholders são escapados para HTML. Caminhos com ponto acessam valores aninhados, como <code v-pre>{{ dcc.amount }}</code>.
 
 ## Dados disponíveis
 

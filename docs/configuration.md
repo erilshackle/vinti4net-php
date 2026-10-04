@@ -37,8 +37,10 @@ $vinti4 = new Vinti4Net(
 );
 ```
 
-!!! danger "Proteja o código de autenticação"
-    Não coloque `posAuthCode` no HTML, JavaScript, URL, log ou repositório Git. A criação do pagamento e o callback devem ser processados no servidor.
+::: danger Proteja o código de autenticação
+Não coloque `posAuthCode` no HTML, JavaScript, URL, log ou repositório Git. A criação do pagamento e o callback devem ser processados no servidor.
+
+:::
 
 ## Idiomas
 

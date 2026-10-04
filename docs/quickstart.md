@@ -24,7 +24,7 @@ $billing = Billing::from([
     'postalCode' => '7600',
 ]);
 
-$reference = 'R' . date('YmdHis');
+$reference = Vinti4Net::generateMerchantRef();
 
 try {
     $vinti4
@@ -49,6 +49,8 @@ Para uma compra sem dados 3DS adicionais, passe `[]` no lugar de `$billing`.
 
 ```php
 <?php
+
+use Erilshk\Sisp\Vinti4Net;
 
 $vinti4 = new Vinti4Net(
     $_ENV['VINTI4_POS_ID'],

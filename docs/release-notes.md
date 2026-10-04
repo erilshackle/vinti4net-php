@@ -1,4 +1,4 @@
-# Novidades da linha v2
+# Notas de versão
 
 Mudanças de comportamento e novas APIs das versões recentes. A linha v2 usa
 PHP 8.1+ e o namespace `Erilshk\Sisp`.
