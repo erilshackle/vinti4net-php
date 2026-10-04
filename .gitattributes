@@ -5,6 +5,7 @@
 /.cache export-ignore
 /mkdocs export-ignore
 /examples export-ignore
+/dist export-ignore
 
 # Excluir arquivos extras
 /.gitignore export-ignore

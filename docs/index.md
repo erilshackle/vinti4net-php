@@ -1,4 +1,4 @@
-# Vinti4Net PHP SDK 2.3
+# Vinti4Net PHP SDK 2.3.3
 
 SDK PHP para integrar pagamentos da Rede Vinti4/SISP em aplicações de Cabo Verde.
 

@@ -25,7 +25,7 @@ use Erilshk\Sisp\Exceptions\Vinti4Exception;
  * - Refund
  *
  * @author  Eril TS Carvalho <erilandocarvalho@gmail.com>
- * @version 2.3.0
+ * @version 2.3.3
  * 
  * @package Erilshk\Sisp
  * @link https://erilshackle.github.io/vinti4net-php Documentation

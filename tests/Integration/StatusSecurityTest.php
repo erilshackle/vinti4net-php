@@ -7,7 +7,7 @@ namespace Tests\Integration;
 use Erilshk\Sisp\Vinti4Net;
 use PHPUnit\Framework\TestCase;
 
-require_once __DIR__ . '/../../standalone.php';
+require_once __DIR__ . '/../../dist/standalone.php';
 
 final class StatusSecurityTest extends TestCase
 {

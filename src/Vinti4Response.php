@@ -16,7 +16,7 @@ use Erilshk\Sisp\Receipt\Receipt;
  * - Parsed data (including DCC information)
  * - Debug information when fingerprint validation fails
  * 
- * @version 2.3.0
+ * @version 2.3.3
  * @package Erilshk\Vinti4Net
  */
 class Vinti4Response
@@ -32,11 +32,19 @@ class Vinti4Response
      * @param string      $status   Normalized transaction status.
      * @param string      $message  Human-friendly message describing the status.
      * @param bool        $success  Indicates whether the transaction was successful.
-     * @param array       $data     Raw data returned from SISP.
-     * @param array       $dcc      DCC (Dynamic Currency Conversion) information if available.
-     * @param array       $debug    Debug data (only populated for fingerprint errors).
+     * @param array<string, mixed> $data Raw callback fields; PAN is masked only when exporting.
+     * @param array{
+     *     enabled?: bool,
+     *     amount?: string|int|float|null,
+     *     currency?: string|null,
+     *     markup?: string|int|float|null,
+     *     rate?: string|int|float|null,
+     *     error?: string|null
+     * } $dcc DCC keys: enabled (active), amount (converted total), currency (DCC currency),
+     *        markup (DCC fee), rate (exchange rate), error (parsing error).
+     * @param array<string, string> $debug Fingerprint diagnostics: received and calculated.
      * @param string|null $detail   Optional detailed error description.
-     * @param string|null $operation
+     * @param string|null $operation Operation label; null when unknown.
      */
     public function __construct(
         public readonly string $status,
@@ -52,7 +60,9 @@ class Vinti4Response
     /**
      * Smart factory that interprets a raw processor result and creates a normalized `Vinti4Response`.
      *
-     * @param array $result  Raw processor result.
+     * @param array<string, mixed> $result Processor keys: success, fingerprint_valid,
+     *        calculated_fingerprint, message_type and data.
+     * @param string|null $operation Operation override; null infers it from messageType.
      * @return self
      */
     public static function fromProcessorResult(array $result, ?string $operation = null): self
@@ -226,7 +236,11 @@ class Vinti4Response
     // ------------------------------------------------------------------
 
     /**
-     * Creates a mock success response (useful for tests).
+     * Creates a mock success response; no fingerprint validation.
+     *
+     * @param string $message Display message.
+     * @param array<string, mixed> $data Raw transaction fields.
+     * @param array{enabled?: bool, amount?: string|int|float|null, currency?: string|null, markup?: string|int|float|null, rate?: string|int|float|null, error?: string|null} $dcc Normalized DCC fields; see constructor.
      */
     public static function success(string $message = 'Transação válida.', array $data = [], array $dcc = []): self
     {
@@ -234,7 +248,11 @@ class Vinti4Response
     }
 
     /**
-     * Creates a mock error response (useful for tests).
+     * Creates a mock error response; no fingerprint validation.
+     *
+     * @param string $message Display message.
+     * @param string|null $detail Error details.
+     * @param array<string, mixed> $data Raw transaction fields.
      */
     public static function error(string $message, ?string $detail = null, array $data = []): self
     {
@@ -242,7 +260,10 @@ class Vinti4Response
     }
 
     /**
-     * Creates a mock cancellation response (useful for tests).
+     * Creates a mock cancellation response; no fingerprint validation.
+     *
+     * @param string $message Display message.
+     * @param array<string, mixed> $data Raw cancellation fields.
      */
     public static function cancelled(string $message = 'Utilizador cancelou a transação.', array $data = []): self
     {
@@ -250,7 +271,10 @@ class Vinti4Response
     }
 
     /**
-     * Creates a mock invalid-fingerprint response (useful for tests).
+     * Creates a mock invalid-fingerprint response.
+     *
+     * @param array<string, string> $debug Fingerprint diagnostics: received and calculated.
+     * @param array<string, mixed> $data Raw callback fields.
      */
     public static function invalidFingerprint(array $debug = [], array $data = []): self
     {
@@ -265,7 +289,9 @@ class Vinti4Response
     }
 
     /**
-     * Converts the response to an array format.
+     * Exports status, message, success, data, dcc, debug, detail and operation.
+     *
+     * @return array<string, mixed> Response fields with PAN masked in data.
      */
     public function toArray(): array
     {
@@ -282,7 +308,9 @@ class Vinti4Response
     }
 
     /**
-     * Converts the response to a pretty-printed JSON string.
+     * Exports the response as formatted JSON with PAN masked.
+     *
+     * @return string JSON object; '{}' if encoding fails.
      */
     public function toJson(): string
     {
@@ -319,6 +347,7 @@ class Vinti4Response
         return $this->status === self::INVALID_FINGERPRINT;
     }
 
+    /** Checks for ERROR; excludes cancellation and invalid fingerprints. */
     public function hasFailed(): bool
     {
         return $this->status === self::ERROR;
@@ -375,7 +404,11 @@ class Vinti4Response
 
 
     /**
-     * Returns the transaction currency code (e.g., CVE, USD).
+     * Legacy accessor for merchantRespCurrency; absent from documented callbacks.
+     *
+     * @deprecated 2.3.3 Use the currency stored with the original order.
+     *             For DCC, use $response->dcc['currency'].
+     * @return string|null Supplied raw field, usually null; not an authenticated currency.
      */
     public function getCurrency(): ?string
     {
@@ -383,7 +416,7 @@ class Vinti4Response
     }
 
     /**
-     * Checks whether the Dynamic Currency Conversion is enabled or not.
+     * Checks dcc['enabled']; this does not confirm payment success.
      */
     public function isDccEnabled(): bool
     {
@@ -391,7 +424,7 @@ class Vinti4Response
     }
 
     /**
-     * Summary of GetAdditionalErrorMessage
+     * Returns merchantRespAdditionalErrorMessage, or an empty string.
      */
     public function getAdditionalErrorMessage(): string
     {
@@ -402,7 +435,7 @@ class Vinti4Response
      * Render the default receipt or a custom PHP/HTML template.
      *
      * @param string|null $template Absolute path to a .php, .html or .htm template.
-     * @param array<string, mixed> $data Custom template data.
+     * @param array<string, mixed> $data Template values, e.g. companyName and logo.
      */
     public function renderReceipt(?string $template = null, array $data = []): string
     {
@@ -412,7 +445,7 @@ class Vinti4Response
     /**
      * Render the official receipt for a DCC transaction.
      *
-     * @param array<string, mixed> $data Custom template data.
+     * @param array<string, mixed> $data Template values, e.g. companyName and logo.
      */
     public function renderDccReceipt(array $data = []): string
     {
@@ -427,7 +460,7 @@ class Vinti4Response
      *
      * @param int|string $amount Original transaction amount.
      * @param string|null $originalTransactionId Original SISP transaction ID.
-     * @param array<string, mixed> $data Custom template data.
+     * @param array<string, mixed> $data Template values, e.g. companyName and logo.
      */
     public function renderRefundReceipt(
         int|string $amount,
@@ -443,6 +476,9 @@ class Vinti4Response
 
     /**
      * Generate the default HTML receipt using the legacy v2 API.
+     *
+     * @param string|null $companyName Merchant display name.
+     * @param bool $styled Include default receipt styling.
      * @deprecated v2.1
      */
     public function generateReceiptHtml(?string $companyName = null, bool $styled = true): string
@@ -455,6 +491,8 @@ class Vinti4Response
 
     /**
      * Generate a plain-text receipt using the legacy v2 API.
+     *
+     * @param string|null $companyName Merchant display name.
      * @deprecated v2.1
      */
     public function generateReceiptText(?string $companyName = null): string

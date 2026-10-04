@@ -18,7 +18,7 @@ O callback da SISP pode variar conforme o resultado e o tipo da operação. Nem 
 | Campo SISP | Uso |
 | --- | --- |
 | `merchantRespPurchaseAmount` | `getAmount()`; pode ser `0` num estorno aprovado |
-| `merchantRespCurrency` | `getCurrency()` |
+| `merchantRespCurrency` | Não integra a resposta documentada; `getCurrency()` está depreciado |
 | `merchantRespEntityCode` | Entidade de serviço/recarga |
 | `merchantRespReferenceNumber` | Referência do serviço/recarga |
 | `merchantRespReloadCode` | Código de recarga, quando existir |

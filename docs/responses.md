@@ -63,7 +63,7 @@ $transactionId = $response->getTransactionId();
 $clearingPeriod = $response->getClearingPeriod();
 $reference = $response->getMerchantRef();
 $amount = $response->getAmount();
-$currency = $response->getCurrency();
+$dccCurrency = $response->dcc['currency'] ?? null; // Moeda DCC; não é a moeda do pedido.
 ```
 
 Todos podem retornar `null` quando o campo não existir naquele tipo de resposta.
@@ -88,3 +88,8 @@ O cancelamento retorna `merchantRef`, `merchantSession` e `UserCancelled`, sem
 substitui o estado de uma resposta de sucesso ou erro que tenha `messageType`.
 O tipo `6` é autenticado com sua fórmula própria: erros adulterados ou sem
 fingerprint resultam em `INVALID_FINGERPRINT`.
+
+
+`getCurrency()` está depreciado desde a v2.3.3: a resposta documentada não
+retorna a moeda do pedido. Use a moeda guardada no pedido original.
+Para a moeda DCC, use `$response->dcc['currency'] ?? null`.
