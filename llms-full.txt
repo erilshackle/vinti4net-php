@@ -131,4 +131,4 @@ Crie e guarde a referência, a sessão, o montante e o estado do pedido antes de
 
 As falhas da biblioteca lançam `Erilshk\Sisp\Exceptions\Vinti4Exception`. Consulte: https://erilshackle.github.io/vinti4net-php/security/ e https://erilshackle.github.io/vinti4net-php/faq/ .
 
-Novidades da linha v2: https://erilshackle.github.io/vinti4net-php/changes/ .
+Notas de versão: https://erilshackle.github.io/vinti4net-php/release-notes .
