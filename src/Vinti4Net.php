@@ -154,12 +154,13 @@ class Vinti4Net
      *  -   **billAddrCity**      - City (eg. Praia)
      *  -   **billAddrLine1**     - Address (eg. Avenida Cidade da Praia, 45)
      *  -   **billAddrPostCode**  - Postal Code (eg. 7600)
-     * @param string        $currency ISO currency (default: CVE).
+     * @param 'CVE'|'132'|'EUR'|'978'|'USD'|'840'|string $currency ISO 4217 name or numeric code (default: 132).
+     * @see https://pt.iban.com/currency-codes
      * 
      * @return static
      *
      */
-    public function preparePurchase(float|string $amount, array|Billing $billing, string $currency = 'CVE'): static
+    public function preparePurchase(float|string $amount, array|Billing $billing, string $currency = Currency::CVE): static
     {
         $this->prepared = true;
 
@@ -217,7 +218,7 @@ class Vinti4Net
      * Prepares a **recharge payment** request (entity + phone/account number).
      *
      * @param float|string $amount Amount to pay.
-     * @param int          $entity Recharge entity code.
+     * @param int          $entity Recharge entity code, e.g. Entity::RECHARGE_ALOU.
      * @param string       $number Target account/phone number.
      *
      * @return static

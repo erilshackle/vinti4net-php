@@ -96,10 +96,11 @@ class Vinti4Response
             return self::INVALID_FINGERPRINT;
         }
 
-        if (filter_var(
-            $data['UserCancelled'] ?? false,
-            FILTER_VALIDATE_BOOLEAN,
-        )) {
+        if (
+            trim((string) ($data['messageType'] ?? $result['message_type'] ?? '')) === ''
+            && isset($data['merchantRef'], $data['merchantSession'])
+            && filter_var($data['UserCancelled'] ?? false, FILTER_VALIDATE_BOOLEAN,)
+        ) {
             return self::CANCELLED;
         }
 

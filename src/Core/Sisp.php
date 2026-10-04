@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Erilshk\Sisp\Core;
 
 use Erilshk\Sisp\Billing;
+use Erilshk\Sisp\Currency;
 use Erilshk\Sisp\Exceptions\Vinti4Exception;
 
 /**
@@ -115,26 +116,23 @@ abstract class Sisp
             default => false,
         };
 
-        // Error and cancellation responses do not use the successful
-        // transaction fingerprint formula.
+        // Cancellation has no fingerprint. Type 6 uses its own signed fields.
         $fingerprintValid = true;
         $calculatedFingerprint = null;
 
-        if ($successType) {
-            $calculatedFingerprint = $this->fingerprintResponse(
-                $postData,
-            );
+        if ($successType || $messageType === '6') {
+            $calculatedFingerprint = $messageType === '6'
+                ? $this->fingerprintErrorResponse($postData)
+                : $this->fingerprintResponse($postData);
 
             $receivedFingerprint = trim(
                 (string) ($postData['resultFingerPrint'] ?? '')
             );
 
-            $fingerprintValid =
-                $receivedFingerprint !== ''
-                && hash_equals(
-                    $calculatedFingerprint,
-                    $receivedFingerprint,
-                );
+            $fingerprintValid = $receivedFingerprint !== '' && hash_equals(
+                $calculatedFingerprint,
+                $receivedFingerprint,
+            );
         }
 
         return [
@@ -148,25 +146,41 @@ abstract class Sisp
     }
 
     /**
+     * Calculate the error response fingerprint (messageType 6).
+     *
+     * @param array<string, mixed> $data Callback fields in protocol order.
+     */
+    protected function fingerprintErrorResponse(array $data): string
+    {
+        $message = $this->encodedAuthCode();
+        foreach (
+            [
+                'messageType',
+                'merchantRespMessageID',
+                'merchantRespErrorCode',
+                'merchantRespErrorDetail',
+                'merchantRespErrorDescription',
+                'merchantRespMerchantRef',
+                'merchantRespMerchantSession',
+                'merchantRespAdditionalErrorMessage',
+                'merchantRespTimeStamp',
+            ] as $field
+        ) {
+            $value = trim((string) ($data[$field] ?? ''));
+            $message .= $field === 'merchantRespErrorCode'
+                ? preg_replace('/\s+/u', '', $value)
+                : $value;
+        }
+
+        return base64_encode(hash('sha512', $message, true));
+    }
+
+    /**
      * Convert an ISO currency name or numeric code to the SISP code.
      */
     protected function currencyToCode(string|int $currency,): string
     {
-        $currency = strtoupper(trim((string) $currency));
-
-        return match ($currency) {
-            'CVE' => '132',
-            'USD' => '840',
-            'EUR' => '978',
-            'BRL' => '986',
-            'GBP' => '826',
-            'JPY' => '392',
-            default => preg_match('/^\d{3}$/', $currency)
-                ? $currency
-                : throw new Vinti4Exception(
-                    "Moeda inválida: {$currency}."
-                ),
-        };
+        return Currency::toNumeric((string) $currency);
     }
 
     /**
