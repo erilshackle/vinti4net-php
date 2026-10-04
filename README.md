@@ -25,15 +25,17 @@ Requer PHP 8.1 ou superior.
 
 require_once __DIR__ . '/vendor/autoload.php';
 
+use Erilshk\Sisp\Vinti4Net;
 use Erilshk\Sisp\Billing;
 use Erilshk\Sisp\Exceptions\Vinti4Exception;
-use Erilshk\Sisp\Vinti4Net;
 
+// Criar o cliente (credenciais do SISP)
 $vinti4 = new Vinti4Net(
-    posID: $_ENV['VINTI4_POS_ID'],
-    posAuthCode: $_ENV['VINTI4_AUTH_CODE'],
+    posID: getenv('VINTI4_POS_ID'),
+    posAuthCode: getenv('VINTI4_AUTH_CODE'),
 );
 
+// preparar o purchaseRequest
 $billing = Billing::from([
     'email' => 'cliente@example.cv',
     'country' => '132',
@@ -43,14 +45,19 @@ $billing = Billing::from([
 ]);
 
 try {
-    $vinti4
-        ->setMerchant(reference: 'PEDIDO000000001')
-        ->preparePurchase(amount: 1500, billing: $billing);
+    // preeparar merchantRef (opcional)
+    $reference = Vinti4Net::generateMerchantRef()
+    $vinti4->setMerchant(reference: $reference);
 
+    // preparar o pagamento
+    $vinti4->preparePurchase(amount: 1500, billing: $billing);
+
+    // criar e chamar o formulário do pagamento 
     echo $vinti4->createPaymentForm(
         responseUrl: 'https://example.cv/pagamentos/callback',
         lang: 'pt',
     );
+
 } catch (Vinti4Exception $exception) {
     error_log($exception->getMessage());
     http_response_code(400);
@@ -73,7 +80,7 @@ O formulário é auto-submetido para a página da Rede Vinti4. `merchantRef` e `
 
 ```php
 $vinti4
-    ->setMerchant('SERVICO00000001')
+    ->setMerchant($reference)
     ->prepareServicePayment(
         amount: 2500,
         entity: 10001,
@@ -85,7 +92,7 @@ $vinti4
 
 ```php
 $vinti4
-    ->setMerchant('RECARGA00000001')
+    ->setMerchant($refenrece)
     ->prepareRecharge(
         amount: 500,
         entity: 10021,
@@ -97,7 +104,7 @@ $vinti4
 
 ```php
 $vinti4
-    ->setMerchant('REFUND000000001')
+    ->setMerchant($reference)
     ->prepareRefund(
         amount: 1500,
         transactionID: '3456',
@@ -121,18 +128,23 @@ require_once __DIR__ . '/vendor/autoload.php';
 use Erilshk\Sisp\Exceptions\Vinti4Exception;
 use Erilshk\Sisp\Vinti4Net;
 
+// criar o cliente (credenciais do SISP)
 $vinti4 = new Vinti4Net(
-    $_ENV['VINTI4_POS_ID'],
-    $_ENV['VINTI4_AUTH_CODE'],
+    getenv('VINTI4_POS_ID'),
+    getenv('VINTI4_AUTH_CODE'),
 );
 
 try {
+    // enviar o body da resposta do sisp para o processResponse
     $response = $vinti4->processResponse($_POST);
 
+    // validar o fingerprint (segurança anti-fraude)
     if ($response->hasInvalidFingerprint()) {
         http_response_code(400);
         exit('Resposta inválida.');
     }
+
+    // tratar a resposta
 
     if ($response->isSuccess()) {
         $transactionId = $response->getTransactionId();
@@ -217,19 +229,9 @@ try {
     // integração
 } catch (Vinti4Exception $exception) {
     error_log($exception->getMessage());
+    //! trate e resolva como erro de desenvolvimento (+info na documentação)
 }
 ```
-
-## Testes
-
-```bash
-composer test
-composer analyse
-```
-
-## Atualização
-
-Consulte o [resumo das novidades](https://erilshackle.github.io/vinti4net-php/changes/) e as [alterações da v2.4.0](CHANGELOG.md) antes de atualizar.
 
 ## Links
 
@@ -240,3 +242,4 @@ Consulte o [resumo das novidades](https://erilshackle.github.io/vinti4net-php/ch
 ## Licença
 
 Distribuído sob a licença MIT. Consulte a licença do repositório.
+by Erilando TS Carvalho
