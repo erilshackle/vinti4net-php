@@ -152,7 +152,7 @@ class BillingTest extends TestCase
         $this->assertEquals('05', $billing['acctInfo']['chAccAgeInd']);
         $this->assertEquals('20230101', $billing['acctInfo']['chAccChange']);
         $this->assertEquals('20220101', $billing['acctInfo']['chAccDate']);
-        $this->assertEquals('20230101', $billing['acctInfo']['chAccPwChange']);
+        $this->assertArrayNotHasKey('chAccPwChange', $billing['acctInfo']);
         $this->assertEquals('05', $billing['acctInfo']['chAccPwChangeInd']);
         $this->assertEquals('02', $billing['acctInfo']['suspiciousAccActivity']);
     }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Erilshk\Sisp;
 
+use Erilshk\Sisp\Exceptions\Vinti4Exception;
+
 /**
  * Represents billing and 3D Secure customer information.
  */
@@ -43,22 +45,14 @@ final class Billing
     }
 
     /**
-     * Create an empty billing without 3DS integration.
-     */
-    public static function without3DS(): array
-    {
-        return [];
-    }
-
-    /**
      * Create a billing builder from an array.
      *
      * Friendly names and their SISP equivalents are both accepted. Unknown keys
      * are ignored for backward compatibility. The billing country defaults to
      * "132" (Cabo Verde).
      *
-     * When billing is used for a purchase, email, city, address and postal code
-     * must be supplied; the country may use its default.
+     * When billing is used, supply email, city and address. The country defaults
+     * to 132 and an unknown postal code defaults to 0000 at request creation.
      *
      * Phone numbers may be given as a local subscriber number or as an array
      * with separate country code and subscriber number.
@@ -96,7 +90,7 @@ final class Billing
      *     acctID?: string,
      *     accountInfo?: array<string, mixed>,
      *     acctInfo?: array<string, mixed>,
-     *     addressMatchesShipping?: bool,
+     *     addressMatchesShipping?: bool|'Y'|'N'|'y'|'n',
      *     addrMatch?: bool|string,
      *     suspicious?: bool
      * } $data Billing and 3D Secure customer data.
@@ -189,13 +183,11 @@ final class Billing
             }
 
             if ($field === 'addrMatch') {
-                $this->data[$field] = is_bool($value)
-                    ? ($value ? 'Y' : 'N')
-                    : $value;
+                $this->addressMatchesShipping($value);
                 continue;
             }
 
-            $this->data[$field] = $value;
+            $this->data[$field] = is_string($value) ? trim($value) : $value;
         }
 
         return $this;
@@ -243,7 +235,7 @@ final class Billing
         return $this;
     }
 
-    /** Set the billing postal code required when billing is supplied. */
+    /** Set the billing postal code; an unknown/blank code uses 0000 in the request. */
     public function postalCode(string $value): self
     {
         $this->data['billAddrPostCode'] = trim($value);
@@ -292,19 +284,27 @@ final class Billing
         return $this;
     }
 
-    /** Record whether billing and shipping addresses match (Y or N). */
-    public function addressMatchesShipping(bool $matches = true): self
+    /**
+     * Set addrMatch; Y copies billing fields to shipping when exported.
+     * @param bool|'Y'|'N'|'y'|'n' $matches Address correspondence.
+     */
+    public function addressMatchesShipping(bool|string $matches = true): self
     {
-        $this->data['addrMatch'] = $matches ? 'Y' : 'N';
+        $value = is_bool($matches) ? ($matches ? 'Y' : 'N') : strtoupper(trim($matches));
+        if (!in_array($value, ['Y', 'N'], true)) {
+            throw new Vinti4Exception('addrMatch deve ser Y, N ou booleano.');
+        }
+        $this->data['addrMatch'] = $value;
         return $this;
     }
 
     /**
      * Set whether billing and shipping addresses match.
      *
+     * @param bool|'Y'|'N'|'y'|'n' $value Address correspondence.
      * @deprecated 2.2.0 Use addressMatchesShipping().
      */
-    public function addrMatch(bool $value): self
+    public function addrMatch(bool|string $value): self
     {
         return $this->addressMatchesShipping($value);
     }
@@ -335,7 +335,7 @@ final class Billing
         return $this;
     }
 
-    /** Set the cardholder account identifier (acctID). */
+    /** Set the merchant user ID (acctID); the login email may also be used. */
     public function accountId(string $value): self
     {
         $this->data['acctID'] = trim($value);
@@ -355,26 +355,64 @@ final class Billing
     /**
      * Set 3D Secure account information using SISP acctInfo field names.
      *
-     * Missing age, password-change and suspicious-activity indicators receive
-     * the class defaults. Date values are not converted; supply YYYYMMDD.
+     * Missing age/password indicators are omitted; suspicious activity defaults
+     * to 01. Dates use YYYYMMDD. Existing account fields are preserved.
      *
-     * @param array<string, mixed> $info Account information (e.g. chAccDate).
+     * @param array{
+     *   chAccAgeInd?: '01'|'02'|'03'|'04'|'05',
+     *   chAccChange?: string,
+     *   chAccDate?: string,
+     *   chAccPwChange?: string,
+     *   chAccPwChangeInd?: '01'|'02'|'03'|'04'|'05',
+     *   suspiciousAccActivity?: '01'|'02',
+     * } $info Age/password: 01 no account, 02 during checkout, 03 <30 days,
+     *         04 30–60 days, 05 >60 days. Dates: profile change, creation,
+     *         password change. Suspicious activity: 01 no, 02 yes.
+     *         Age 01 is reserved for SISP-approved guest-account exceptions.
      */
     public function accountInfo(array $info): self
     {
         $this->data['acctInfo'] = array_filter(
             array_merge([
-                'chAccAgeInd' => '01',
                 'chAccChange' => '',
                 'chAccDate' => '',
                 'chAccPwChange' => '',
-                'chAccPwChangeInd' => '01',
                 'suspiciousAccActivity' => '01',
-            ], $info),
+            ], $this->data['acctInfo'], $info),
             static fn(mixed $value): bool => $value !== null && $value !== '',
         );
 
         return $this;
+    }
+
+    /**
+     * Set account data with named arguments instead of an application user array.
+     *
+     * @param string $id Account ID (up to 64 characters).
+     * @param string|null $createdAt Account creation date, YYYYMMDD.
+     * @param string|null $changedAt Last profile change, YYYYMMDD.
+     * @param string|null $passwordChangedAt Last password change, YYYYMMDD.
+     * @param '01'|'02'|'03'|'04'|'05'|null $ageIndicator Account age; see accountInfo().
+     * @param '01'|'02'|'03'|'04'|'05'|null $passwordChangeIndicator Password age; see accountInfo().
+     * @param bool $suspicious Known suspicious account activity.
+     */
+    public function account(
+        string $id,
+        ?string $createdAt = null,
+        ?string $changedAt = null,
+        ?string $passwordChangedAt = null,
+        ?string $ageIndicator = null,
+        ?string $passwordChangeIndicator = null,
+        bool $suspicious = false,
+    ): self {
+        return $this->accountId($id)->accountInfo(array_filter([
+            'chAccDate' => $createdAt,
+            'chAccChange' => $changedAt,
+            'chAccPwChange' => $passwordChangedAt,
+            'chAccAgeInd' => $ageIndicator,
+            'chAccPwChangeInd' => $passwordChangeIndicator,
+            'suspiciousAccActivity' => $suspicious ? '02' : '01',
+        ], static fn(mixed $value): bool => $value !== null));
     }
 
     /**
@@ -397,14 +435,25 @@ final class Billing
     }
 
     /**
-     * Return SISP field names, omitting empty strings, nulls and empty arrays.
+     * Return SISP fields with line 2 fallback and matching shipping addresses.
+     * Empty strings, nulls and empty arrays are omitted; postal fallback is applied in the request.
      *
      * @return array<string, mixed>
      */
     public function toArray(): array
     {
+        $data = $this->data;
+        if (!empty($data['billAddrLine1']) && empty($data['billAddrLine2'])) {
+            $data['billAddrLine2'] = $data['billAddrLine1'];
+        }
+        if (($data['addrMatch'] ?? null) === 'Y') {
+            foreach (['Country', 'City', 'Line1', 'PostCode', 'State'] as $suffix) {
+                $data['shipAddr' . $suffix] = $data['billAddr' . $suffix];
+            }
+        }
+
         return array_filter(
-            $this->data,
+            $data,
             static fn(mixed $value): bool =>
             $value !== null && $value !== '' && $value !== [],
         );
@@ -415,7 +464,7 @@ final class Billing
      *
      * @param array<string, mixed> $user User data.
      *
-     * @deprecated 2.2.0 Map application data explicitly with Billing::from().
+     * @deprecated 2.2.0 Use account() for account fields and from() for explicit billing mappings.
      */
     public static function fromUser(array $user): self
     {
@@ -438,11 +487,11 @@ final class Billing
             ],
             'accountId' => (string) ($user['id'] ?? ''),
             'accountInfo' => [
-                'chAccAgeInd' => $user['chAccAgeInd'] ?? '05',
+                'chAccAgeInd' => $user['chAccAgeInd'] ?? null,
                 'chAccChange' => self::dateValue($user['updated_at'] ?? null),
                 'chAccDate' => self::dateValue($user['created_at'] ?? null),
-                'chAccPwChange' => self::dateValue($user['updated_at'] ?? null),
-                'chAccPwChangeInd' => $user['chAccPwInd'] ?? '05',
+                'chAccPwChange' => self::dateValue($user['password_changed_at'] ?? null),
+                'chAccPwChangeInd' => $user['chAccPwInd'] ?? null,
             ],
             'suspicious' => (bool) ($user['suspicious'] ?? false),
         ]);

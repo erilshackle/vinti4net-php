@@ -124,7 +124,7 @@ class PaymentTest extends TestCase
     {
         $this->expectException(Vinti4Exception::class);
         $this->expectExceptionMessage(
-            'Campos obrigatórios ausentes em billing: billAddrCity, billAddrLine1, billAddrPostCode.'
+            'Campos obrigatórios ausentes em billing: billAddrCity, billAddrLine1.'
         );
     
         $this->payment->preparePayment([

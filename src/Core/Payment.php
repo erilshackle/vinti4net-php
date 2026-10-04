@@ -89,21 +89,11 @@ class Payment extends Sisp
             $user = get_object_vars($user);
         }
 
-        $legacy = is_array($user) && $user !== []
-            ? Billing::fromUser($user)->toArray()
-            : [];
+        $builder = is_array($user) && $user !== []
+            ? Billing::fromUser($user)
+            : Billing::make();
 
-        $explicit = Billing::from($billing)->toArray();
-        $normalized = array_replace($legacy, $explicit);
-
-        if (isset($legacy['acctInfo'], $explicit['acctInfo'])) {
-            $normalized['acctInfo'] = array_replace(
-                $legacy['acctInfo'],
-                $explicit['acctInfo'],
-            );
-        }
-
-        return $normalized;
+        return $builder->fill($billing)->toArray();
     }
 
     /**
@@ -113,26 +103,14 @@ class Payment extends Sisp
      */
     protected function generatePurchaseRequest(array $billing): string
     {
-        $required = [
-            'email',
-            'billAddrCountry',
-            'billAddrCity',
-            'billAddrLine1',
-            'billAddrPostCode',
-        ];
-
-        $missing = array_filter(
-            $required,
-            static fn(string $field): bool =>
-            !isset($billing[$field]) || trim((string) $billing[$field]) === '',
-        );
-
-        if ($missing !== []) {
-            throw new Vinti4Exception(
-                'Campos obrigatórios ausentes em billing: ' .
-                    implode(', ', $missing) . '.'
-            );
+        if (!isset($billing['billAddrPostCode']) || trim((string) $billing['billAddrPostCode']) === '') {
+            $billing['billAddrPostCode'] = '0000';
         }
+        if (($billing['addrMatch'] ?? null) === 'Y') {
+            $billing['shipAddrPostCode'] = $billing['billAddrPostCode'];
+        }
+
+        $this->validateBilling($billing);
 
         try {
             $json = json_encode(
@@ -152,6 +130,31 @@ class Payment extends Sisp
         return base64_encode($json);
     }
 
+
+    /** @param array<string, mixed> $billing */
+    private function validateBilling(array $billing): void
+    {
+        $required = ['email', 'billAddrCountry', 'billAddrCity', 'billAddrLine1'];
+        $missing = array_filter(
+            $required,
+            static fn(string $field): bool =>
+                !isset($billing[$field]) || trim((string) $billing[$field]) === '',
+        );
+
+        if ($missing !== []) {
+            throw new Vinti4Exception(
+                'Campos obrigatórios ausentes em billing: ' . implode(', ', $missing) . '.'
+            );
+        }
+
+        if (filter_var($billing['email'], FILTER_VALIDATE_EMAIL) === false) {
+            throw new Vinti4Exception('Email de billing inválido.');
+        }
+
+        if (isset($billing['acctID']) && preg_match_all('/./us', (string) $billing['acctID']) > 64) {
+            throw new Vinti4Exception('acctID deve ter no máximo 64 caracteres.');
+        }
+    }
 
     /**
      * Prepara uma requisição de pagamento (compra, serviço, recarga).

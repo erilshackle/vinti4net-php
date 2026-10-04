@@ -745,11 +745,14 @@ HTML;
                 }
             }
 
-            if ($field === 'addrMatch' && is_bool($value)) {
-                $value = $value ? 'Y' : 'N';
+            if ($field === 'addrMatch') {
+                $value = is_bool($value) ? ($value ? 'Y' : 'N') : strtoupper(trim((string) $value));
+                if (!in_array($value, ['Y', 'N'], true)) {
+                    throw new Vinti4Exception('addrMatch deve ser Y, N ou booleano.');
+                }
             }
 
-            $normalized[$field] = $value;
+            $normalized[$field] = is_string($value) ? trim($value) : $value;
         }
 
         if (array_key_exists('suspicious', $billing)) {
@@ -763,15 +766,22 @@ HTML;
         if (isset($normalized['acctInfo']) && is_array($normalized['acctInfo'])) {
             $normalized['acctInfo'] = array_filter(
                 array_merge([
-                    'chAccAgeInd' => '01',
                     'chAccChange' => '',
                     'chAccDate' => '',
                     'chAccPwChange' => '',
-                    'chAccPwChangeInd' => '01',
                     'suspiciousAccActivity' => '01',
                 ], $normalized['acctInfo']),
                 static fn(mixed $value): bool => $value !== null && $value !== '',
             );
+        }
+
+        if (!empty($normalized['billAddrLine1']) && empty($normalized['billAddrLine2'])) {
+            $normalized['billAddrLine2'] = $normalized['billAddrLine1'];
+        }
+        if (($normalized['addrMatch'] ?? null) === 'Y') {
+            foreach (['Country', 'City', 'Line1', 'PostCode', 'State'] as $suffix) {
+                $normalized['shipAddr' . $suffix] = $normalized['billAddr' . $suffix] ?? '';
+            }
         }
 
         return array_filter(
@@ -784,27 +794,14 @@ HTML;
     /** @param array<string, mixed> $billing */
     private function generatePurchaseRequest(array $billing): string
     {
-        $required = [
-            'email',
-            'billAddrCountry',
-            'billAddrCity',
-            'billAddrLine1',
-            'billAddrPostCode',
-        ];
-
-        $missing = array_filter(
-            $required,
-            static fn(string $field): bool =>
-            !isset($billing[$field]) || trim((string) $billing[$field]) === '',
-        );
-
-        if ($missing !== []) {
-            throw new Vinti4Exception(
-                'Campos obrigatórios ausentes em billing: '
-                    . implode(', ', $missing)
-                    . '.'
-            );
+        if (!isset($billing['billAddrPostCode']) || trim((string) $billing['billAddrPostCode']) === '') {
+            $billing['billAddrPostCode'] = '0000';
         }
+        if (($billing['addrMatch'] ?? null) === 'Y') {
+            $billing['shipAddrPostCode'] = $billing['billAddrPostCode'];
+        }
+
+        $this->validateBilling($billing);
 
         try {
             $json = json_encode(
@@ -822,6 +819,31 @@ HTML;
         }
 
         return base64_encode($json);
+    }
+
+    /** @param array<string, mixed> $billing */
+    private function validateBilling(array $billing): void
+    {
+        $required = ['email', 'billAddrCountry', 'billAddrCity', 'billAddrLine1'];
+        $missing = array_filter(
+            $required,
+            static fn(string $field): bool =>
+                !isset($billing[$field]) || trim((string) $billing[$field]) === '',
+        );
+
+        if ($missing !== []) {
+            throw new Vinti4Exception(
+                'Campos obrigatórios ausentes em billing: ' . implode(', ', $missing) . '.'
+            );
+        }
+
+        if (filter_var($billing['email'], FILTER_VALIDATE_EMAIL) === false) {
+            throw new Vinti4Exception('Email de billing inválido.');
+        }
+
+        if (isset($billing['acctID']) && preg_match_all('/./us', (string) $billing['acctID']) > 64) {
+            throw new Vinti4Exception('acctID deve ter no máximo 64 caracteres.');
+        }
     }
 
     /** @param array<string, mixed> $data */
