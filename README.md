@@ -13,7 +13,7 @@ SDK PHP comunitário para integração com a **Rede Vinti4 / SISP**, em Cabo Ver
 ## Instalação
 
 ```bash
-composer require erilshk/vinti4net:^2.3
+composer require erilshk/vinti4net:^2.4.0
 ```
 
 Requer PHP 8.1 ou superior.
@@ -59,7 +59,6 @@ try {
 
 O formulário é auto-submetido para a página da Rede Vinti4. `merchantRef` e `merchantSession` devem ter exatamente 15 caracteres. Guarde uma referência única para cada operação; `generateMerchantRef()` adiciona aleatoriedade para reduzir colisões, mas a aplicação ainda deve garantir a unicidade da referência na base de dados.
 
-Para comprar sem enviar billing, passe `Billing::without3DS()` como segundo argumento de `preparePurchase()`; esta opção só se aplica à compra.
 
 ## Tipos de transação
 
@@ -225,12 +224,12 @@ try {
 
 ```bash
 composer test
-composer test-coverage
+composer analyse
 ```
 
 ## Atualização
 
-Consulte o [guia de atualização da v2.1 para v2.2](https://erilshackle.github.io/vinti4net-php/upgrade-2.2/) e as [alterações da v2.3](CHANGELOG.md) antes de atualizar.
+Consulte o [resumo das novidades](https://erilshackle.github.io/vinti4net-php/changes/) e as [alterações da v2.4.0](CHANGELOG.md) antes de atualizar.
 
 ## Links
 
