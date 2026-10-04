@@ -3,7 +3,6 @@
 /tests export-ignore
 /.github export-ignore
 /.cache export-ignore
-/mkdocs export-ignore
 /examples export-ignore
 /dist export-ignore
 
@@ -18,5 +17,6 @@
 /CONTRIBUTING.md export-ignore
 /llms-full.txt export-ignore
 /llms.txt export-ignore
-/mkdocs.yml export-ignore
-/README.md export-ignore
+/package.json export-ignore
+/package-lock.json export-ignore
+/node_modules export-ignore

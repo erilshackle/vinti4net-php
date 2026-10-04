@@ -109,3 +109,18 @@ Se precisar de ajuda ou tiver dúvidas:
 ---
 
 **Obrigado por contribuir e ajudar a melhorar o SDK Vinti4Net (PHP) para toda a comunidade!** ❤️
+## Documentação
+
+A documentação usa VitePress com Node.js 22+.
+
+```bash
+npm ci
+npm run docs:dev
+```
+
+`npm run docs:build` gera o site em `docs/.vitepress/dist`;
+`npm run docs:preview` permite consultar o resultado localmente.
+A publicação no GitHub Pages é feita pelo workflow de documentação.
+
+O `package.json` fixa a dependência Vite do VitePress na linha 6.4.3+
+para incluir as correções de segurança ausentes na dependência padrão da v1.6.4.
