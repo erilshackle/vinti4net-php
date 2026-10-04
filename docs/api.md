@@ -101,7 +101,7 @@ $billing = Billing::make()
     ->accountId('12345');
 ```
 
-O país de faturação usa `132` por padrão. Se enviar billing, forneça email, cidade, morada e código postal; se não quiser enviar billing, passe `[]` a `preparePurchase()`.
+O país de faturação usa `132` por padrão. Se enviar billing, forneça email, cidade e morada; código postal desconhecido usa `0000`; se não quiser enviar billing, passe `[]` a `preparePurchase()`.
 
 ### Criação e conversão
 
@@ -138,7 +138,8 @@ O país de faturação usa `132` por padrão. Se enviar billing, forneça email,
 | `mobilePhone()` | Telefone móvel com país e número |
 | `workPhone()` | Telefone de trabalho |
 | `accountId()` | ID da conta do cliente |
-| `accountInfo()` | Informações 3DS da conta |
+| `accountInfo()` | Informações 3DS da conta com chaves SISP |
+| `account()` | ID, datas e indicadores da conta com parâmetros nomeados |
 | `suspicious()` | Marca ou desmarca atividade suspeita |
 
 ---

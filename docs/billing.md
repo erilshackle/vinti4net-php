@@ -53,12 +53,12 @@ $billing = Billing::make()
     ->address2('Bloco B, Apt 10')
     ->address3('Próximo ao mercado')
     ->postalCode('7600')
-    ->state('01')
+    ->state('PR')
     ->shipCountry('132')
     ->shipAddress('Rua de Entrega, 45')
     ->shipCity('Praia')
     ->shipPostalCode('7601')
-    ->shipState('01')
+    ->shipState('PR')
     ->mobilePhone('238', '9911122')
     ->workPhone('238', '2612345')
     ->accountId('123456')
@@ -88,7 +88,7 @@ $billing = Billing::make()
 | `billAddrLine1` | `address` | `string` | Endereço principal |
 | `billAddrPostCode` | `postalCode` | `string` | Código postal |
 
-`billAddrCountry` usa `132` por padrão. Se informar billing, forneça email, cidade, morada e código postal. Para não enviar dados 3DS adicionais, passe `[]` em `preparePurchase()`.
+`billAddrCountry` usa `132` por padrão. Se informar billing, forneça email, cidade e morada. Quando o código postal não for informado, o pedido usa `0000`. Para não enviar dados 3DS adicionais, passe `[]` em `preparePurchase()`.
 
 ## Campos opcionais de faturação
 
@@ -108,7 +108,7 @@ $billing = Billing::make()
 | `shipAddrPostCode` | `shipPostalCode` | `shipPostalCode()` |
 | `shipAddrState` | `shipState` | `shipState()` |
 
-Use `addressMatchesShipping(true)` quando o endereço de entrega corresponde ao endereço de faturação. O valor enviado será `Y`; para `false`, será `N`.
+Use `addressMatchesShipping(true)` quando o endereço de entrega corresponde ao endereço de faturação. O método aceita `true`, `false`, `Y` ou `N` (também em minúsculas). `Y` copia país, cidade, morada, código postal e subdivisão de cobrança para entrega; `N` preserva a entrega informada.
 
 ---
 
@@ -146,13 +146,13 @@ Para `+2389911122` ou números de outros países, informe `cc` e `subscriber` se
 
 ### `acctID`
 
-Identifica a conta do cliente no sistema do comerciante:
+Identifica a conta do cliente no sistema do comerciante. Pode ser o ID do utilizador ou o email usado para entrar no site:
 
 ```php
 $billing->accountId('CLIENTE-123');
 ```
 
-O limite validado pela requisição é 64 caracteres.
+O limite de `acctID` é validado dentro do billing: 64 caracteres.
 
 ### `acctInfo`
 
@@ -166,9 +166,9 @@ $billing->accountInfo([
 ]);
 ```
 
-Quando não informados, `chAccAgeInd`, `chAccPwChangeInd` e `suspiciousAccActivity` recebem valores padrão.
+`chAccAgeInd` e `chAccPwChangeInd` são omitidos quando não informados. `suspiciousAccActivity` usa `01` quando dados da conta são fornecidos. A biblioteca não inventa o histórico do cliente.
 
-As datas de `acctInfo` são enviadas como fornecidas; use o formato `YYYYMMDD`. `created_at` e `updated_at` não são aliases de `Billing::from()` e serão ignorados. Mapeie campos do seu `$user` explicitamente para as chaves SISP. `fromUser()` permanece apenas para compatibilidade.
+As datas de `acctInfo` são enviadas como fornecidas; use o formato `YYYYMMDD`. `created_at` e `updated_at` não são aliases de `Billing::from()` e serão ignorados. Mapeie campos do seu `$user` explicitamente para as chaves SISP. `fromUser()` permanece apenas para compatibilidade: preserva os indicadores informados e usa `password_changed_at` para a senha, nunca `updated_at`.
 
 ### Atividade suspeita
 
@@ -229,3 +229,48 @@ Nesse exemplo, `$user['phone']` deve conter o número local, sem `+238`. O `Bill
 ---
 
 
+
+## Conta com parâmetros nomeados
+
+Use o método fluente `account()` para evitar um array específico da aplicação:
+
+```php
+$billing->account(
+    id: (string) $user['id'],
+    createdAt: '20261001',
+    changedAt: '20261002',
+    passwordChangedAt: '20261003',
+    ageIndicator: '03',
+    passwordChangeIndicator: '03',
+    suspicious: false,
+);
+```
+
+Datas: `YYYYMMDD`; `changedAt` é a última alteração do perfil, enquanto
+`passwordChangedAt` é exclusivamente a última alteração da senha.
+`accountInfo()` continua aceitando as chaves SISP para quem usa a especificação.
+
+| Campo de `acctInfo` | Significado |
+| --- | --- |
+| `chAccAgeInd` | Idade da conta |
+| `chAccDate` | Data de criação da conta |
+| `chAccChange` | Data da última alteração do perfil |
+| `chAccPwChange` | Data da última alteração da senha |
+| `chAccPwChangeInd` | Indicador do período da alteração da senha |
+| `suspiciousAccActivity` | `01`: não suspeito; `02`: suspeito |
+
+Indicadores de idade: `01` sem conta, `02` durante a transação, `03` menos de
+30 dias, `04` entre 30 e 60 dias, `05` mais de 60 dias. O cenário sem conta
+(`chAccAgeInd=01`) depende de exceção aprovada pela SISP.
+
+## Normalização e validação
+
+- Uma segunda linha de cobrança vazia recebe a primeira linha.
+- Código postal desconhecido recebe `0000` ao gerar o pedido.
+- Email e limite de `acctID` (64 caracteres) são validados. Os formatos e limites dos campos opcionais seguem a documentação da SISP, sem validação restritiva na lib.
+- País e subdivisão são preservados, sem catálogo ou conversão automática: `132`
+  e `CPV` podem ser fornecidos ao helper. A SISP documenta país numérico ISO 3166-1
+  (`132`) e subdivisão ISO 3166-2 (`PR` para Praia); preservar `CPV` não garante
+  sua aceitação pelo gateway.
+- Telefone pessoal pode preencher `workPhone` explicitamente quando necessário;
+  a biblioteca não copia contactos automaticamente.

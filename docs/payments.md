@@ -45,7 +45,7 @@ $sdk->preparePurchase(
 );
 ```
 
-O Billing pode ser um objeto `Billing` ou um array. Para não enviar dados de billing, use `Billing::without3DS()` ou um array vazio:
+O Billing pode ser um objeto `Billing` ou um array. Para não enviar dados de billing, passe um array vazio:
 
 ```php
 $sdk->preparePurchase(1500, []);

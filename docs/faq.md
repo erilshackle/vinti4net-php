@@ -2,7 +2,7 @@
 
 ## Preciso informar os dados 3DS numa compra?
 
-Não. Passe `[]` como segundo argumento: `$vinti4->preparePurchase(1500, [])`. Se fornecer billing, preencha email, cidade, morada e código postal. O país usa `132` por padrão.
+A API permite omitir os dados adicionais com `$vinti4->preparePurchase(1500, [])`, mas isso não desativa 3DS: `is3DSec` permanece `1`. Para integração 3DSServer com cartões internacionais, forneça os dados exigidos pela SISP. Se enviar billing, informe email, cidade e morada; o país usa `132` e o código postal desconhecido usa `0000`.
 
 ## Como escolho a referência?
 
