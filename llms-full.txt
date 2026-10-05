@@ -1,4 +1,4 @@
-# Vinti4Net PHP SDK — referência de uso 2.2.x
+# Vinti4Net PHP SDK — referência de uso 2.4.0
 
 Pacote Composer: `erilshk/vinti4net`. Namespace: `Erilshk\Sisp`. Projeto comunitário de Eril TS Carvalho; **não é oficial da SISP**. Documentação: https://erilshackle.github.io/vinti4net-php/ . Código: https://github.com/erilshackle/vinti4net-php . Esta referência destina-se a quem utiliza a API pública; para pormenores adicionais, consulte as páginas do site.
 
@@ -7,7 +7,7 @@ Pacote Composer: `erilshk/vinti4net`. Namespace: `Erilshk\Sisp`. Projeto comunit
 Requer PHP 8.1+, Composer e credenciais POS fornecidas pela SISP.
 
 ```bash
-composer require erilshk/vinti4net:^2.2
+composer require erilshk/vinti4net:^2.4.0
 ```
 
 ```php
@@ -23,9 +23,9 @@ O terceiro argumento, `?string $endpoint = null`, permite indicar uma URL altern
 
 ## Preparar uma compra
 
-`preparePurchase(float|string $amount, array|Billing $billing, string $currency = 'CVE'): static` prepara a operação. O montante precisa ser inteiro positivo (por exemplo, `1500`), sem casas decimais. O segundo argumento é obrigatório: para comprar sem dados adicionais de billing/3DS, passe `[]`; nesse caso não há `purchaseRequest` no formulário.
+`preparePurchase(float|string $amount, array|Billing $billing, string $currency = Currency::CVE): static` prepara a operação. O montante precisa ser inteiro positivo (por exemplo, `1500`), sem casas decimais. O segundo argumento é obrigatório: para comprar sem dados adicionais de billing/3DS, passe `[]`; nesse caso não há `purchaseRequest` no formulário. Isso não desativa 3DS: `is3DSec` permanece `1`. Forneça os dados exigidos pela SISP para a sua integração com cartões internacionais.
 
-Com billing, forneça email, cidade, morada e código postal. O país de faturação usa `132` (CVE) por padrão. Pode fornecer um array ou `Billing::from([...])`:
+Com billing, forneça email válido, cidade e morada. O país de faturação usa `132` (Cabo Verde) por padrão e o código postal de cobrança desconhecido recebe `0000` ao gerar o pedido. `acctID`, quando informado, tem limite de 64 caracteres. Pode fornecer um array ou `Billing::from([...])`:
 
 ```php
 use Erilshk\Sisp\Billing;
@@ -55,17 +55,86 @@ echo $vinti4->createPaymentForm(
 
 Também é possível construir o billing de forma fluente: `Billing::make()->email(...)->city(...)->address(...)->postalCode(...)`. Para telefones, `mobilePhone($cc, $subscriber)` e `workPhone($cc, $subscriber)` recebem indicativo e número local separados; um prefixo `+238` numa string única não é interpretado automaticamente. Outros métodos públicos incluem `shipCountry`, `shipCity`, `shipAddress`, `shipPostalCode`, `shipState`, `addressMatchesShipping`, `accountId`, `accountInfo` e `suspicious`. Veja: https://erilshackle.github.io/vinti4net-php/billing/ .
 
+## Billing: endereço e conta
+
+`addressMatchesShipping(true)` ou `addressMatchesShipping('Y')` copia país,
+cidade, primeira linha, código postal e subdivisão de cobrança para entrega.
+`false` ou `'N'` preserva a entrega informada; strings minúsculas também são
+aceites. Uma segunda linha de cobrança vazia recebe a primeira linha.
+
+País e subdivisão são preservados sem conversão automática. Use o código
+numérico indicado pela SISP, como `'132'`, e a subdivisão ISO 3166-2, como `'PR'`.
+Preservar `'CPV'` não garante que o gateway aceite esse valor.
+
+`accountId()` recebe o ID do utilizador no sistema do comerciante ou o email de
+acesso. Use `account()` para informar o histórico com parâmetros definidos:
+
+```php
+$billing->account(
+    id: (string) $user['id'],
+    createdAt: '20260901',
+    changedAt: '20261001',
+    passwordChangedAt: '20261002',
+    ageIndicator: '04',
+    passwordChangeIndicator: '03',
+    suspicious: false,
+);
+```
+
+Substitua as datas e os indicadores pelos dados reais do cliente. As datas
+explícitas usam `YYYYMMDD`; `changedAt` corresponde ao perfil e
+`passwordChangedAt` exclusivamente à senha. `accountInfo()` também aceita as
+chaves SISP: `chAccDate`, `chAccChange`, `chAccPwChange`, `chAccAgeInd`,
+`chAccPwChangeInd` e `suspiciousAccActivity`.
+
+Para idade da conta, `01` significa sem conta (exceção aprovada pela SISP),
+`02` criada durante a transação, `03` menos de 30 dias, `04` entre 30 e 60 dias
+e `05` mais de 60 dias. Os indicadores omitidos não são calculados nem recebem
+valores inventados. Ao fornecer dados da conta, atividade suspeita usa `01`
+(não suspeito) por padrão; `suspicious(true)` usa `02`.
+
+`fromUser()` continua depreciado. Na compatibilidade legada, `created_at`
+corresponde à criação, `updated_at` à alteração do perfil e apenas
+`password_changed_at` à alteração da senha. Prefira mapeamento explícito com
+`Billing::from()` e `account()`. Campos desconhecidos em `from()` são ignorados.
+
+## Moedas e entidades
+
+```php
+use Erilshk\Sisp\Currency;
+use Erilshk\Sisp\Entity;
+
+Currency::CVE; // string '132'
+Currency::toNumeric('EUR'); // string '978'
+Currency::toNumeric('840'); // string '840'
+Entity::RECHARGE_ALOU; // int 2
+Entity::all('recharge'); // nomes das constantes => códigos inteiros
+```
+
+`Currency` contém CVE, USD, EUR, BRL, GBP e JPY. `toNumeric()` normaliza nomes
+conhecidos e preserva códigos de três dígitos, incluindo zeros à esquerda.
+Nomes desconhecidos lançam `Vinti4Exception`. A moeda padrão de compra é
+`Currency::CVE`: `getRequest()['currency']` contém `'132'` quando omitida,
+em vez do antigo `'CVE'`; o código enviado ao gateway permanece o mesmo.
+As constantes não garantem suporte pela SISP; o protocolo documentado usa CVE.
+
+`Entity` tem constantes `SERVICE_...` e `RECHARGE_...`. `all()` retorna
+`array<string, int>` no formato nome => código e permite as categorias
+`recharge`, `electricity`, `water`, `insurance`, `internet`, `transport` e
+`telephone`. Uma entidade pode pertencer a mais de uma categoria. Categorias
+desconhecidas lançam `Vinti4Exception`. Confirme os serviços habilitados no POS.
+
 ## Serviço, recarga e estorno
 
 ```php
-$vinti4->prepareServicePayment(2000, $serviceEntityCode, '123456789');
-$vinti4->prepareRecharge(500, $rechargeEntityCode, '9912345');
-$vinti4->prepareRefund(1000, $originalTransactionId, $clearingPeriod);
+$vinti4->prepareServicePayment('2000', Entity::SERVICE_ALOU_LANDLINE, '123456789');
+$vinti4->prepareRecharge('500', Entity::RECHARGE_ALOU, '9912345');
+$vinti4->prepareRefund($originalAmount, $originalTransactionId, $clearingPeriod);
 ```
 
-Estas chamadas preparam operações alternativas: use apenas uma por formulário. Serviço e recarga exigem código numérico de entidade (`int`) e referência/número com até 9 dígitos. Os códigos de entidade são fornecidos pela SISP ou pela entidade prestadora, não pelo SDK. `prepareRefund()` usa o montante integral da operação original, `transactionID` e `clearingPeriod` retornados no pagamento aprovado. O estorno é em CVE; a SISP não aceita devolução parcial neste fluxo.
+Estas chamadas preparam operações alternativas: use apenas uma por formulário. Serviço e recarga exigem código numérico de entidade (`int`) e referência/número com até 9 dígitos. Os códigos devem corresponder aos serviços fornecidos pela SISP ou pela entidade prestadora; as constantes `Entity` facilitam a sua identificação. `prepareRefund()` usa o montante integral da operação original, `transactionID` e `clearingPeriod` retornados no pagamento aprovado. O estorno é em CVE; a SISP não aceita devolução parcial neste fluxo.
 
-Antes de enviar cada operação, defina e guarde uma referência própria de 15 caracteres com `setMerchant($reference, $session = null)`. O SDK também pode gerar uma referência no momento do envio; `Vinti4Net::generateMerchantRef($random)` devolve `R` mais data/hora, garantindo unicidade para transações no mesmo segundo, onde random `false` gera _R + ymdHis + 2 random alphanumeric characters_ e `true` gera _R + 14 random hexadecimal characters_. `setRequestParams()` aceita apenas `merchantRef`, `merchantSession`, `languageMessages` e `timeStamp`. Depois da preparação, use `createPaymentForm($callbackUrl, 'pt')`.
+Antes de enviar cada operação, defina e guarde uma referência própria de 15 caracteres com `setMerchant($reference, $session = null)`. O SDK também pode gerar uma referência no momento do envio. `Vinti4Net::generateMerchantRef()` usa `R` + `ymdHis` + dois caracteres alfanuméricos aleatórios; com `random: true`, usa `R` + 14 caracteres hexadecimais aleatórios. O sufixo reduz colisões, mas a unicidade deve ser garantida no sistema do comerciante. A sessão também deve ter exatamente 15 caracteres e é gerada por `setMerchant()` quando omitida; consulte-a em `$vinti4->getRequest()['merchantSession']`. `setRequestParams()` aceita apenas `merchantRef`, `merchantSession`, `languageMessages` e `timeStamp`. Depois da preparação, use `createPaymentForm($callbackUrl, 'pt')`.
 
 O estorno pode levar o cliente diretamente à URL de resposta. Consulte: https://erilshackle.github.io/vinti4net-php/payments/ e https://erilshackle.github.io/vinti4net-php/refunds/ .
 
@@ -95,9 +164,11 @@ if ($response->isSuccess()) {
 }
 ```
 
-`processResponse(array $postData): Vinti4Response` devolve `status` (`SUCCESS`, `ERROR`, `CANCELLED`, `INVALID_FINGERPRINT`), `message`, `detail`, `success`, `operation`, `data`, `dcc` e `debug`. Use `getMerchantRef()`, `getTransactionId()`, `getClearingPeriod()`, `getAmount()`, `getCurrency()`, `getAdditionalErrorMessage()` e `getMaskedPan()` para os dados disponíveis. Alguns getters devolvem `null` se o campo não estiver no callback. `hasFailed()` não inclui fingerprint inválido. Num cancelamento normal, `isCancelled()` é verdadeiro; se houver fingerprint inválido numa resposta de sucesso, esse estado prevalece.
+`processResponse(array $postData): Vinti4Response` devolve `status` (`SUCCESS`, `ERROR`, `CANCELLED`, `INVALID_FINGERPRINT`), `message`, `detail`, `success`, `operation`, `data`, `dcc` e `debug`. Use `getMerchantRef()`, `getTransactionId()`, `getClearingPeriod()`, `getAmount()`, `getAdditionalErrorMessage()` e `getMaskedPan()` para os dados disponíveis. Alguns getters devolvem `null` se o campo não estiver no callback. `hasFailed()` não inclui fingerprint inválido. Num cancelamento normal, `isCancelled()` é verdadeiro; se houver fingerprint inválido numa resposta de sucesso, esse estado prevalece.
 
-Compra aprovada corresponde ao tipo `8` com confirmação `merchantResp=C` e fingerprint válido. Estorno aprovado corresponde ao tipo `10` com fingerprint válido; não requer `merchantResp=C`. Erros tipo `6` não permitem inferir a operação original: `operation` fica `null`. Consulte a operação pendente pela referência guardada. Erros e cancelamentos não são confirmação de pagamento ou reembolso; a indicação interna de fingerprint válido nesses casos não comprova a origem da resposta. `toArray()` e `toJson()` mascaram o PAN; a propriedade pública `data` contém o payload original, que deve ser tratado como sensível. Veja: https://erilshackle.github.io/vinti4net-php/responses/ e https://erilshackle.github.io/vinti4net-php/response-fields/ .
+Compra aprovada corresponde ao tipo `8` com confirmação `merchantResp=C` e fingerprint válido. Estorno aprovado corresponde ao tipo `10` com fingerprint válido; não requer `merchantResp=C`. Erros tipo `6` não permitem inferir a operação original: `operation` fica `null`. Consulte a operação pendente pela referência guardada. Erros tipo `6` são autenticados com a fórmula própria de fingerprint; assinatura ausente ou inválida resulta em `INVALID_FINGERPRINT`. Cancelamentos retornam `merchantRef`, `merchantSession` e `UserCancelled`, sem `messageType` ou fingerprint, e não são autenticados por assinatura. Um campo `UserCancelled` não sobrepõe uma resposta assinada de sucesso ou erro. Nenhum desses estados confirma pagamento ou reembolso.
+
+A resposta não contém a moeda original: `getCurrency()` está depreciado desde a v2.4.0. Use a moeda guardada com o pedido. `$response->dcc['currency'] ?? null` representa apenas a moeda da conversão DCC. A sessão de sucesso/erro está em `$response->data['merchantRespMerchantSession']`; num cancelamento, em `$response->data['merchantSession']`. Não existe `getMerchantSession()`. `toArray()` e `toJson()` mascaram o PAN; a propriedade pública `data` contém o payload original, que deve ser tratado como sensível. Veja: https://erilshackle.github.io/vinti4net-php/responses/ e https://erilshackle.github.io/vinti4net-php/response-fields/ .
 
 ## Recibos
 
@@ -123,7 +194,7 @@ echo $response->renderRefundReceipt(
 );
 ```
 
-`renderDccReceipt()` requer DCC ativo com montante, moeda, taxa e câmbio devolvidos pela SISP. Consulte: https://erilshackle.github.io/vinti4net-php/receipt/ e https://erilshackle.github.io/vinti4net-php/dcc/ .
+`renderDccReceipt()` requer DCC ativo com montante, moeda, markup e taxa de conversão devolvidos pela SISP. `dccMarkup` é um montante, não uma percentagem; preserve os valores recebidos sem recalcular a conversão. Omitir dados necessários lança `Vinti4Exception`. Consulte: https://erilshackle.github.io/vinti4net-php/receipt/ e https://erilshackle.github.io/vinti4net-php/dcc/ .
 
 ## Segurança e erros
 
@@ -132,3 +203,14 @@ Crie e guarde a referência, a sessão, o montante e o estado do pedido antes de
 As falhas da biblioteca lançam `Erilshk\Sisp\Exceptions\Vinti4Exception`. Consulte: https://erilshackle.github.io/vinti4net-php/security/ e https://erilshackle.github.io/vinti4net-php/faq/ .
 
 Notas de versão: https://erilshackle.github.io/vinti4net-php/release-notes .
+
+## Referência técnica e autoria
+
+A implementação segue a especificação técnica disponibilizada pela SISP.
+Esta referência descreve a API do SDK e exemplos próprios, sem disponibilizar
+os documentos originais. O MOP021 v13 (maio de 2023) contém indicação «Público»
+e também uma nota que condiciona duplicação/publicação/divulgação à autorização
+prévia da SISP; consulte a entidade para obter os documentos e as condições.
+
+Vinti4: https://www.vinti4.cv/ . Sobre o projeto:
+https://erilshackle.github.io/vinti4net-php/about/ .
