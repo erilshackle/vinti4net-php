@@ -13,7 +13,7 @@ SDK PHP comunitário para integração com a **Rede Vinti4 / SISP**, em Cabo Ver
 ## Instalação
 
 ```bash
-composer require erilshk/vinti4net:^2.4.0
+composer require erilshk/vinti4net
 ```
 
 Requer PHP 8.1 ou superior.
