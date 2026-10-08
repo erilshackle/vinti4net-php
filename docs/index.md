@@ -1,24 +1,64 @@
-# Vinti4Net PHP SDK 2.4.0
+---
+layout: home
 
-SDK PHP para integrar pagamentos da Rede Vinti4/SISP em aplicações de Cabo Verde.
+title: Vinti4Net PHP SDK
+titleTemplate: Pagamentos Vinti4/SISP para PHP
+
+hero:
+  name: Vinti4Net
+  text: Pagamentos Vinti4, simplificados.
+  tagline: SDK PHP para integrar pagamentos da Rede Vinti4/SISP em aplicações de Cabo Verde. Da criação da transação à validação da resposta.
+  actions:
+    - theme: brand
+      text: Começar agora
+      link: /payment-integration-guide
+    - theme: alt
+      text: Ver no GitHub
+      link: https://github.com/erilshackle/vinti4net
+
+features:
+  - icon: 💳
+    title: Pagamentos
+    details: Compras com 3D Secure, pagamentos de serviços e recargas através da Rede Vinti4.
+
+  - icon: 🔄
+    title: Reembolsos
+    details: Prepare operações de devolução e gere os respetivos comprovativos.
+
+  - icon: 🔐
+    title: Respostas verificadas
+    details: Processe callbacks, valide fingerprints e identifique pagamentos aprovados, recusados ou cancelados.
+
+  - icon: 🧾
+    title: Recibos
+    details: Recibos padrão, personalizados, DCC e de estorno, adaptados às operações suportadas.
+
+  - icon: ⚡
+    title: API simples
+    details: Prepare transações e gere formulários de pagamento com uma interface PHP intuitiva.
+
+  - icon: 🧩
+    title: Independente de frameworks
+    details: Integre o SDK na sua aplicação sem impor uma arquitetura ou dependência de framework.
+---
+
+## Comece com uma instalação
+
+Disponível através do Composer, o Vinti4Net pode ser adicionado diretamente ao seu projeto PHP.
 
 ```bash
 composer require erilshk/vinti4net:^2.4.0
 ```
 
-## O que a biblioteca faz
+<small>
+  [Packagist](https://packagist.org/packages/erilshk/vinti4net) ·
+  [Código-fonte](https://github.com/erilshackle/vinti4net) ·
+  [Releases](https://github.com/erilshackle/vinti4net/releases)
+</small>
 
-- compra com 3D Secure;
-- pagamento de serviço;
-- recarga;
-- reembolso;
-- criação do formulário enviado à Vinti4;
-- processamento e validação do callback;
-- mensagens claras para erro e cancelamento;
-- recibo padrão, personalizado e DCC.
-- recibo de estorno com valor original fornecido pela aplicação.
+## Do código ao pagamento
 
-## Fluxo básico
+Prepare uma compra, configure os dados do cliente e gere o formulário que encaminha a transação para a Rede Vinti4.
 
 ```php
 use Erilshk\Sisp\Billing;
@@ -39,13 +79,28 @@ $vinti4
 
 echo $vinti4->createPaymentForm(
     'https://loja.example.cv/pagamentos/callback',
-    'pt',
+    'pt'
 );
 ```
 
-Se não quiser fornecer billing, use `preparePurchase(1500, [])`: o segundo argumento é obrigatório, mas os dados 3DS são opcionais.
+::: tip
+Os dados de billing são opcionais. Para uma compra sem billing, utilize `preparePurchase(1500, [])`.
+:::
 
-No callback:
+## Uma integração, do início ao fim
+
+O Vinti4Net acompanha as principais etapas da comunicação com o gateway, enquanto a sua aplicação mantém o controlo sobre os pedidos e a lógica de negócio.
+
+```mermaid
+flowchart LR
+    A["Aplicação PHP"] --> B["Vinti4Net"]
+    B --> C["Rede Vinti4 / SISP"]
+    C --> D["Callback"]
+    D --> E["Validação"]
+    E --> F["Resultado"]
+```
+
+No retorno do pagamento, processe a resposta e verifique a sua autenticidade:
 
 ```php
 $response = $vinti4->processResponse($_POST);
@@ -56,14 +111,32 @@ if ($response->hasInvalidFingerprint()) {
 }
 
 if ($response->isSuccess()) {
-    // Confira referência, sessão e valor antes de confirmar o pedido.
+    // Validar referência, sessão e valor.
+    // Confirmar o pedido na aplicação.
 }
 ```
 
-[Ver o guia completo](payment-integration-guide.md)
+A confirmação do pagamento deve ocorrer apenas após a validação da resposta e a conferência dos dados da transação com o pedido original.
 
-::: warning
-Este é um SDK comunitário. O contrato e as credenciais fornecidos pela SISP continuam sendo a fonte oficial para o seu estabelecimento.
+[Explorar o guia completo de integração →](./payment-integration-guide.md)
 
+## Feito para desenvolvedores PHP
+
+O Vinti4Net abstrai os detalhes da integração com a SISP sem assumir responsabilidades que pertencem à sua aplicação.
+
+Pode utilizá-lo em lojas online, plataformas de reservas, sistemas de cobrança e outros serviços que necessitem de aceitar pagamentos através da Rede Vinti4.
+
+**O SDK prepara e processa transações. A sua aplicação decide o que fazer com os resultados.**
+
+---
+
+## Explore o projeto
+
+- **[Guia de integração](./payment-integration-guide.md)** — implemente o fluxo completo de pagamento.
+- **[GitHub](https://github.com/erilshackle/vinti4net)** — consulte o código-fonte e contribua.
+- **[Packagist](https://packagist.org/packages/erilshk/vinti4net)** — versões, instalação e dependências.
+- **[Issues](https://github.com/erilshackle/vinti4net/issues)** — reporte problemas ou sugira melhorias.
+
+::: info Projeto comunitário
+O Vinti4Net é um SDK independente e não oficial da SISP. O contrato, as credenciais e a documentação fornecidos pela SISP continuam a ser a referência oficial para o seu estabelecimento.
 :::
-
