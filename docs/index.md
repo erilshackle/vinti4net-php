@@ -13,9 +13,6 @@ hero:
       text: Começar a integrar
       link: /quickstart
     - theme: alt
-      text: Referência da API
-      link: /api
-    - theme: alt
       text: Novidades da v2.4.0
       link: /release-notes
 
@@ -71,8 +68,7 @@ $billing = Billing::make()
     ->address('Avenida Cidade de Lisboa')
     ->postalCode('7600');
 
-$vinti4
-    ->setMerchant(Vinti4Net::generateMerchantRef())
+$vinti4->setMerchant(Vinti4Net::generateMerchantRef())
     ->preparePurchase('1500', $billing);
 
 echo $vinti4->createPaymentForm(
