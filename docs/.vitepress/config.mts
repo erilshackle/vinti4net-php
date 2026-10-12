@@ -2,7 +2,7 @@ import { defineConfig } from 'vitepress'
 
 export default defineConfig({
   lang: 'pt-PT',
-  title: 'Vinti4Net PHP',
+  title: 'SISP Vinti4Net PHP',
   description: 'SDK PHP para pagamentos com a Rede Vinti4 / SISP em Cabo Verde',
   base: '/vinti4net-php/',
   cleanUrls: true,
