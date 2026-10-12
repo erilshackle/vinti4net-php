@@ -27,12 +27,12 @@
     <section>
         <p class="eyebrow">Exemplos de integração</p>
         <h1>Pagamentos com Vinti4Net</h1>
-        <p class="lead">Experimente compra, pagamento de serviço, recarga e estorno com os exemplos da v2.2.</p>
+        <p class="lead">Experimente compra, pagamento de serviço, recarga, estorno e <a href="token_example.php">tokenização Vinti4</a>.</p>
         <div class="steps">
             <article class="step"><span class="step-number">1</span><div><h2>Configure as credenciais</h2><p>Defina <code>VINTI4_POS_ID</code> e <code>VINTI4_AUTH_CODE</code>. O endpoint personalizado é opcional.</p></div></article>
             <article class="step"><span class="step-number">2</span><div><h2>Escolha uma operação</h2><p>Cada aba envia os dados ao seu próprio arquivo de preparação.</p></div></article>
             <article class="step"><span class="step-number">3</span><div><h2>Envie para a SISP</h2><p>A biblioteca cria o formulário para o endpoint da operação.</p></div></article>
-            <article class="step"><span class="step-number">4</span><div><h2>Receba o resultado</h2><p>Pagamento e estorno têm callbacks separados, que processam <code>$_POST</code>.</p></div></article>
+            <article class="step"><span class="step-number">4</span><div><h2>Receba o resultado</h2><p>Pagamento, estorno e tokenização têm callbacks separados, que processam <code>$_POST</code>.</p></div></article>
         </div>
     </section>
     <section class="card" aria-label="Iniciar transação">
@@ -77,6 +77,7 @@
             </form>
         </div>
         <p class="note">As credenciais são lidas das variáveis de ambiente.</p>
+        <p class="note"><a href="token_example.php">Criar token, pagar com token ou cancelar token</a></p>
     </section>
 </main>
 <script>
