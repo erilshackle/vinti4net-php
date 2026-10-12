@@ -245,13 +245,13 @@ abstract class Sisp
         }
 
         $merchantRef = trim((string) ($params['merchantRef'] ?? ''));
-        if (strlen($merchantRef) !== 15) {
-            return 'MerchantRef é obrigatório e deve ter exatamente 15 caracteres.';
+        if ($merchantRef === '') {
+            return 'MerchantRef é obrigatório e não pode estar vazio.';
         }
 
         $merchantSession = trim((string) ($params['merchantSession'] ?? ''));
-        if ($merchantSession === '' || strlen($merchantSession) != 15) {
-            return 'MerchantSession é obrigatório e deve ter 15 caracteres.';
+        if ($merchantSession === '') {
+            return 'MerchantSession é obrigatório e não pode estar vazio.';
         }
 
         if (in_array($transactionCode, ['2', '3'], true)) {
