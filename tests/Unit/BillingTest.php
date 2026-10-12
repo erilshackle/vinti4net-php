@@ -7,6 +7,24 @@ use PHPUnit\Framework\TestCase;
 
 class BillingTest extends TestCase
 {
+    public function testAlpha2CountriesAreConvertedAcrossBillingInputs(): void
+    {
+        foreach (['US' => '840', 'CV' => '132', 'BR' => '076', 'PT' => '620', 'AF' => '004'] as $country => $numeric) {
+            $billing = Billing::make()->country(strtolower($country))->shipCountry(' ' . $country . ' ')->toArray();
+            self::assertSame($numeric, $billing['billAddrCountry']);
+            self::assertSame($numeric, $billing['shipAddrCountry']);
+            foreach ([['country', 'shipCountry'], ['billAddrCountry', 'shipAddrCountry']] as [$bill, $ship]) {
+                $data = Billing::from([$bill => $country, $ship => $country])->toArray();
+                self::assertSame($numeric, $data['billAddrCountry']);
+                self::assertSame($numeric, $data['shipAddrCountry']);
+            }
+        }
+        self::assertSame('076', Billing::make()->country('076')->toArray()['billAddrCountry']);
+        self::assertSame('CPV', Billing::make()->country('CPV')->toArray()['billAddrCountry']);
+        self::assertSame('ZZ', Billing::make()->country('ZZ')->toArray()['billAddrCountry']);
+        self::assertSame('840', Billing::from(['country' => 'US', 'addrMatch' => 'Y'])->toArray()['shipAddrCountry']);
+    }
+
     public function testCreateGeneratesFullBillingArray()
     {
         $billing = Billing::from([

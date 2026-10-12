@@ -83,7 +83,7 @@ $billing = Billing::make()
 | Campo SISP | Nome amigável | Tipo | Descrição |
 | --- | --- | --- | --- |
 | `email` | `email` | `string` | E-mail do titular |
-| `billAddrCountry` | `country` | `string` | País em código numérico, como `132` |
+| `billAddrCountry` | `country` | `string` | País ISO alpha-2 (`CV`) ou numérico (`132`) |
 | `billAddrCity` | `city` | `string` | Cidade de faturação |
 | `billAddrLine1` | `address` | `string` | Endereço principal |
 | `billAddrPostCode` | `postalCode` | `string` | Código postal |
@@ -268,9 +268,25 @@ Indicadores de idade: `01` sem conta, `02` durante a transação, `03` menos de
 - Uma segunda linha de cobrança vazia recebe a primeira linha.
 - Código postal desconhecido recebe `0000` ao gerar o pedido.
 - Email e limite de `acctID` (64 caracteres) são validados. Os formatos e limites dos campos opcionais seguem a documentação da SISP, sem validação restritiva na lib.
-- País e subdivisão são preservados, sem catálogo ou conversão automática: `132`
-  e `CPV` podem ser fornecidos ao helper. A SISP documenta país numérico ISO 3166-1
-  (`132`) e subdivisão ISO 3166-2 (`PR` para Praia); preservar `CPV` não garante
-  sua aceitação pelo gateway.
+- Países aceitam códigos ISO 3166-1 alpha-2 ou numéricos: `CV` → `'132'`,
+  `US` → `'840'`, `BR` → `'076'`, `PT` → `'620'`. A conversão cobre os 249
+  países e territórios com códigos atribuídos, aceita minúsculas e preserva zeros.
+  Aplica-se a `country()`, `shipCountry()` e aos nomes amigáveis/SISP em arrays.
+  Códigos numéricos são preservados; outros valores, como `CPV`, continuam sem
+  conversão por compatibilidade. Subdivisões como `PR` não são convertidas.
 - Telefone pessoal pode preencher `workPhone` explicitamente quando necessário;
   a biblioteca não copia contactos automaticamente.
+
+```php
+$billing = Billing::from([
+    'email' => 'cliente@example.cv',
+    'country' => 'CV',
+    'city' => 'Praia',
+    'address' => 'Rua Principal',
+    'shipCountry' => 'PT',
+]);
+// toArray(): billAddrCountry = '132', shipAddrCountry = '620'.
+```
+
+A tabela de países é interna; não é necessário chamar um conversor nem instalar
+uma dependência adicional. A conversão não se aplica a moedas ou indicativos telefónicos.

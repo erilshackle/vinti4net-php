@@ -23,10 +23,13 @@ corresponder ao cliente, não a valores inventados.
 
 ### País deve ser `132` ou `CPV`? E a subdivisão?
 
-Use o código numérico ISO 3166-1 indicado pela SISP, como `'132'` para Cabo Verde,
-e a subdivisão ISO 3166-2, como `'PR'` para Praia. A biblioteca preserva os valores
-recebidos, sem converter `CPV` em `132`; aceitar uma string no helper não garante
-que o gateway a aceite.
+Pode fornecer `'CV'` ou `'132'`: o `Billing` converte códigos ISO de duas letras
+para três dígitos, tanto na cobrança como na entrega. Exemplos: `US` → `'840'`,
+`BR` → `'076'`, `PT` → `'620'`. Minúsculas também são aceites.
+
+Códigos de três letras, como `CPV`, continuam preservados sem conversão por
+compatibilidade; isso não garante aceitação pelo gateway. A subdivisão continua
+no formato ISO 3166-2, como `'PR'` para Praia, sem conversão automática.
 
 ### Como informo o telefone?
 

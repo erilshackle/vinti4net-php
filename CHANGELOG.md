@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- Convert all 249 assigned ISO 3166-1 alpha-2 country codes to three-digit numeric strings in billing and shipping addresses, preserving existing numeric and unmapped values.
+
 ## [2.4.0] - 2026-10-04
 
 ### Added

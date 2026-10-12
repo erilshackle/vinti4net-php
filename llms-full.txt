@@ -62,9 +62,14 @@ cidade, primeira linha, código postal e subdivisão de cobrança para entrega.
 `false` ou `'N'` preserva a entrega informada; strings minúsculas também são
 aceites. Uma segunda linha de cobrança vazia recebe a primeira linha.
 
-País e subdivisão são preservados sem conversão automática. Use o código
-numérico indicado pela SISP, como `'132'`, e a subdivisão ISO 3166-2, como `'PR'`.
-Preservar `'CPV'` não garante que o gateway aceite esse valor.
+Países de cobrança e entrega aceitam códigos ISO 3166-1 alpha-2 e numéricos.
+A classe interna converte todos os 249 códigos atribuídos: `CV` → `'132'`,
+`US` → `'840'`, `BR` → `'076'`, `PT` → `'620'`. Aceita minúsculas e espaços
+externos, preservando zeros à esquerda. Isso aplica-se aos métodos `country()`
+e `shipCountry()` e aos aliases de array, inclusive `billAddrCountry` e
+`shipAddrCountry`. Códigos numéricos e valores não mapeados são preservados;
+`CPV` continua sem conversão. Subdivisões como `'PR'` não são convertidas.
+A conversão é restrita a billing, sem afetar moedas ou indicativos telefónicos.
 
 `accountId()` recebe o ID do utilizador no sistema do comerciante ou o email de
 acesso. Use `account()` para informar o histórico com parâmetros definidos:

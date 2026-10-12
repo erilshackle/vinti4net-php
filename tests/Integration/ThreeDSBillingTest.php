@@ -28,6 +28,29 @@ final class ThreeDSBillingTest extends TestCase
         return ['email' => 'cliente@example.cv', 'city' => 'Praia', 'address' => 'Rua Principal'];
     }
 
+    public function testCompleteCountryMapAndStandaloneParity(): void
+    {
+        $mapping = (new \ReflectionClass(\Erilshk\Sisp\Utils\CountryCode::class))->getConstant('NUMERIC');
+        $standaloneMap = (new \ReflectionClass(\Vinti4Net::class))->getConstant('COUNTRY_CODES');
+        self::assertCount(249, $mapping);
+        self::assertSame($mapping, $standaloneMap);
+        foreach ($mapping as $alpha2 => $numeric) {
+            self::assertMatchesRegularExpression('/^[A-Z]{2}$/', $alpha2);
+            self::assertMatchesRegularExpression('/^[0-9]{3}$/', $numeric);
+            self::assertSame($numeric, Billing::make()->country($alpha2)->toArray()['billAddrCountry']);
+        }
+        $input = $this->minimal() + ['country' => 'br', 'shipCountry' => 'US'];
+        $data = $this->payload($input);
+        self::assertSame('076', $data['billAddrCountry']);
+        self::assertSame('840', $data['shipAddrCountry']);
+        $html = (new \Vinti4Net('POS', 'AUTH'))->preparePurchase('1500', $input)
+            ->createPaymentForm('https://example.test/callback');
+        preg_match('/name="purchaseRequest" value="([^"]+)"/', $html, $match);
+        $data = json_decode(base64_decode(html_entity_decode($match[1])), true, 512, JSON_THROW_ON_ERROR);
+        self::assertSame('076', $data['billAddrCountry']);
+        self::assertSame('840', $data['shipAddrCountry']);
+    }
+
     public function testShippingAndDefaultsInBothIntegrations(): void
     {
         foreach ([true, 'y', 'Y'] as $matches) {

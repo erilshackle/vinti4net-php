@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Erilshk\Sisp;
 
 use Erilshk\Sisp\Exceptions\Vinti4Exception;
+use Erilshk\Sisp\Utils\CountryCode;
 
 /**
  * Represents billing and 3D Secure customer information.
@@ -187,6 +188,10 @@ final class Billing
                 continue;
             }
 
+            if (is_string($value) && in_array($field, ['billAddrCountry', 'shipAddrCountry'], true)) {
+                $value = CountryCode::toNumeric($value);
+            }
+
             $this->data[$field] = is_string($value) ? trim($value) : $value;
         }
 
@@ -200,10 +205,10 @@ final class Billing
         return $this;
     }
 
-    /** Set the billing country code; defaults to "132" (Cabo Verde). */
+    /** Set ISO alpha-2 or numeric country code, e.g. CV or 132; defaults to 132. */
     public function country(string $value): self
     {
-        $this->data['billAddrCountry'] = trim($value);
+        $this->data['billAddrCountry'] = CountryCode::toNumeric($value);
         return $this;
     }
 
@@ -249,10 +254,10 @@ final class Billing
         return $this;
     }
 
-    /** Set the shipping country code. */
+    /** Set ISO alpha-2 or numeric shipping country code, e.g. US or 840. */
     public function shipCountry(string $value): self
     {
-        $this->data['shipAddrCountry'] = trim($value);
+        $this->data['shipAddrCountry'] = CountryCode::toNumeric($value);
         return $this;
     }
 
