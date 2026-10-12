@@ -255,7 +255,7 @@ class SispTest extends TestCase
     {
         $params = [
             'transactionCode' => '5', // inválido
-            'merchantRef' => str_repeat('X', 16) // inválido também
+            'merchantRef' => '' // inválido também
         ];
 
         $method = new \ReflectionMethod($this->sisp, 'validateParams');
