@@ -13,9 +13,6 @@ hero:
       text: Começar a integrar
       link: /quickstart
     - theme: alt
-      text: Referência da API
-      link: /api
-    - theme: alt
       text: Novidades da v2.4.0
       link: /release-notes
 
@@ -53,7 +50,7 @@ features:
 PHP **8.1+** e credenciais POS fornecidas pela SISP.
 
 ```bash
-composer require erilshk/vinti4net:^2.4.0
+composer require erilshk/vinti4net:^2.4
 ```
 
 ## Da sua aplicação à Vinti4
@@ -71,8 +68,7 @@ $billing = Billing::make()
     ->address('Avenida Cidade de Lisboa')
     ->postalCode('7600');
 
-$vinti4
-    ->setMerchant(Vinti4Net::generateMerchantRef())
+$vinti4->setMerchant(Vinti4Net::generateMerchantRef())
     ->preparePurchase('1500', $billing);
 
 echo $vinti4->createPaymentForm(
@@ -80,8 +76,6 @@ echo $vinti4->createPaymentForm(
     'pt',
 );
 ```
-
-O SDK prepara o formulário; os dados do cartão são introduzidos na página da Vinti4. Para omitir billing, passe `[]` explicitamente. Isso não desativa 3DS: `is3DSec` permanece `1`. Consulte os [dados de billing](billing.md) exigidos para a sua integração.
 
 ## Receba e valide o resultado
 
