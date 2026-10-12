@@ -28,7 +28,7 @@ new Vinti4Net(
 | --- | --- |
 | `posID` | Identificador POS fornecido pela SISP |
 | `posAuthCode` | Código secreto de autenticação |
-| `endpoint` | Endpoint alternativo; opcional |
+| `endpoint` | URL completa alternativa para as operações, incluindo tokenização; opcional |
 
 ### Métodos principais
 
@@ -238,3 +238,18 @@ try {
 
 As falhas da biblioteca usam essa exceção pública.
 
+## Tokenização
+
+| Método de Vinti4Net | Operação |
+| --- | --- |
+| `prepareTokenRequest($minimumAmount)` | Enrollment, código 5 |
+| `prepareTokenPurchase($token, $amount)` | Compra, código 6 |
+| `prepareTokenServicePayment($token, $amount, $entity, $number)` | Serviço, código 2 |
+| `prepareTokenRecharge($token, $amount, $entity, $number)` | Recarga, código 3 |
+| `prepareTokenCancellation($token)` | Cancelamento, código 7, montante zero |
+| `processTokenResponse($postData, $expectedCode = null)` | Valida callback de token e contexto esperado |
+
+As preparações são fluentes e usam `createPaymentForm()` para gerar o HTML. O construtor mantém exatamente os três argumentos anteriores; os endpoints padrão de tokenização estão centralizados em `Core\Token` e podem ser personalizados pelo argumento `endpoint` já existente no construtor. `Vinti4Response` acrescenta `getToken()`, `getTokenDescription()` e `getTokenLimits()`. Veja [Tokenização](./tokenization) para configuração e contrato.
+
+
+`setMerchant($reference, $session = null)` aceita uma referência não vazia, sem comprimento fixo. A sessão também deve ser não vazia, sem comprimento fixo. `generateMerchantRef()` permanece público e estático, com geração padrão e aleatória de 15 caracteres.

@@ -58,7 +58,7 @@ Use datas `YYYYMMDD`; `changedAt` refere-se ao perfil e `passwordChangedAt`
 
 ### Como escolho a referência e a sessão?
 
-Ambas devem ter exatamente **15 caracteres**. Pode gerar a referência e deixar
+Referência e sessão devem ser não vazias, sem comprimento fixo imposto pelo SDK. Pode gerar a referência e deixar
 a biblioteca gerar a sessão:
 
 ```php

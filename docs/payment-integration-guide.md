@@ -19,7 +19,7 @@ $currency = '132';
 
 A referência padrão combina data e sufixo aleatório. Para uma referência
 inteiramente aleatória, use `Vinti4Net::generateMerchantRef(random: true)`.
-A sessão gerada e a referência têm exatamente 15 caracteres.
+A sessão gerada e a referência gerada têm exatamente 15 caracteres. Referências e sessões próprias só precisam ser não vazias no SDK, sem comprimento fixo.
 
 ## 2. Preparar a transação
 

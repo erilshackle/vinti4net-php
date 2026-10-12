@@ -68,3 +68,13 @@ try {
 }
 ```
 
+
+## Endpoint de tokenização
+
+O terceiro argumento existente do construtor também é usado pelas operações de token:
+
+```php
+$vinti4 = new Vinti4Net($posID, $posAuthCode, 'https://gateway.example/TokenPayment');
+```
+
+Forneça uma URL completa, não uma base. Sem esse argumento, enrollment, pagamento e cancelamento usam as suas rotas padrão na SISP. Para destinos diferentes, use clientes com os URLs correspondentes. Não há novos argumentos ou setters. Veja [Tokenização](./tokenization).

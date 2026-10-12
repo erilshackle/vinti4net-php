@@ -3,6 +3,14 @@
 Mudanças de comportamento e novas APIs das versões recentes. A linha v2 usa
 PHP 8.1+ e o namespace `Erilshk\Sisp`.
 
+## 2.5.0 — em desenvolvimento
+
+- Os novos métodos de pagamento com token recebem `$token` como primeiro argumento. O construtor e os métodos já publicados mantêm as suas assinaturas.
+
+- O argumento `endpoint` já existente em `Vinti4Net` também personaliza o URL completo de tokenização, sem alterar a assinatura do construtor.
+- `merchantRef` e `merchantSession` passam a exigir apenas valores não vazios, sem comprimento fixo imposto pelo SDK.
+- `generateMerchantRef()` continua público e estático, gerando referências de 15 caracteres nos modos padrão e aleatório.
+
 ## 2.4.0
 
 ### Moedas e entidades

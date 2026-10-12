@@ -2,7 +2,7 @@
 
 ## Antes de enviar o pagamento
 
-1. Gere uma referência única, de exatamente 15 caracteres, no servidor com `Vinti4Net::generateMerchantRef()` e aplique uma restrição `UNIQUE` na base de dados.
+1. Gere uma referência única no servidor com `Vinti4Net::generateMerchantRef()` e aplique uma restrição `UNIQUE` na base de dados.
 2. Leia o montante (amount) do sua base de dados, não do formulário do cliente.
 3. Guarde a referência*, sessão, montante*, moeda e estado `pendente`.
 4. Só então chame pelo formulário Vinti4Net.
