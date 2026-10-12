@@ -7,15 +7,20 @@ namespace Erilshk\Sisp;
 use Erilshk\Sisp\Core\Payment;
 use Erilshk\Sisp\Core\Refund;
 use Erilshk\Sisp\Core\Sisp;
+use Erilshk\Sisp\Core\Token;
 use Erilshk\Sisp\Exceptions\Vinti4Exception;
 
 /**
  * Main SDK facade for Vinti4Net Payments (SISP - Cabo Verde).
  *
- * This class provides a high-level API for preparing, submitting
- * and processing Vinti4Net payment and refund transactions.
- * 
- * It acts as a unified interface over the internal Payment and Refund
+ * Prepares payment, refund and tokenization requests, generates POST forms,
+ * and validates transaction callbacks through their operation processors.
+ *
+ * Preparation methods are fluent: each replaces the current transaction while
+ * retaining merchant options. Request validation and fingerprint generation
+ * take place when createPaymentForm() is called.
+ *
+ * It acts as a unified interface over the internal Payment, Refund and Token
  * processing engines, simplifying all merchant-side operations.
  *
  * Supported operations:
@@ -23,20 +28,36 @@ use Erilshk\Sisp\Exceptions\Vinti4Exception;
  * - Service payment (entity + reference)
  * - Recharge payment (entity + phone/account)
  * - Refund
+ * - Token enrollment, purchase, service, recharge and cancellation
  *
  * @author  Eril TS Carvalho <erilandocarvalho@gmail.com>
- * @version 2.4
- * 
+ * @version 2.5
+ *
  * @package Erilshk\Sisp
  * @link https://erilshackle.github.io/vinti4net-php Documentation
  */
 class Vinti4Net
 {
-    /** @var Payment */
+    /**
+     * Processor for card purchases, service payments and recharges.
+     *
+     * @var Payment
+     */
     private Payment $payment;
 
-    /** @var Refund */
+    /**
+     * Processor for refunds of approved transactions.
+     *
+     * @var Refund
+     */
     private Refund $refund;
+
+    /**
+     * Processor for token enrollment, payments and cancellation.
+     *
+     * @var Token
+     */
+    private Token $token;
 
     /** @var array<string,mixed> */
     private array $request = [];
@@ -44,12 +65,18 @@ class Vinti4Net
     /** @var bool */
     private bool $prepared = false;
 
+    // ------------------------------------------------------------------
+    //  MERCHANT OPTIONS
+    // ------------------------------------------------------------------
+
     /**
-     * Constructor for the Vinti4Net facade.
+     * Create the payment, refund and tokenization processors.
      *
-     * @param string      $posID        POS identifier provided by SISP.
-     * @param string      $posAuthCode  POS authorization key.
-     * @param string|null $endpoint     Optional custom SISP endpoint URL.
+     * @param string      $posID       POS identifier supplied by SISP.
+     * @param string      $posAuthCode POS authorization code supplied by SISP.
+     * @param string|null $endpoint    Complete custom transaction URL; null selects the operation default.
+     *
+     * @throws Vinti4Exception If credentials or the custom URL are invalid.
      */
     public function __construct(
         string $posID,
@@ -58,21 +85,20 @@ class Vinti4Net
     ) {
         $this->payment = new Payment($posID, $posAuthCode, $endpoint);
         $this->refund = new Refund($posID, $posAuthCode, $endpoint);
+        $this->token = new Token($posID, $posAuthCode, $endpoint);
     }
 
-    // ------------------------------------------------------------------
-    //  SET PARAMS
-    // ------------------------------------------------------------------
-
     /**
-     * Sets additional optional request parameters for the next transaction.
+     * Set optional merchant parameters for the next transaction.
      *
-     * Only the keys listed below are allowed:
+     * Supported options:
+     * - merchantRef: non-empty merchant reference; no fixed length is imposed.
+     * - merchantSession: non-empty customer session identifier; no fixed length is imposed.
+     * - languageMessages: SISP UI language; tokenization supports pt and en.
+     * - timeStamp: request timestamp in Y-m-d H:i:s format.
      *
-     * - **merchantRef**        Merchant reference for identifying the transaction.
-     * - **merchantSession**    Unique session identifier for the merchant.
-     * - **languageMessages**   Language code for SISP UI messages (e.g. "pt", "en").
-     * - **timeStamp**          Optional timestamp override.
+     * Options are retained when preparing another transaction. Their values are
+     * validated when generating the form; unsupported keys are rejected here.
      *
      * @param array{
      *     merchantRef?: string,
@@ -80,12 +106,11 @@ class Vinti4Net
      *     languageMessages?: 'pt'|'en'|'fr',
      *     timeStamp?: string,
      *     ...
-     * } $params Supported options. The timestamp uses Y-m-d H:i:s.
+     * } $params Merchant request options.
      *
-     * @return self
+     * @return self Current instance for method chaining.
      *
-     * @throws Vinti4Exception If a disallowed parameter is included.
-     *
+     * @throws Vinti4Exception If an unsupported parameter is provided.
      */
     public function setRequestParams(array $params): self
     {
@@ -107,29 +132,16 @@ class Vinti4Net
     }
 
     /**
-     * Generate a 15-character merchant reference.
+     * Set the merchant reference and session for the next operation.
      *
-     * By default, the reference contains a date followed by a random suffix:
-     * R + ymdHis + 2 random alphanumeric characters.
-     * 
-     * @param bool $random Generate a fully random reference instead of using
-     *                     the date with a random suffix.
-     */
-    public static function generateMerchantRef(bool $random = false): string
-    {
-        return Sisp::generateReference($random);
-    }
-
-
-    /**
-     * Set the merchant reference and session (exactly 15 characters each).
+     * The reference and session must be non-empty; no fixed length is imposed.
+     * Both values are validated when generating the form.
+     * A session is generated when omitted. Persist both values to correlate callbacks.
      *
-     * Sets the merchant identifier/reference used by this client
+     * @param string      $reference Unique merchant reference.
+     * @param string|null $session   Merchant session identifier.
      *
-     * @param string      $reference Non-empty merchant reference or transaction_id. exactly 15 characters
-     * @param string|null $session   Optional session information (string). exactly 15 characters
-     * @return self                  Returns $this to allow method chaining.
-     *
+     * @return self Current instance for method chaining.
      */
     public function setMerchant(string $reference, ?string $session = null): self
     {
@@ -139,26 +151,50 @@ class Vinti4Net
         ]);
     }
 
+    /**
+     * Generate a 15-character merchant reference.
+     *
+     * The default format is R + ymdHis + two random alphanumeric characters.
+     * Random mode uses R followed by 14 hexadecimal characters. The application
+     * remains responsible for enforcing reference uniqueness.
+     *
+     * @param bool $random Generate a fully random reference instead of the timestamp format.
+     *
+     * @return string Generated merchant reference.
+     */
+    public static function generateMerchantRef(bool $random = false): string
+    {
+        return Sisp::generateReference($random);
+    }
+
     // ------------------------------------------------------------------
-    //  PURCHASE PAYMENT (3DS)
+    //  CARD PAYMENTS AND REFUNDS
     // ------------------------------------------------------------------
 
     /**
-     * Prepares a standard **purchase (3D Secure)** payment request.
+     * Prepare a purchase payment with 3D Secure billing data.
      *
-     * @param float|string  $amount   Transaction amount.
-     * @param array|Billing $billing  Customer billing data for Purchase Request.
-     *  > __Required Params__:     
-     *  -   **email**             - Customer email 
-     *  -   **billAddrCountry**   - Country ISO 3166-1  (eg. 132)
-     *  -   **billAddrCity**      - City (eg. PR - Praia)
-     *  -   **billAddrLine1**     - Address (eg. Avenida Cidade da Praia, 45)
-     *  -   **billAddrPostCode**  - Postal Code (eg. 7600)
-     * @param 'CVE'|'132'|'EUR'|'978'|'USD'|'840'|string $currency ISO 4217 name or numeric code (default: 132).
-     * @see https://pt.iban.com/currency-codes
-     * 
-     * @return static
+     * Accepts a Billing instance or an array of customer billing fields. When
+     * billing data is supplied, these fields are required after normalization:
+     * - email: customer email address.
+     * - billAddrCountry: three-digit ISO 3166-1 numeric country code (e.g. 132).
+     * - billAddrCity: billing city (e.g. Praia).
+     * - billAddrLine1: first line of the billing address.
+     * - billAddrPostCode: billing postal code.
      *
+     * The billing payload is encoded as purchaseRequest during form generation.
+     * An empty billing array omits purchaseRequest. Request validation and
+     * fingerprint generation occur when createPaymentForm() is called.
+     *
+     * @param float|string $amount   Positive integer transaction amount.
+     * @param array<string, mixed>|Billing $billing Customer billing data.
+     * @param string       $currency ISO 4217 name or numeric code; defaults to CVE (132).
+     *
+     * @return static Current instance for method chaining.
+     *
+     * @see Billing
+     * @see Currency
+     * @see self::createPaymentForm()
      */
     public function preparePurchase(float|string $amount, array|Billing $billing, string $currency = Currency::CVE): static
     {
@@ -180,20 +216,14 @@ class Vinti4Net
         return $this;
     }
 
-
-    // ------------------------------------------------------------------
-    //  SERVICE PAYMENT
-    // ------------------------------------------------------------------
-
     /**
-     * Prepares a **service payment** request (entity + reference number).
+     * Prepare a service payment using the standard card flow.
      *
-     * @param float|string $amount Amount to pay.
-     * @param int          $entity Service entity code (SISP).
-     * @param string       $number Reference number.
+     * @param float|string $amount Positive integer amount in CVE.
+     * @param int          $entity SISP service entity code.
+     * @param string       $number Service reference, up to 9 digits.
      *
-     * @return static
-     *
+     * @return static Current instance for method chaining.
      */
     public function prepareServicePayment(float|string $amount, int $entity, string $number): static
     {
@@ -209,20 +239,14 @@ class Vinti4Net
         return $this;
     }
 
-
-    // ------------------------------------------------------------------
-    //  RECHARGE PAYMENT
-    // ------------------------------------------------------------------
-
     /**
-     * Prepares a **recharge payment** request (entity + phone/account number).
+     * Prepare a recharge using the standard card flow.
      *
-     * @param float|string $amount Amount to pay.
-     * @param int          $entity Recharge entity code, e.g. Entity::RECHARGE_ALOU.
-     * @param string       $number Target account/phone number.
+     * @param float|string $amount Positive integer amount in CVE.
+     * @param int          $entity SISP recharge entity code.
+     * @param string       $number Phone/account reference, up to 9 digits.
      *
-     * @return static
-     *
+     * @return static Current instance for method chaining.
      */
     public function prepareRecharge(float|string $amount, int $entity, string $number): static
     {
@@ -238,20 +262,14 @@ class Vinti4Net
         return $this;
     }
 
-
-    // ------------------------------------------------------------------
-    //  REFUND PAYMENT
-    // ------------------------------------------------------------------
-
     /**
-     * Prepares a **refund** request.
+     * Prepare a refund of a previous transaction.
      *
-     * @param float|string $amount          Refund amount.
-     * @param string       $transactionID   Original SISP transaction ID.
-     * @param string       $clearingPeriod  Clearing period required by SISP.
+     * @param float|string $amount         Refund amount in CVE.
+     * @param string       $transactionID  Original SISP transaction identifier.
+     * @param string       $clearingPeriod Original clearing period.
      *
-     * @return static
-     *
+     * @return static Current instance for method chaining.
      */
     public function prepareRefund(
         float|string $amount,
@@ -270,22 +288,101 @@ class Vinti4Net
         return $this;
     }
 
-
     // ------------------------------------------------------------------
-    //  CREATE FORM (auto-submissão)
+    //  TOKEN OPERATIONS
     // ------------------------------------------------------------------
 
     /**
-     * Generates an auto-submitting HTML form to send the transaction
-     * request to the Vinti4Net gateway.
+     * Prepare token enrollment (transactionCode 5).
      *
-     * @param string $responseUrl URL where SISP will POST the transaction result.
-     * @param string|'pt'|'en'|'fr' $lang language Messages (default: pt).
+     * Card details, recurring limits and OTP are collected on the SISP page.
      *
-     * @return string HTML form with auto-submit enabled.
+     * The minimum applies to future payments and is not debited at enrollment.
+     * Generate the enrollment POST with createPaymentForm().
      *
-     * @throws Vinti4Exception If no payment has been prepared or data is invalid.
+     * @param float|string $minimumAmount Positive integer minimum amount in CVE.
      *
+     * @return static Current instance for method chaining.
+     */
+    public function prepareTokenRequest(float|string $minimumAmount): static
+    {
+        return $this->prepareTokenOperation(Token::ENROLLMENT, $minimumAmount);
+    }
+
+    /**
+     * Prepare a purchase using an existing token (transactionCode 6).
+     *
+     * @param string       $token  Opaque token; leading zeros and original contents are preserved.
+     * @param float|string $amount Positive integer amount in CVE.
+     *
+     * @return static Current instance for method chaining.
+     */
+    public function prepareTokenPurchase(string $token, float|string $amount): static
+    {
+        return $this->prepareTokenOperation(Token::PURCHASE, $amount, $token);
+    }
+
+    /**
+     * Prepare a service payment using a token (transactionCode 2).
+     *
+     * @param string       $token  Opaque token associated with the customer.
+     * @param float|string $amount Positive integer amount in CVE.
+     * @param int          $entity SISP service entity code, up to 5 digits.
+     * @param string       $number Service reference, up to 9 digits.
+     *
+     * @return static Current instance for method chaining.
+     */
+    public function prepareTokenServicePayment(string $token, float|string $amount, int $entity, string $number): static
+    {
+        return $this->prepareTokenOperation(Sisp::TRANSACTION_TYPE_SERVICE, $amount, $token, $entity, $number);
+    }
+
+    /**
+     * Prepare a recharge using a token (transactionCode 3).
+     *
+     * @param string       $token  Opaque token associated with the customer.
+     * @param float|string $amount Positive integer amount in CVE.
+     * @param int          $entity SISP recharge entity code, up to 5 digits.
+     * @param string       $number Phone/account reference, up to 9 digits.
+     *
+     * @return static Current instance for method chaining.
+     */
+    public function prepareTokenRecharge(string $token, float|string $amount, int $entity, string $number): static
+    {
+        return $this->prepareTokenOperation(Sisp::TRANSACTION_TYPE_RECHARGE, $amount, $token, $entity, $number);
+    }
+
+    /**
+     * Prepare token cancellation (transactionCode 7), with amount fixed to zero.
+     *
+     * A successful cancellation prevents future payments with this token.
+     * This operation is distinct from a user-interrupted request.
+     *
+     * @param string $token Opaque token to cancel.
+     *
+     * @return static Current instance for method chaining.
+     */
+    public function prepareTokenCancellation(string $token): static
+    {
+        return $this->prepareTokenOperation(Token::CANCELLATION, '0', $token);
+    }
+
+    // ------------------------------------------------------------------
+    //  FORM AND REQUEST DATA
+    // ------------------------------------------------------------------
+
+    /**
+     * Validate the prepared operation and generate an auto-submitting POST form.
+     *
+     * This method prepares HTML; it does not send an HTTP request. Preparing another
+     * operation replaces transaction fields while retaining merchant options.
+     *
+     * @param string $responseUrl Merchant callback URL; token callbacks allow HTTP loopback for local development.
+     * @param string $lang        UI language; tokenization supports pt/en.
+     *
+     * @return string Escaped HTML form directed to the selected operation endpoint.
+     *
+     * @throws Vinti4Exception If no operation is prepared or request fields are invalid.
      */
     public function createPaymentForm(string $responseUrl, string $lang = 'pt'): string
     {
@@ -303,7 +400,9 @@ class Vinti4Net
 
         $tc = $params['transactionCode'] ?? null;
 
-        if ($tc === Sisp::TRANSACTION_TYPE_REFUND) {
+        if (in_array($tc, [Token::ENROLLMENT, Token::PURCHASE, Token::CANCELLATION], true) || array_key_exists('token', $params)) {
+            $prepared = $this->token->preparePayment($params);
+        } elseif ($tc === Sisp::TRANSACTION_TYPE_REFUND) {
             $prepared = $this->refund->preparePayment($params);
         } else {
             $prepared = $this->payment->preparePayment($params);
@@ -343,24 +442,39 @@ class Vinti4Net
     </html>";
     }
 
+    /**
+     * Return the currently prepared request fields.
+     *
+     * Includes merchant options and operation-specific fields before request
+     * normalization and fingerprint generation.
+     *
+     * @return array<string, mixed> Current request fields.
+     */
+    public function getRequest(): array
+    {
+        return $this->request;
+    }
 
     // ------------------------------------------------------------------
-    //  PROCESS RESPONSE
+    //  CALLBACKS
     // ------------------------------------------------------------------
 
     /**
-     * Process a generic SISP callback.
+     * Dispatch a callback to the payment, refund or token processor.
      *
-     * Successful refund responses are identified by messageType 10.
-     * Error responses cannot identify their originating operation.
-     * 
-     * @param array $postData Raw POST data received from SISP.
+     * Token callbacks A/B/C are routed automatically. Errors do not identify their
+     * operation; use processTokenResponse() with persisted context for token flows.
      *
-     * @return Vinti4Response Standardized response object.
+     * @param array<string, mixed> $postData Raw SISP POST fields.
+     *
+     * @return Vinti4Response Validated result; correlate reference/session before updating application state.
+     *
+     * @throws Vinti4Exception If the callback is empty.
      */
     public function processResponse(array $postData): Vinti4Response
     {
         return match ($postData['messageType'] ?? '') {
+            'A', 'B', 'C' => $this->processTokenResponse($postData),
             '10' => $this->processRefundResponse($postData),
             '8', 'P', 'M' => $this->processPaymentResponse($postData),
             default => Vinti4Response::fromProcessorResult(
@@ -370,7 +484,47 @@ class Vinti4Net
     }
 
     /**
-     * Process a payment, service payment or recharge callback.
+     * Validate a token callback against its expected operation.
+     *
+     * Expected operation codes:
+     * - 5: enrollment, callback A.
+     * - 6, 2 or 3: token purchase, service or recharge, callback B.
+     * - 7: token cancellation, callback C.
+     *
+     * Obtain the expected code from the persisted merchant request. Success
+     * requires a valid fingerprint and a matching response type and status.
+     * Original callback fields remain available in the response object.
+     *
+     * @param array<string, mixed> $postData Raw SISP POST fields.
+     * @param string|null $expectedCode Expected operation; null dispatches by callback type.
+     *
+     * @return Vinti4Response Validated result with token metadata when present.
+     *
+     * @throws Vinti4Exception If the expected operation is invalid or the callback is empty.
+     */
+    public function processTokenResponse(array $postData, ?string $expectedCode = null): Vinti4Response
+    {
+        $operation = match ($expectedCode) {
+            '5' => 'token_enrollment', '7' => 'token_cancellation',
+            '2', '3', '6' => 'token_payment',
+            default => match ($postData['messageType'] ?? '') {
+                'A' => 'token_enrollment', 'C' => 'token_cancellation',
+                'B' => 'token_payment', default => 'token',
+            },
+        };
+        return Vinti4Response::fromProcessorResult($this->token->processResponse($postData, $expectedCode), $operation);
+    }
+
+    // ------------------------------------------------------------------
+    //  INTERNAL HELPERS
+    // ------------------------------------------------------------------
+
+    /**
+     * Process a standard card payment callback.
+     *
+     * @param array<string, mixed> $postData Raw SISP POST fields.
+     *
+     * @return Vinti4Response
      */
     private function processPaymentResponse(
         array $postData,
@@ -383,6 +537,10 @@ class Vinti4Net
 
     /**
      * Process a refund callback.
+     *
+     * @param array<string, mixed> $postData Raw SISP POST fields.
+     *
+     * @return Vinti4Response
      */
     private function processRefundResponse(
         array $postData,
@@ -394,20 +552,33 @@ class Vinti4Net
     }
 
     /**
-     * Returns the currently prepared request data (for debugging).
+     * Replace the current transaction with a token operation.
      *
-     * @return array
+     * @param string       $code   Token operation code.
+     * @param float|string $amount Amount in CVE, zero for cancellation.
+     * @param string       $token  Opaque token, empty for enrollment.
+     * @param int|null     $entity Service/recharge entity.
+     * @param string|null  $number Service/recharge reference.
      *
+     * @return static Current instance for method chaining.
      */
-    public function getRequest(): array
+    private function prepareTokenOperation(string $code, float|string $amount, string $token = '', ?int $entity = null, ?string $number = null): static
     {
-        return $this->request;
+        $this->prepareRequest([
+            'transactionCode' => $code,
+            'amount' => $amount,
+            'token' => $token,
+            'entityCode' => $entity ?? '',
+            'referenceNumber' => $number ?? '',
+        ]);
+        $this->prepared = true;
+        return $this;
     }
 
     /**
-     * Replace transaction-specific data while preserving merchant options.
+     * Replace transaction fields while retaining merchant options.
      *
-     * @param array<string, mixed> $transaction
+     * @param array<string, mixed> $transaction Fields of the new operation.
      */
     private function prepareRequest(array $transaction): void
     {

@@ -362,6 +362,25 @@ class Vinti4Response
         return $this->data['merchantRespTid'] ?? null;
     }
 
+    /** Token remains opaque; only use it after isSuccess(). */
+    public function getToken(): ?string
+    {
+        return $this->data['token'] ?? null;
+    }
+
+    public function getTokenDescription(): ?string
+    {
+        return $this->data['tokenDescription'] ?? null;
+    }
+
+    /** @return array<string, string> */
+    public function getTokenLimits(): array
+    {
+        return array_intersect_key($this->data, array_flip([
+            'maxAmountAllowed', 'maxNumberOfTransactions', 'limitDate',
+        ]));
+    }
+
     /**
      * Returns the Clearing Period if available.
      * [merchantRespCP]
