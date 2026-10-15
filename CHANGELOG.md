@@ -2,9 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
-## [Unreleased]
+## [Unreleased] — target 2.5.0
 
 ### Added
+
+- Target release 2.5.0: new token payment methods accept the token as their first argument. Existing constructor and released payment/refund signatures remain unchanged.
+
+- The existing Vinti4Net constructor endpoint argument now also overrides token URLs, without signature changes or configuration setters. Merchant references and sessions now require only non-empty values; `generateMerchantRef()` remains available and generates 15 characters.
+
+- Local HTTP loopback callbacks for tokenization development; organized facade PHPDocs and operation grouping. Optional empty token payment/cancellation callback fields no longer have to be sent.
+
+- Independent `Core\Token` version 1 fingerprints and enrollment, purchase, service, recharge and cancellation operations in the Composer facade. The facade retains its original constructor and uses default SISP token endpoints or the existing constructor endpoint override; advanced Core\Token integrations can override endpoints and cancellation callback B/C; signed callbacks A/B/C preserve token metadata and limits.
+- Independent synthetic tokenization regression vectors, callback rejection tests and facade regression tests; Portuguese and English usage examples.
 
 - Convert all 249 assigned ISO 3166-1 alpha-2 country codes to three-digit numeric strings in billing and shipping addresses, preserving existing numeric and unmapped values.
 

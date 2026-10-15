@@ -46,7 +46,7 @@ $billing = Billing::from([
 
 try {
     // preeparar merchantRef (opcional)
-    $reference = Vinti4Net::generateMerchantRef()
+    $reference = Vinti4Net::generateMerchantRef();
     $vinti4->setMerchant(reference: $reference);
 
     // preparar o pagamento
@@ -64,7 +64,7 @@ try {
 }
 ```
 
-O formulário é auto-submetido para a página da Rede Vinti4. `merchantRef` e `merchantSession` devem ter exatamente 15 caracteres. Guarde uma referência única para cada operação; `generateMerchantRef()` adiciona aleatoriedade para reduzir colisões, mas a aplicação ainda deve garantir a unicidade da referência na base de dados.
+O formulário é auto-submetido para a página da Rede Vinti4. `merchantRef` e `merchantSession` devem ser não vazios, sem comprimento fixo imposto pelo SDK. Guarde uma referência única para cada operação; `generateMerchantRef()` adiciona aleatoriedade para reduzir colisões, mas a aplicação ainda deve garantir a unicidade da referência na base de dados.
 
 
 ## Tipos de transação
@@ -75,6 +75,49 @@ O formulário é auto-submetido para a página da Rede Vinti4. `merchantRef` e `
 | Pagamento de serviço | `prepareServicePayment()` |
 | Recarga | `prepareRecharge()` |
 | Reembolso | `prepareRefund()` |
+| Adesão de token | `prepareTokenRequest()` |
+| Compra com token | `prepareTokenPurchase()` |
+| Serviço com token | `prepareTokenServicePayment()` |
+| Recarga com token | `prepareTokenRecharge()` |
+| Cancelamento de token | `prepareTokenCancellation()` |
+
+### Tokenização (API Composer, prevista para v2.5.0)
+
+O construtor de `Vinti4Net` mantém os três argumentos existentes. O argumento opcional `endpoint` também personaliza o URL de token, sem métodos adicionais de configuração. Por padrão, as operações usam os endpoints `/TokenEnrollment`, `/TokenPayment` e `/TokenCancel` em `https://mc.vinti4net.cv/BizMPIOnUsSisp`. Consulte o [guia de tokenização](docs/tokenization.md) e o [exemplo interativo](examples/token_example.php).
+
+```php
+$client = new Vinti4Net(
+    posID: $posId,
+    posAuthCode: $posAuthCode,
+);
+$client->prepareTokenRequest('100');
+echo $client->createPaymentForm('https://merchant.example/token-response');
+
+// Em pedidos separados, com novas referências persistidas:
+$client->prepareTokenPurchase($token, '500');
+$client->prepareTokenServicePayment($token, '500', 6, '227045251');
+$client->prepareTokenRecharge($token, '500', 2, '9573234');
+$client->prepareTokenCancellation($token);
+
+// No callback, o código esperado vem do pedido persistido pela aplicação:
+$response = $client->processTokenResponse($_POST, $expectedTransactionCode);
+if ($response->isSuccess()) {
+    $token = $response->getToken();
+    $limits = $response->getTokenLimits();
+}
+```
+
+Cada preparação substitui a operação anterior. Gere o formulário depois da operação pretendida. Tokens mantêm-se strings; não converta para inteiro. O enrollment não debita o montante mínimo. A assinatura de versão 1 é independente de `Payment` e os callbacks A/B/C só resultam em sucesso após validação. Correlacione referência/sessão com o pedido antes de guardar dados ou atualizar estados. `dist/standalone.php` mantém as operações anteriores.
+
+Para desenvolvimento, callbacks HTTP em `localhost`, `127.0.0.1` e `::1` são aceites pelo SDK. Para testar o retorno real da SISP, utilize HTTPS local ou um túnel HTTPS público; veja as notas de sessão no guia.
+
+### Tokenization (English)
+
+The Composer SDK supports enrollment (`5`), token purchase (`6`), service payment (`2`), recharge (`3`) and token cancellation (`7`, amount zero). The original three-argument `Vinti4Net` constructor is unchanged. Token operations default to the SISP routes `/TokenEnrollment`, `/TokenPayment` and `/TokenCancel` under `https://mc.vinti4net.cv/BizMPIOnUsSisp`. The existing optional `endpoint` overrides the complete URL for token operations as well as Payment/Refund.
+
+Pass a complete custom URL as the existing constructor endpoint argument; no configuration setter is needed. Merchant references and sessions must be non-empty, with no fixed SDK length; generated references still have 15 characters. Use the five `prepareToken*` methods above followed by `createPaymentForm()`. Each call replaces the prepared operation. Enrollment collects card details and OTP on the SISP page; the merchant application stores the returned opaque string token and consent. Request fingerprints include the token and use version 1 without changing Payment fingerprints.
+
+Call `processTokenResponse($_POST, $expectedTransactionCode)` with an operation code from your persisted request. Signed callbacks use A for enrollment, B for payments and C for cancellation. The facade expects C for cancellation. Advanced integrations can configure the B alternative directly in `Core\Token` after confirmation. Always check `isSuccess()` and correlate merchant reference/session before storing `getToken()` or `getTokenLimits()`. The SDK prepares forms and validates callbacks; scheduling, notifications and reconciliation remain merchant responsibilities. Tokenization is available in the Composer API, with full details in the [tokenization guide](docs/tokenization.md).
 
 ### Pagamento de serviço
 
