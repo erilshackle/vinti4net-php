@@ -14,6 +14,7 @@ All notable changes to this project are documented in this file.
 
 - Independent `Core\Token` version 1 fingerprints and enrollment, purchase, service, recharge and cancellation operations in the Composer facade. The facade retains its original constructor and uses default SISP token endpoints or the existing constructor endpoint override; advanced Core\Token integrations can override endpoints and cancellation callback B/C; signed callbacks A/B/C preserve token metadata and limits.
 - Independent synthetic tokenization regression vectors, callback rejection tests and facade regression tests; Portuguese and English usage examples.
+- Documentation for the Composer tokenization API, local callback limits, endpoint behavior, expected callback operation and token persistence.
 
 - Convert all 249 assigned ISO 3166-1 alpha-2 country codes to three-digit numeric strings in billing and shipping addresses, preserving existing numeric and unmapped values.
 

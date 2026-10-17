@@ -5,11 +5,40 @@ PHP 8.1+ e o namespace `Erilshk\Sisp`.
 
 ## 2.5.0 — em desenvolvimento
 
-- Os novos métodos de pagamento com token recebem `$token` como primeiro argumento. O construtor e os métodos já publicados mantêm as suas assinaturas.
+### Tokenização
 
-- O argumento `endpoint` já existente em `Vinti4Net` também personaliza o URL completo de tokenização, sem alterar a assinatura do construtor.
-- `merchantRef` e `merchantSession` passam a exigir apenas valores não vazios, sem comprimento fixo imposto pelo SDK.
-- `generateMerchantRef()` continua público e estático, gerando referências de 15 caracteres nos modos padrão e aleatório.
+- A API Composer passa a preparar adesão de token (código `5`), compra com
+  token (`6`), serviço (`2`), recarga (`3`) e cancelamento (`7`, montante zero)
+  através dos métodos `prepareToken*()` de `Vinti4Net`.
+- O processador `Core\Token` usa fingerprints v1 independentes dos pagamentos
+  tradicionais. Os callbacks assinados A/B/C são validados e expõem token,
+  descrição e limites do enrollment através de `Vinti4Response`.
+- Os métodos de serviço, recarga e compra tokenizados recebem `$token` como
+  primeiro argumento. O construtor e os métodos já publicados mantêm as suas
+  assinaturas. A integração `dist/standalone.php` mantém as operações anteriores.
+- Os endpoints padrão são enrollment, pagamento e cancelamento em
+  `https://mc.vinti4net.cv/BizMPIOnUsSisp`. O argumento `endpoint` já existente
+  em `Vinti4Net` também substitui o URL completo usado na tokenização, sem
+  novos argumentos nem setters.
+- Callbacks HTTP em `localhost`, `127.0.0.1` e `::1` são aceites para
+  desenvolvimento local; a SISP pode exigir HTTPS acessível para o retorno
+  real. O enrollment recolhe os dados do cartão e o OTP na página da SISP.
+
+### Referências e billing
+
+- `merchantRef` e `merchantSession` exigem valores não vazios, sem comprimento
+  fixo imposto pelo SDK. `generateMerchantRef()` continua público e estático,
+  gerando referências de 15 caracteres nos modos padrão e aleatório.
+- Países ISO 3166-1 alpha-2 atribuídos são convertidos para códigos numéricos
+  ISO de três dígitos nos endereços de faturação e entrega; códigos numéricos
+  e valores sem mapeamento são preservados.
+
+### Exemplos e validação
+
+- Foram acrescentados exemplos de utilização em português e inglês e testes
+  independentes para fingerprints, validação de callbacks, endpoints,
+  callbacks locais e reutilização da fachada. Os vetores são sintéticos e não
+  substituem a homologação nem vetores oficiais da SISP.
 
 ## 2.4.0
 

@@ -36,13 +36,19 @@ new Vinti4Net(
 | --- | --- | --- |
 | `setRequestParams(array $params)` | `self` | Configura parâmetros permitidos |
 | `setMerchant(string $reference, ?string $session = null)` | `self` | Define referência e sessão |
-| `generateMerchantRef(bool $random = false)` (estático) | `string` | Gera uma referência de exatamente 15 caracteres |
+| `generateMerchantRef(bool $random = false)` (estático) | `string` | Gera uma referência de 15 caracteres; a aplicação continua responsável pela unicidade |
 | `preparePurchase(float|string $amount, array|Billing $billing, string $currency = Currency::CVE)` | `static` | Prepara compra; passe `[]` para não enviar billing |
 | `prepareServicePayment(float|string $amount, int $entity, string $number)` | `static` | Prepara pagamento de serviço |
 | `prepareRecharge(float|string $amount, int $entity, string $number)` | `static` | Prepara recarga |
 | `prepareRefund(float|string $amount, string $transactionID, string $clearingPeriod)` | `static` | Prepara reembolso |
+| `prepareTokenRequest(float|string $minimumAmount)` | `static` | Prepara adesão; o mínimo não é debitado no enrollment |
+| `prepareTokenPurchase(string $token, float|string $amount)` | `static` | Prepara compra com token existente |
+| `prepareTokenServicePayment(string $token, float|string $amount, int $entity, string $number)` | `static` | Prepara pagamento de serviço com token |
+| `prepareTokenRecharge(string $token, float|string $amount, int $entity, string $number)` | `static` | Prepara recarga com token |
+| `prepareTokenCancellation(string $token)` | `static` | Prepara cancelamento com montante zero |
 | `createPaymentForm(string $responseUrl, string $lang = 'pt')` | `string` | Gera o formulário auto-submit |
 | `processResponse(array $postData)` | `Vinti4Response` | Processa o retorno da SISP; `10` indica estorno bem-sucedido |
+| `processTokenResponse(array $postData, ?string $expectedCode = null)` | `Vinti4Response` | Valida callback tokenizado; prefira o código da operação persistida |
 | `getRequest()` | `array` | Retorna a requisição preparada |
 
 
@@ -195,6 +201,9 @@ if ($response->isSuccess()) {
 | `getCurrency()` | `?string` | Depreciado na v2.4.0; use a moeda guardada no pedido. Para DCC, use `dcc['currency']` |
 | `getAdditionalErrorMessage()` | `string` | `merchantRespAdditionalErrorMessage` |
 | `getMaskedPan()` | `?string` | Exibe apenas os últimos quatro dígitos |
+| `getToken()` | `?string` | Token opaco retornado no enrollment; só usar após validar sucesso |
+| `getTokenDescription()` | `?string` | Descrição devolvida no enrollment |
+| `getTokenLimits()` | `array<string, string>` | Limites do token devolvidos no enrollment |
 | `toArray()` | `array` | Resposta normalizada com PAN mascarado |
 | `toJson()` | `string` | JSON formatado com PAN mascarado |
 
@@ -238,7 +247,7 @@ try {
 
 As falhas da biblioteca usam essa exceção pública.
 
-## Tokenização
+## Tokenização (v2.5)
 
 | Método de Vinti4Net | Operação |
 | --- | --- |
@@ -251,5 +260,6 @@ As falhas da biblioteca usam essa exceção pública.
 
 As preparações são fluentes e usam `createPaymentForm()` para gerar o HTML. O construtor mantém exatamente os três argumentos anteriores; os endpoints padrão de tokenização estão centralizados em `Core\Token` e podem ser personalizados pelo argumento `endpoint` já existente no construtor. `Vinti4Response` acrescenta `getToken()`, `getTokenDescription()` e `getTokenLimits()`. Veja [Tokenização](./tokenization) para configuração e contrato.
 
+`processTokenResponse()` deve receber, como segundo argumento, o código esperado obtido do pedido guardado: `5` para adesão, `6` para compra, `2` para serviço, `3` para recarga e `7` para cancelamento. Os callbacks assinados usam A para adesão, B para pagamentos e C para cancelamento. Verifique `isSuccess()` e correlacione referência e sessão antes de guardar token ou limites. O token é uma string opaca; preserve zeros iniciais e o conteúdo recebido.
 
 `setMerchant($reference, $session = null)` aceita uma referência não vazia, sem comprimento fixo. A sessão também deve ser não vazia, sem comprimento fixo. `generateMerchantRef()` permanece público e estático, com geração padrão e aleatória de 15 caracteres.

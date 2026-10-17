@@ -1,95 +1,316 @@
-# Tokenização SISP
+# Tokenização (v2.5)
 
-A API Composer oferece enrollment (adesão), compra, serviço, recarga e cancelamento através de `Core\Token`, com fingerprints independentes dos pagamentos tradicionais. O titular introduz os dados do cartão e autentica o enrollment na SISP. A aplicação guarda o token devolvido, associado ao cliente e ao consentimento.
+Com a tokenização, o cliente autoriza a utilização do cartão na página da SISP.
+Depois da adesão, a sua aplicação recebe um token para associar ao cliente e
+usar em pagamentos futuros, sem voltar a recolher os dados do cartão.
 
-## Configuração
+Esta página mostra o fluxo que a aplicação precisa implementar. O SDK prepara
+o pedido e valida a resposta; a aplicação continua responsável por guardar os
+pedidos, associar tokens ao cliente, registar o consentimento e controlar o
+estado das operações.
+
+## Fluxo de integração
+
+1. O cliente autenticado escolhe uma operação na sua aplicação.
+2. O servidor prepara a operação e cria uma referência única.
+3. A aplicação guarda o pedido pendente e o contexto necessário para reconhecer
+   o callback.
+4. A aplicação apresenta o formulário devolvido por `createPaymentForm()`, que
+   envia o cliente para a SISP.
+5. No callback, a aplicação encontra o pedido guardado, valida a assinatura e
+   confere a referência e a sessão antes de alterar qualquer estado.
+6. Só após uma adesão validada a aplicação guarda o token, associado ao cliente
+   e ao consentimento registado.
+
+Não confie em montantes, tokens ou códigos de operação enviados pelo browser
+para decidir o que cobrar. Obtenha esses valores no servidor e no registo
+persistido da operação.
+
+## Operações disponíveis
+
+| Operação | Método | Código | Dados necessários |
+| --- | --- | --- | --- |
+| Adesão / criação do token | `prepareTokenRequest($minimumAmount)` | `5` | Montante mínimo para pagamentos futuros |
+| Compra com token | `prepareTokenPurchase($token, $amount)` | `6` | Token guardado e montante |
+| Pagamento de serviço | `prepareTokenServicePayment($token, $amount, $entity, $number)` | `2` | Token, montante, entidade e referência |
+| Recarga | `prepareTokenRecharge($token, $amount, $entity, $number)` | `3` | Token, montante, entidade e número |
+| Cancelamento de token | `prepareTokenCancellation($token)` | `7` | Token a cancelar; o montante é zero |
+
+Os montantes são valores inteiros positivos em CVE (`132`); o cancelamento usa
+zero. No enrollment, o montante é o mínimo autorizado para pagamentos futuros,
+não um débito feito durante a adesão. Serviço e recarga exigem entidade
+numérica de até 5 dígitos e referência/número de até 9 dígitos.
+
+Use tokens como strings opacas. Preserve zeros iniciais e não os converta para
+números. Cada método `prepareToken*()` substitui a operação anteriormente
+preparada: crie um formulário separado para cada operação.
+
+## Preparar um pedido
+
+Crie o cliente no servidor com as credenciais guardadas em variáveis de
+ambiente. Não envie `posAuthCode` ao browser.
 
 ```php
 use Erilshk\Sisp\Vinti4Net;
 
 $client = new Vinti4Net(
-    posID: $posId,
-    posAuthCode: $posAuthCode,
+    posID: $_ENV['VINTI4_POS_ID'],
+    posAuthCode: $_ENV['VINTI4_AUTH_CODE'],
 );
+
+$reference = Vinti4Net::generateMerchantRef();
+$client
+    ->prepareTokenRequest('100')
+    ->setMerchant($reference);
+
+$request = $client->getRequest();
+$form = $client->createPaymentForm(
+    $_ENV['VINTI4_TOKEN_CALLBACK_URL'],
+    'pt',
+);
+
+// Grave antes de apresentar o formulário: a referência e o código esperado
+// serão usados para localizar e validar o callback.
+$pendingRequests->save([
+    'merchantRef' => $reference,
+    'merchantSession' => $request['merchantSession'],
+    'transactionCode' => '5',
+    'customerId' => $authenticatedCustomerId,
+    'status' => 'pending',
+]);
+
+echo $form;
 ```
 
-O construtor original é `new Vinti4Net($posID, $posAuthCode, $endpoint = null)`. Os endpoints padrão de tokenização seguem o site de testes SISP:
+`$pendingRequests` representa a camada de persistência da sua aplicação. Guarde
+no mínimo a referência, a sessão, o cliente, o código da operação, os dados
+necessários para conferir o resultado e o estado pendente. Use uma restrição
+única para a referência. Gere uma nova referência e sessão para cada tentativa.
 
-| Operação | URL |
+Para operações com um token já guardado, obtenha-o do registo do cliente
+autenticado no servidor; não aceite um token arbitrário enviado pelo browser:
+
+```php
+$reference = Vinti4Net::generateMerchantRef();
+$client
+    ->prepareTokenPurchase($tokenGuardadoDoCliente, '500')
+    ->setMerchant($reference);
+
+$request = $client->getRequest();
+$form = $client->createPaymentForm($callbackUrl, 'pt');
+
+$pendingRequests->save([
+    'merchantRef' => $reference,
+    'merchantSession' => $request['merchantSession'],
+    'transactionCode' => '6',
+    'customerId' => $authenticatedCustomerId,
+    'amount' => '500',
+    'status' => 'pending',
+]);
+
+echo $form;
+```
+
+Substitua o método de preparação conforme a operação:
+
+```php
+$client->prepareTokenServicePayment($token, '500', 6, '227045251');
+$client->prepareTokenRecharge($token, '500', 2, '9573234');
+$client->prepareTokenCancellation($token);
+```
+
+Cada exemplo acima é uma operação independente: defina uma nova referência,
+guarde o respetivo código (`2`, `3` ou `7`) e gere o formulário depois de a
+preparar.
+
+## Receber e validar o callback
+
+No callback, não confie no código de operação enviado no POST. Recupere-o do
+pedido pendente e passe-o a `processTokenResponse()`. O método valida a
+assinatura e a versão do fingerprint; nos callbacks assinados A/B/C, também
+confere o tipo com a operação esperada. Respostas de erro (`messageType=6`)
+seguem a validação de erro própria e não identificam por si só qual operação
+originou o callback. A aplicação deve ainda conferir a referência e a sessão
+com os valores guardados.
+
+O exemplo seguinte mostra a sequência do controller. `$pendingRequests`
+representa a camada de persistência da aplicação; os métodos `complete...Once`
+devem atualizar o estado de forma atómica e idempotente, numa transação da
+base de dados.
+
+```php
+use Erilshk\Sisp\Exceptions\Vinti4Exception;
+use Erilshk\Sisp\Vinti4Net;
+
+$reference = (string) (
+    $_POST['merchantRespMerchantRef']
+    ?? $_POST['merchantRef']
+    ?? ''
+);
+
+if ($reference === '') {
+    http_response_code(400);
+    exit('Referência ausente.');
+}
+
+$pending = $pendingRequests->findByReference($reference);
+if ($pending === null) {
+    http_response_code(404);
+    exit('Pedido pendente não encontrado.');
+}
+
+$client = new Vinti4Net(
+    posID: $_ENV['VINTI4_POS_ID'],
+    posAuthCode: $_ENV['VINTI4_AUTH_CODE'],
+);
+
+try {
+    $response = $client->processTokenResponse(
+        $_POST,
+        (string) $pending['transactionCode'],
+    );
+} catch (Vinti4Exception $exception) {
+    error_log('Callback de token inválido: ' . $exception->getMessage());
+    http_response_code(400);
+    exit('Não foi possível processar a resposta.');
+}
+
+$callbackSession = (string) (
+    $response->data['merchantRespMerchantSession']
+    ?? $response->data['merchantSession']
+    ?? ''
+);
+
+if (
+    $callbackSession === ''
+    || !hash_equals((string) $pending['merchantSession'], $callbackSession)
+) {
+    http_response_code(400);
+    exit('A sessão não corresponde ao pedido.');
+}
+
+if ($response->hasInvalidFingerprint()) {
+    http_response_code(400);
+    exit('Não foi possível validar a resposta.');
+}
+
+if ($response->isCancelled()) {
+    $pendingRequests->completeCancelledOnce($pending['id']);
+    exit('Operação interrompida pelo cliente.');
+}
+
+if ($response->hasFailed()) {
+    $pendingRequests->completeFailedOnce($pending['id']);
+    exit('Operação não aprovada.');
+}
+
+if (!$response->isSuccess()) {
+    http_response_code(400);
+    exit('Estado de resposta inesperado.');
+}
+
+if ($pending['transactionCode'] === '5') {
+    $pendingRequests->completeEnrollmentOnce(
+        $pending['id'],
+        $pending['customerId'],
+        $response->getToken(),
+        $response->getTokenDescription(),
+        $response->getTokenLimits(),
+    );
+} else {
+    // Confira também montante, cliente e tipo de operação contra o pedido guardado.
+    $pendingRequests->completeApprovedOperationOnce($pending['id'], $response);
+}
+
+http_response_code(200);
+echo 'Resposta processada.';
+```
+
+O exemplo usa nomes ilustrativos para as operações da camada de persistência;
+implemente-as com as suas tabelas e transações. A conclusão “Once” deve alterar
+somente pedidos ainda pendentes, para que callbacks repetidos não criem tokens
+duplicados nem confirmem duas vezes a mesma operação. Antes de aprovar uma
+compra, confira também o montante e os dados da operação com o pedido guardado.
+
+`isCancelled()` representa uma interrupção pelo cliente, sem aprovação da
+operação. Um callback C válido de cancelamento de token, por outro lado,
+representa uma operação concluída e resulta em `isSuccess()`. Verifique sempre
+`hasInvalidFingerprint()` antes de atualizar o pedido ou guardar dados do token.
+Os acessores de resposta não substituem essa validação.
+
+Uma interrupção sem `messageType` pode ser reconhecida pelo indicador de
+cancelamento do cliente e não tem a assinatura A/B/C. Trate-a apenas como uma
+operação interrompida; nunca como aprovação ou autorização para guardar token.
+
+Os callbacks assinados usam o tipo `A` para enrollment, `B` para pagamentos e
+`C` para cancelamento. A fachada `Vinti4Net` espera `C` no cancelamento. Se a
+SISP lhe indicar um tipo diferente, confirme o fluxo antes de o integrar; a
+alternativa `B` está disponível apenas na integração avançada com `Core\Token`.
+
+## Guardar e utilizar tokens
+
+- Associe o token ao cliente autenticado e ao registo do consentimento obtido
+  pela sua aplicação. A biblioteca não gere consentimento, utilizadores ou
+  armazenamento.
+- Trate o token como dado sensível: restrinja o acesso, proteja-o em repouso e
+  não o inclua em páginas, URLs, logs ou mensagens de erro.
+- Em pagamentos futuros, carregue o token do cliente no servidor e confirme
+  que o montante, a entidade e a frequência respeitam o consentimento e os
+  limites devolvidos no enrollment.
+- O SDK não agenda cobranças recorrentes nem envia notificações. A aplicação
+  implementa agendamento, prevenção de duplicados, reconciliação e cancelamento.
+- Após um cancelamento aprovado, não volte a usar o token em novas operações.
+
+`getTokenLimits()` devolve os campos de limite disponibilizados no enrollment:
+montante máximo, número máximo de transações e data limite. A interpretação e
+aplicação desses limites à sua política de cobrança são responsabilidade da
+aplicação, de acordo com o contrato SISP.
+
+## Endpoints e callback
+
+Sem configuração adicional, a biblioteca utiliza estas rotas:
+
+| Operação | Endpoint padrão |
 | --- | --- |
 | Enrollment | `https://mc.vinti4net.cv/BizMPIOnUsSisp/TokenEnrollment` |
 | Pagamento | `https://mc.vinti4net.cv/BizMPIOnUsSisp/TokenPayment` |
 | Cancelamento | `https://mc.vinti4net.cv/BizMPIOnUsSisp/TokenCancel` |
 
-Os caminhos padrão estão centralizados em `Token::ENDPOINT_PATHS`. O terceiro argumento existente do construtor (`endpoint`) é uma URL completa personalizada e agora também é encaminhado ao processador Token, seguindo o padrão de Payment/Refund. Se for omitido, cada operação usa a sua rota padrão. Não há novos argumentos nem métodos de configuração na fachada. Na API direta `Core\Token`, o terceiro argumento também é `?string $endpoint`; `cancelMessageType` continua a isolar a alternativa B/C.
-
-Os destinos de token exigem HTTPS sem fragmento ao gerar o pedido. Query strings existentes são preservadas. O callback aceita HTTPS ou HTTP estritamente em localhost, 127.0.0.1 e ::1, sem credenciais nem fragmento, para desenvolvimento local.
-
-O arquivo `examples/token_example.php`, acessível a partir do índice dos exemplos, demonstra as cinco operações. Configure `VINTI4_POS_ID`, `VINTI4_AUTH_CODE` e `VINTI4_TOKEN_CALLBACK_URL` com um callback HTTPS acessível pela SISP. O exemplo usa sessão para correlacionar os pedidos; uma aplicação deve persistir essa informação na base de dados. Em HTTP local, o cookie usa SameSite=Lax para testes manuais. No retorno POST entre sites da SISP, use HTTPS (certificado local ou túnel público) e SameSite=None/Secure. A exceção local do SDK não garante que a SISP aceite callbacks HTTP ou consiga aceder ao localhost da máquina de desenvolvimento.
-
-### Endpoint personalizado
+Confirme com a SISP os endpoints e o ambiente aplicáveis às suas credenciais.
+Se lhe for fornecido outro destino, o argumento `endpoint` existente no
+construtor aceita uma URL completa:
 
 ```php
-$client = new Vinti4Net(
-    posID: $posId,
-    posAuthCode: $posAuthCode,
-    endpoint: 'https://gateway.example/TokenPayment',
-);
+$client = new Vinti4Net($posId, $posAuthCode, $endpointCompleto);
 ```
 
-Esse argumento substitui a URL completa para os pedidos do cliente, incluindo tokenização. Não é uma URL base: o SDK não acrescenta uma rota de operação ao valor fornecido. Para usar destinos personalizados diferentes, crie um cliente com o URL correspondente a cada operação. O construtor mantém a assinatura das releases anteriores.
+Não é uma URL base: o SDK não acrescenta o caminho da operação. O mesmo valor
+é utilizado para as operações do cliente; se a integração exigir URLs
+diferentes, crie o cliente com o URL apropriado para cada pedido. O endpoint
+deve usar HTTPS. O URL de callback é outro parâmetro: é o destino no seu
+servidor passado a `createPaymentForm()`.
 
-## Preparar e enviar
+Em produção, publique o callback em HTTPS acessível pela SISP. HTTP em
+`localhost`, `127.0.0.1` e `::1` é uma exceção do SDK para desenvolvimento
+local; não torna o serviço local acessível à SISP. Não dependa de sessão de
+navegador para encontrar o pedido: um POST de retorno pode não incluir o
+cookie. Use uma base de dados ou outro armazenamento do lado do servidor.
 
-```php
-$client->setMerchant($referenceOf15Characters, $sessionOf15Characters);
-$client->prepareTokenRequest('100'); // mínimo de futuros pagamentos; não debita o cartão
-echo $client->createPaymentForm('https://merchant.example/token-response');
+O projeto inclui um [exemplo interativo](https://github.com/erilshackle/vinti4net-php/blob/main/examples/token_example.php)
+e um [exemplo de callback](https://github.com/erilshackle/vinti4net-php/blob/main/examples/token_response.php).
+Estes exemplos usam sessão PHP para demonstração; substitua-a por persistência
+durável antes de utilizar em produção.
 
-// Para os próximos pedidos, use novas referências/sessões persistidas pela aplicação.
-$client->prepareTokenPurchase($token, '500');
-$client->prepareTokenServicePayment($token, '500', 6, '227045251');
-$client->prepareTokenRecharge($token, '500', 2, '9573234');
-$client->prepareTokenCancellation($token); // amount=0
-```
+## Testes e entrada em produção
 
-Cada chamada prepara uma operação e substitui a anterior. Gere o formulário depois da operação desejada. Os códigos são, respetivamente, `5`, `6`, `2`, `3` e `7`. A preparação de serviço/recarga tokenizados seleciona o processador Token; `prepareServicePayment` e `prepareRecharge` continuam a selecionar Payment. A reutilização do cliente não propaga o token para pagamentos tradicionais.
+Os testes automatizados do projeto utilizam vetores sintéticos próprios. São
+úteis para detetar regressões, mas não comprovam homologação nem substituem
+testes com as credenciais e os procedimentos fornecidos pela SISP. Antes de
+ativar a funcionalidade em produção, confirme com a SISP o ambiente, os
+endpoints, os tipos de callback, os limites e o processo de homologação.
 
-Para obter campos/URL sem HTML, use `Core\Token::preparePayment($params)`, que devolve `fields` e `postUrl`. Nenhum destes métodos executa um débito ou envia HTTP por si. A biblioteca não inclui um agendador de pagamentos recorrentes.
-
-Os montantes públicos de pedido são inteiros positivos em CVE (`132`), com até 13 dígitos; cancelamento fixa zero. O mínimo de enrollment é definido pelo comerciante e pelo contrato SISP, sem constante arbitrária. A referência e a sessão merchant devem ser não vazias, sem comprimento fixo imposto pelo SDK. `generateMerchantRef()` continua disponível e gera 15 caracteres. A aplicação deve observar os limites contratados com a SISP para referências e sessões próprias. Serviço/recarga exigem entidade numérica de até 5 dígitos e referência numérica de até 9. Os idiomas disponíveis são `pt` e `en`. Tokens são strings opacas: não são convertidos em números, truncados ou aparados.
-
-## Callbacks
-
-```php
-$response = $client->processTokenResponse($_POST, $expectedTransactionCode);
-
-if ($response->isSuccess()) {
-    // Correlacione referência/sessão com o pedido persistido antes de atualizar o estado.
-    $token = $response->getToken(); // preenchido no enrollment
-    $description = $response->getTokenDescription();
-    $limits = $response->getTokenLimits();
-}
-```
-
-Obtenha `$expectedTransactionCode` do pedido persistido na aplicação, não do callback. A verificação exige assinatura válida, versão `1`, campos obrigatórios presentes, `merchantResp='0'` e tipo compatível: enrollment A, pagamento B, cancelamento C. `processResponse()` também encaminha A/B/C automaticamente. Use `processTokenResponse($post, '7')` para validar explicitamente o contexto de cancelamento.
-
-O plano de testes diverge da especificação/referência Node sobre cancelamento B/C. O padrão é C; Na API direta `Core\Token`, `cancelMessageType: 'B'` habilita B somente para o contexto explícito de cancelamento; a fachada usa C. A assinatura continua a usar o tipo recebido, e o montante deve ser zero. A operação de cancelar um token com sucesso devolve `SUCCESS`, distinta de `CANCELLED`, que representa uma interrupção pelo utilizador.
-
-Erros de tipo 6 seguem a assinatura de erro existente. Respostas sem tipo são falhas ou interrupções explícitas com `UserCancelled`/`userCancelled`, nunca sucesso. Os campos originais são preservados; a variante `userCancelled` ganha um alias para integração com o wrapper atual. Recibo, código de recarga, entidade, referência e approvalCode podem ser omitidos quando não se aplicam a compra/cancelamento. Ausência equivale a vazio no hash; se um valor não vazio assinado for retirado, a assinatura deixa de coincidir. No contexto explícito de serviço/recarga, entidade e referência são obrigatórias. Os acessores podem devolver dados de respostas inválidas: só persista token/limites após validar sucesso e correlação.
-
-## Fingerprints e testes
-
-Versão 1: `Base64(SHA-512(posAuthCode))` inicia a concatenação; aplica-se SHA-512 binário e Base64 novamente no fim. O campo POST é `fingerprint`, a versão POST segue o SDK como `fingerprintversion`, e a query usa `FingerPrint`, `TimeStamp`, `FingerPrintVersion`. A resposta usa `resultFingerPrint` e `resultFingerPrintVersion`.
-
-- Pedido: auth codificado, timestamp, amount × 1000, merchantRef, sessão aparada, posID, moeda, código, entidade/referência numéricas sem zeros iniciais, token opaco.
-- A: auth codificado, tipo, referência, sessão, messageID, merchantResp, CP, TID, timestamp, token, descrição, limite monetário × 1000, número de operações, data YYYYMMDD, últimos quatro dígitos do PAN.
-- B/C: auth codificado, tipo, referência, sessão, messageID, merchantResp, CP, TID, aprovação, montante × 1000, timestamp, recibo, código de recarga, referência e entidade. Nestes callbacks, referência e entidade mantêm os zeros.
-
-CP/TID removem espaços; os campos textuais de callback são aparados, exceto timestamp e token. A conversão monetária usa strings decimais exatas, sem multiplicação float, e suporta até três casas decimais no cálculo da assinatura. Isso não permite pedidos públicos fracionários em CVE. Whitespace no token é preservado por decisão de string opaca; os testes preservam zeros iniciais e o conteúdo original do token.
-
-Os vetores de pedido das cinco operações e de resposta A/B/C são dados sintéticos próprios em `tests/Fixtures/token-v1.json`. Os hashes esperados foram calculados separadamente com Python hashlib e ficam fixos no arquivo; os testes não geram os seus resultados esperados com o código Token. Há cobertura de escala decimal, zeros iniciais, alterações de payload, campos ausentes, versão, endpoints, HTTP local e reutilização da fachada.
-
-Remover os fixtures Chuva não altera o SDK em execução. O efeito é perder a comparação direta com uma segunda implementação: os vetores próprios protegem contra regressões, mas não são evidência de compatibilidade contratual com a SISP. Uma futura homologação deve fornecer vetores oficiais assinados para completar essa validação.
-
-Execute `composer check` para PHPUnit e PHPStan. A validação local não substitui a homologação SISP. A aplicação merchant continua responsável por consentimento, armazenamento, notificações, prevenção de duplicados, reconciliação VBVT e políticas de recorrência. Este suporte está na API Composer; `dist/standalone.php` mantém as operações anteriores.
+Para detalhes de instalação e disponibilidade por versão, consulte
+[Instalação](installation.md) e as [notas de versão](release-notes.md). Para
+as assinaturas públicas da fachada e os métodos de resposta, consulte a
+[referência da API](api.md); para práticas gerais de validação, consulte
+[Segurança](security.md).

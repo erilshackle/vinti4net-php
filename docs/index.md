@@ -13,7 +13,7 @@ hero:
       text: Começar a integrar
       link: /quickstart
     - theme: alt
-      text: Novidades da v2.4.0
+      text: Novidades da v2.5.0
       link: /release-notes
 
 features:
@@ -33,6 +33,10 @@ features:
     details: Prepare o estorno integral usando os dados da transação original guardados pela sua aplicação.
     link: /refunds
     linkText: Preparar um estorno
+  - title: Tokenização (v2.5)
+    details: Prepare adesão, compras, serviços, recargas e cancelamentos com tokens na API Composer.
+    link: /tokenization
+    linkText: Explorar tokenização
   - title: Recibos e DCC
     details: Apresente recibos padrão ou personalizados, recibos de estorno e os valores de conversão DCC devolvidos pela SISP.
     link: /receipt

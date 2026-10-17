@@ -14,6 +14,10 @@
 composer require erilshk/vinti4net:^2.4.0
 ```
 
+O exemplo instala a versão estável 2.4.x. A tokenização descrita neste guia
+está planeada para a 2.5.0 e ficará disponível no Composer após a publicação
+dessa versão; consulte as [notas de versão](release-notes.md).
+
 Carregue o autoload:
 
 ```php
@@ -42,5 +46,4 @@ VINTI4_CALLBACK_URL=https://loja.example.cv/pagamentos/vinti4/callback
 ```
 
 Não envie o `.env` ao Git.
-
 

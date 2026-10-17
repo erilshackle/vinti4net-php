@@ -45,7 +45,7 @@ $billing = Billing::from([
 ]);
 
 try {
-    // preeparar merchantRef (opcional)
+    // preparar merchantRef (opcional)
     $reference = Vinti4Net::generateMerchantRef();
     $vinti4->setMerchant(reference: $reference);
 
@@ -81,7 +81,7 @@ O formulário é auto-submetido para a página da Rede Vinti4. `merchantRef` e `
 | Recarga com token | `prepareTokenRecharge()` |
 | Cancelamento de token | `prepareTokenCancellation()` |
 
-### Tokenização (API Composer, prevista para v2.5.0)
+### Tokenização (API Composer, v2.5.0 em desenvolvimento)
 
 O construtor de `Vinti4Net` mantém os três argumentos existentes. O argumento opcional `endpoint` também personaliza o URL de token, sem métodos adicionais de configuração. Por padrão, as operações usam os endpoints `/TokenEnrollment`, `/TokenPayment` e `/TokenCancel` em `https://mc.vinti4net.cv/BizMPIOnUsSisp`. Consulte o [guia de tokenização](docs/tokenization.md) e o [exemplo interativo](examples/token_example.php).
 

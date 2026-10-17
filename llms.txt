@@ -1,6 +1,6 @@
 # Vinti4Net PHP SDK
 
-> SDK PHP comunitário para compras, pagamentos de serviço, recargas e estornos na Rede Vinti4/SISP em Cabo Verde. Pacote `erilshk/vinti4net`, documentação da série 2.4.x, namespace `Erilshk\Sisp`. Projeto independente, não oficial da SISP.
+> SDK PHP comunitário para compras, pagamentos de serviço, recargas e estornos na Rede Vinti4/SISP em Cabo Verde. Pacote `erilshk/vinti4net`, documentação da série 2.4.x e das alterações planeadas para 2.5.0, namespace `Erilshk\Sisp`. Projeto independente, não oficial da SISP.
 
 Comece pelo [guia rápido](https://erilshackle.github.io/vinti4net-php/quickstart/) para preparar um pagamento e tratar o callback. Em compras sem dados 3DS adicionais, o argumento billing é obrigatório e recebe `[]`: `preparePurchase(1500, [])`.
 
@@ -14,6 +14,7 @@ Comece pelo [guia rápido](https://erilshackle.github.io/vinti4net-php/quickstar
 ## Operações
 
 - [Pagamentos](https://erilshackle.github.io/vinti4net-php/payments/): compra, serviço e recarga.
+- [Tokenização (v2.5)](https://erilshackle.github.io/vinti4net-php/tokenization/): adesão, pagamentos e cancelamento de token; planeada para a API Composer 2.5.0.
 - [Billing 3DS](https://erilshackle.github.io/vinti4net-php/billing/): dados de faturação, contactos, entrega e conta.
 - [Estornos](https://erilshackle.github.io/vinti4net-php/refunds/): devolução integral e recibo de estorno.
 - [Respostas](https://erilshackle.github.io/vinti4net-php/responses/): sucesso, erro, cancelamento e validação.

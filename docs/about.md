@@ -34,6 +34,7 @@ Código, sugestões e problemas podem ser partilhados no
 [repositório do projeto](https://github.com/erilshackle/vinti4net-php).
 Para contacto direto: [erilandocarvalho@gmail.com](mailto:erilandocarvalho@gmail.com).
 
-Esta documentação descreve até a série **2.4.x** do pacote `erilshk/vinti4net`,
-no namespace `Erilshk\Sisp`. Consulte as [notas de versão](release-notes.md)
-para conhecer as alterações entre versões.
+Esta documentação cobre a série **2.4.x** e as alterações planeadas para
+**2.5.0** do pacote `erilshk/vinti4net`, no namespace `Erilshk\Sisp`.
+As novidades da 2.5.0 ainda estão em desenvolvimento. Consulte as
+[notas de versão](release-notes.md) para conhecer as alterações entre versões.

@@ -25,7 +25,7 @@ export default defineConfig({
       ] },
       { text: 'Pagamentos', items: [
         { text: 'Operações', link: '/payments' },
-        { text: 'Tokenização', link: '/tokenization' },
+        { text: 'Tokenização (v2.5)', link: '/tokenization' },
         { text: 'Billing 3DS', link: '/billing' },
         { text: 'Reembolsos', link: '/refunds' }
       ] },

@@ -1,4 +1,4 @@
-# Vinti4Net PHP SDK — referência de uso 2.4.0
+# Vinti4Net PHP SDK — referência de uso 2.4.x e alterações planeadas para 2.5.0
 
 Pacote Composer: `erilshk/vinti4net`. Namespace: `Erilshk\Sisp`. Projeto comunitário de Eril TS Carvalho; **não é oficial da SISP**. Documentação: https://erilshackle.github.io/vinti4net-php/ . Código: https://github.com/erilshackle/vinti4net-php . Esta referência destina-se a quem utiliza a API pública; para pormenores adicionais, consulte as páginas do site.
 
@@ -139,7 +139,31 @@ $vinti4->prepareRefund($originalAmount, $originalTransactionId, $clearingPeriod)
 
 Estas chamadas preparam operações alternativas: use apenas uma por formulário. Serviço e recarga exigem código numérico de entidade (`int`) e referência/número com até 9 dígitos. Os códigos devem corresponder aos serviços fornecidos pela SISP ou pela entidade prestadora; as constantes `Entity` facilitam a sua identificação. `prepareRefund()` usa o montante integral da operação original, `transactionID` e `clearingPeriod` retornados no pagamento aprovado. O estorno é em CVE; a SISP não aceita devolução parcial neste fluxo.
 
-Antes de enviar cada operação, defina e guarde uma referência própria de 15 caracteres com `setMerchant($reference, $session = null)`. O SDK também pode gerar uma referência no momento do envio. `Vinti4Net::generateMerchantRef()` usa `R` + `ymdHis` + dois caracteres alfanuméricos aleatórios; com `random: true`, usa `R` + 14 caracteres hexadecimais aleatórios. O sufixo reduz colisões, mas a unicidade deve ser garantida no sistema do comerciante. A sessão também deve ter exatamente 15 caracteres e é gerada por `setMerchant()` quando omitida; consulte-a em `$vinti4->getRequest()['merchantSession']`. `setRequestParams()` aceita apenas `merchantRef`, `merchantSession`, `languageMessages` e `timeStamp`. Depois da preparação, use `createPaymentForm($callbackUrl, 'pt')`.
+Antes de enviar cada operação, defina e guarde referências e sessão não vazias com `setMerchant($reference, $session = null)`; o SDK não impõe comprimento fixo. A sessão é gerada por `setMerchant()` quando omitida; consulte-a em `$vinti4->getRequest()['merchantSession']`. `Vinti4Net::generateMerchantRef()` continua a gerar 15 caracteres: `R` + `ymdHis` + dois caracteres alfanuméricos aleatórios ou, com `random: true`, `R` + 14 caracteres hexadecimais aleatórios. A aplicação continua responsável pela unicidade. `setRequestParams()` aceita apenas `merchantRef`, `merchantSession`, `languageMessages` e `timeStamp`. Depois da preparação, use `createPaymentForm($callbackUrl, 'pt')`.
+
+## Tokenização (API Composer, v2.5.0 em desenvolvimento)
+
+A tokenização foi adicionada à API Composer na 2.5.0, ainda em desenvolvimento.
+O comando de instalação acima continua na linha estável 2.4.x e
+`dist/standalone.php` não inclui estas operações. O guia prático, com exemplo de
+preparação e callback, está em
+https://erilshackle.github.io/vinti4net-php/tokenization/ .
+
+Operações: enrollment (`prepareTokenRequest`, código `5`), compra
+(`prepareTokenPurchase`, `6`), serviço (`prepareTokenServicePayment`, `2`),
+recarga (`prepareTokenRecharge`, `3`) e cancelamento
+(`prepareTokenCancellation`, `7`, montante zero). O token é uma string opaca;
+preserve zeros iniciais. Gere e persista referência, sessão, código esperado e
+dados da operação antes de apresentar o formulário. No callback, use
+`processTokenResponse($_POST, $expectedCode)` com o código recuperado do
+registo do servidor; confirme `hasInvalidFingerprint()`, `isSuccess()`,
+referência, sessão e dados da operação antes de atualizar o pedido. Torne a
+conclusão idempotente. Guarde um token de enrollment apenas após validar a
+resposta, associado ao cliente e ao consentimento.
+
+Em produção, use callback HTTPS acessível pela SISP e persistência no servidor,
+não dependa de cookie de sessão. Os vetores automatizados são sintéticos e não
+substituem homologação com os endpoints, credenciais e procedimentos SISP.
 
 O estorno pode levar o cliente diretamente à URL de resposta. Consulte: https://erilshackle.github.io/vinti4net-php/payments/ e https://erilshackle.github.io/vinti4net-php/refunds/ .
 
