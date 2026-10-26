@@ -107,7 +107,7 @@ if ($response->isSuccess()) {
 }
 ```
 
-Cada preparação substitui a operação anterior. Gere o formulário depois da operação pretendida. Tokens mantêm-se strings; não converta para inteiro. O enrollment não debita o montante mínimo. A assinatura de versão 1 é independente de `Payment` e os callbacks A/B/C só resultam em sucesso após validação. Correlacione referência/sessão com o pedido antes de guardar dados ou atualizar estados. `dist/standalone.php` mantém as operações anteriores.
+Cada preparação substitui a operação anterior. Gere o formulário depois da operação pretendida. Tokens mantêm-se strings; não converta para inteiro. O enrollment não debita o montante mínimo. A assinatura de versão 1 é independente de `Payment` e os callbacks A/B/C só resultam em sucesso após validação. Correlacione referência/sessão com o pedido antes de guardar dados ou atualizar estados.
 
 Para desenvolvimento, callbacks HTTP em `localhost`, `127.0.0.1` e `::1` são aceites pelo SDK. Para testar o retorno real da SISP, utilize HTTPS local ou um túnel HTTPS público; veja as notas de sessão no guia.
 
