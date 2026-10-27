@@ -18,9 +18,17 @@ composer require erilshk/vinti4net:^2.4
 
 Requer PHP 8.1 ou superior.
 
+**Sem Composer:** descarregue o ficheiro abaixo e inclua-o com `require_once`:
+
+[Descarregar standalone.php](https://github.com/erilshackle/vinti4net-php/raw/refs/heads/main/dist/standalone.php)
+
+A versão standalone utiliza a classe global `Vinti4Net` e devolve respostas em arrays. Os exemplos deste README utilizam a API Composer.
+
 ## Compra com 3D Secure
 
-O exemplo prepara uma compra de 1 500 CVE com os dados de faturação do cliente e gera o formulário de pagamento da SISP. Configure as credenciais nas variáveis de ambiente indicadas.
+O exemplo prepara uma compra de **1 500 CVE** com os dados de faturação do cliente e gera o formulário de pagamento da SISP.
+
+Configure as credenciais nas variáveis de ambiente indicadas.
 
 ```php
 <?php
@@ -66,12 +74,24 @@ try {
 }
 ```
 
-Antes de apresentar o formulário, guarde a referência, a sessão e o montante esperado na sua aplicação. Pode obter os dados preparados com `getRequest()`. O navegador submete automaticamente o formulário à página da Rede Vinti4. `merchantRef` e `merchantSession` devem ser não vazios, sem comprimento fixo imposto pelo SDK. Guarde uma referência única para cada operação; `generateMerchantRef()` adiciona aleatoriedade para reduzir colisões, mas a aplicação ainda deve garantir a unicidade da referência na base de dados.
+O navegador submete automaticamente o formulário à página da Rede Vinti4.
+
+Antes de apresentar o formulário:
+
+- Guarde a referência, a sessão e o montante esperado na sua aplicação. Os dados preparados estão disponíveis em `getRequest()`.
+- Preencha `merchantRef` e `merchantSession` com valores não vazios. O SDK não impõe um comprimento fixo.
+- Garanta uma referência única por operação na base de dados. `generateMerchantRef()` adiciona aleatoriedade para reduzir colisões.
 
 
 ## Tipos de transação
 
-Os exemplos reutilizam o cliente `$vinti4`. Gere uma nova `$reference` para cada operação e guarde o pedido antes de apresentar o formulário. Cada chamada `prepare*()` substitui a operação anterior.
+Os exemplos reutilizam o cliente `$vinti4`. Para cada operação:
+
+1. Gere uma nova `$reference`.
+2. Prepare a operação e guarde o pedido.
+3. Apresente o formulário de pagamento.
+
+Escolha o método `prepare*()` correspondente ao tipo de pagamento e gere o respetivo formulário com `createPaymentForm()`. Cada pedido representa uma única operação; ao reutilizar o cliente para um novo pedido, o `prepare*()` define os novos dados da operação.
 
 | Operação | Método |
 | --- | --- |
@@ -79,41 +99,6 @@ Os exemplos reutilizam o cliente `$vinti4`. Gere uma nova `$reference` para cada
 | Pagamento de serviço | `prepareServicePayment()` |
 | Recarga | `prepareRecharge()` |
 | Reembolso | `prepareRefund()` |
-| Adesão de token | `prepareTokenRequest()` |
-| Compra com token | `prepareTokenPurchase()` |
-| Serviço com token | `prepareTokenServicePayment()` |
-| Recarga com token | `prepareTokenRecharge()` |
-| Cancelamento de token | `prepareTokenCancellation()` |
-
-### Tokenização (API Composer, v2.5.0 em desenvolvimento)
-
-Esta funcionalidade está em desenvolvimento e ainda não está incluída na versão estável indicada na instalação. O construtor de `Vinti4Net` mantém os três argumentos existentes. O argumento opcional `endpoint` também personaliza o URL de token, sem métodos adicionais de configuração. Por padrão, as operações usam os endpoints `/TokenEnrollment`, `/TokenPayment` e `/TokenCancel` em `https://mc.vinti4net.cv/BizMPIOnUsSisp`. Consulte o [guia de tokenização](docs/tokenization.md) e o [exemplo interativo](examples/token_example.php).
-
-```php
-$client = new Vinti4Net(
-    posID: $posId,
-    posAuthCode: $posAuthCode,
-);
-$client->prepareTokenRequest('100');
-echo $client->createPaymentForm('https://merchant.example/token-response');
-
-// Em pedidos separados, com novas referências persistidas:
-$client->prepareTokenPurchase($token, '500');
-$client->prepareTokenServicePayment($token, '500', 6, '227045251');
-$client->prepareTokenRecharge($token, '500', 2, '9573234');
-$client->prepareTokenCancellation($token);
-
-// No callback, o código esperado vem do pedido persistido pela aplicação:
-$response = $client->processTokenResponse($_POST, $expectedTransactionCode);
-if ($response->isSuccess()) {
-    $token = $response->getToken();
-    $limits = $response->getTokenLimits();
-}
-```
-
-Cada preparação substitui a operação anterior. Gere o formulário depois da operação pretendida. Tokens mantêm-se strings; não converta para inteiro. A adesão não debita o montante mínimo. Os dados do cartão e o código de utilização única (OTP) são recolhidos na página da SISP; a aplicação guarda o token e o consentimento do cliente após validar a resposta. A assinatura de versão 1 é independente de `Payment` e os callbacks A/B/C só resultam em sucesso após validação. Correlacione a referência e a sessão com o pedido antes de guardar dados ou atualizar estados. O SDK prepara formulários e valida respostas; o agendamento de cobranças, as notificações e a reconciliação ficam a cargo da aplicação.
-
-Para desenvolvimento, callbacks HTTP em `localhost`, `127.0.0.1` e `::1` são aceites pelo SDK. Para testar o retorno real da SISP, utilize HTTPS local ou um túnel HTTPS público; veja as notas de sessão no guia.
 
 ### Pagamento de serviço
 
@@ -210,7 +195,80 @@ try {
 }
 ```
 
-Não confirme pagamentos apenas pelo redirecionamento do navegador. Valide sempre o fingerprint, a referência, o valor e se a transação ainda não foi processada.
+Antes de confirmar o pagamento, verifique:
+
+- A validade do fingerprint.
+- A referência e o valor esperados.
+- Se a transação já foi processada, para evitar duplicações.
+
+O redirecionamento do navegador, por si só, não confirma o pagamento.
+
+## Tokenização (API Composer, v2.5.0 em desenvolvimento)
+
+> Esta funcionalidade está em desenvolvimento e ainda não está incluída na versão estável indicada na instalação.
+
+A tokenização permite guardar um token associado ao cliente para utilizar em pagamentos futuros. O cliente faz a adesão na página da SISP; a sua aplicação recebe o token no retorno dessa operação.
+
+| Operação | Método | `transactionCode` |
+| --- | --- | --- |
+| Adesão de token | `prepareTokenRequest()` | `'5'` |
+| Compra com token | `prepareTokenPurchase()` | `'6'` |
+| Serviço com token | `prepareTokenServicePayment()` | `'2'` |
+| Recarga com token | `prepareTokenRecharge()` | `'3'` |
+| Cancelamento de token | `prepareTokenCancellation()` | `'7'` |
+
+### Obter o token
+
+Utilize o cliente `$vinti4` configurado anteriormente para preparar a adesão e apresentar o formulário. O montante indicado é o mínimo para pagamentos futuros e não é debitado na adesão.
+
+```php
+$vinti4->setMerchant(Vinti4Net::generateMerchantRef());
+$vinti4->prepareTokenRequest('100');
+
+echo $vinti4->createPaymentForm('https://example.cv/tokens/resposta');
+```
+
+Guarde a referência, a sessão e o tipo de operação na sua aplicação antes de apresentar o formulário.
+
+No endereço de retorno, `$expectedTransactionCode` é o código da operação guardada: na adesão, é a string `'5'`, conforme a tabela acima.
+
+```php
+// Código da operação iniciada, recuperado do pedido guardado.
+$response = $vinti4->processTokenResponse($_POST, $expectedTransactionCode);
+
+if ($response->isSuccess()) {
+    // Confira a referência e a sessão com o pedido guardado antes de persistir.
+    $token = $response->getToken();
+    $limits = $response->getTokenLimits();
+
+    // Guarde o token, os limites e o consentimento associados ao cliente.
+}
+```
+
+A variável `$token` vem de `getToken()` após uma adesão bem-sucedida. Nos pagamentos seguintes, recupere esse valor do registo do cliente na sua aplicação. Mantenha-o como string, preservando eventuais zeros iniciais.
+
+### Pagar com o token
+
+Com `$token` recuperado do registo do cliente, prepare uma compra:
+
+```php
+$vinti4->setMerchant(Vinti4Net::generateMerchantRef());
+$vinti4->prepareTokenPurchase($token, '500');
+
+// Guarde o pedido antes de apresentar o formulário.
+echo $vinti4->createPaymentForm('https://example.cv/tokens/pagamento-resposta');
+```
+
+Para serviço, recarga ou cancelamento, escolha o método correspondente na tabela. Cada pedido utiliza um único `prepare*()`, seguido de `createPaymentForm()`.
+
+O código esperado vem do pedido guardado na sua aplicação. Se for omitido, o SDK valida a assinatura e identifica a categoria da resposta, mas não a compara com a operação iniciada. Consulte os detalhes no [guia de tokenização](docs/tokenization.md).
+
+### Mais informações
+
+- [Guia de tokenização](docs/tokenization.md): validação, consentimento, limites e desenvolvimento local.
+- [Exemplo interativo](examples/token_example.php).
+
+O SDK prepara formulários e valida respostas. O agendamento de cobranças, as notificações e a reconciliação ficam a cargo da aplicação.
 
 ## Recibos
 
@@ -244,7 +302,10 @@ echo $response->renderReceipt(
 );
 ```
 
-São aceites modelos `.php`, `.html` e `.htm`. Os modelos PHP recebem `$receipt` e `$data`; os modelos HTML utilizam marcadores como `{{ merchantReference }}` e `{{ dcc.amount }}`.
+São aceites modelos `.php`, `.html` e `.htm`:
+
+- **PHP:** recebem `$receipt` e `$data`.
+- **HTML:** utilizam marcadores como `{{ merchantReference }}` e `{{ dcc.amount }}`.
 
 ### Recibo DCC
 
@@ -286,5 +347,4 @@ try {
 
 ## Licença
 
-Distribuído sob a licença MIT. Consulte a licença do repositório.
-Desenvolvido por Erilando TS Carvalho.
+Distribuído sob a [licença MIT](LICENSE). Desenvolvido por Erilando TS Carvalho.
