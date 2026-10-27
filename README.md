@@ -18,7 +18,9 @@ composer require erilshk/vinti4net:^2.4
 
 Requer PHP 8.1 ou superior.
 
-## Pagamento mínimo
+## Compra com 3D Secure
+
+O exemplo prepara uma compra de 1 500 CVE com os dados de faturação do cliente e gera o formulário de pagamento da SISP. Configure as credenciais nas variáveis de ambiente indicadas.
 
 ```php
 <?php
@@ -29,13 +31,13 @@ use Erilshk\Sisp\Vinti4Net;
 use Erilshk\Sisp\Billing;
 use Erilshk\Sisp\Exceptions\Vinti4Exception;
 
-// Criar o cliente (credenciais do SISP)
+// Credenciais POS fornecidas pela SISP.
 $vinti4 = new Vinti4Net(
     posID: getenv('VINTI4_POS_ID'),
     posAuthCode: getenv('VINTI4_AUTH_CODE'),
 );
 
-// preparar o purchaseRequest
+// Dados de faturação para a compra 3DS.
 $billing = Billing::from([
     'email' => 'cliente@example.cv',
     'country' => '132',
@@ -45,14 +47,14 @@ $billing = Billing::from([
 ]);
 
 try {
-    // preparar merchantRef (opcional)
+    // Referência única da tentativa de pagamento.
     $reference = Vinti4Net::generateMerchantRef();
     $vinti4->setMerchant(reference: $reference);
 
-    // preparar o pagamento
-    $vinti4->preparePurchase(amount: 1500, billing: $billing);
+    // Montante em CVE, obtido na aplicação.
+    $vinti4->preparePurchase(amount: '1500', billing: $billing);
 
-    // criar e chamar o formulário do pagamento 
+    // Encaminhar o cliente para a página de pagamento da SISP.
     echo $vinti4->createPaymentForm(
         responseUrl: 'https://example.cv/pagamentos/callback',
         lang: 'pt',
@@ -64,10 +66,12 @@ try {
 }
 ```
 
-O formulário é auto-submetido para a página da Rede Vinti4. `merchantRef` e `merchantSession` devem ser não vazios, sem comprimento fixo imposto pelo SDK. Guarde uma referência única para cada operação; `generateMerchantRef()` adiciona aleatoriedade para reduzir colisões, mas a aplicação ainda deve garantir a unicidade da referência na base de dados.
+Antes de apresentar o formulário, guarde a referência, a sessão e o montante esperado na sua aplicação. Pode obter os dados preparados com `getRequest()`. O navegador submete automaticamente o formulário à página da Rede Vinti4. `merchantRef` e `merchantSession` devem ser não vazios, sem comprimento fixo imposto pelo SDK. Guarde uma referência única para cada operação; `generateMerchantRef()` adiciona aleatoriedade para reduzir colisões, mas a aplicação ainda deve garantir a unicidade da referência na base de dados.
 
 
 ## Tipos de transação
+
+Os exemplos reutilizam o cliente `$vinti4`. Gere uma nova `$reference` para cada operação e guarde o pedido antes de apresentar o formulário. Cada chamada `prepare*()` substitui a operação anterior.
 
 | Operação | Método |
 | --- | --- |
@@ -83,7 +87,7 @@ O formulário é auto-submetido para a página da Rede Vinti4. `merchantRef` e `
 
 ### Tokenização (API Composer, v2.5.0 em desenvolvimento)
 
-O construtor de `Vinti4Net` mantém os três argumentos existentes. O argumento opcional `endpoint` também personaliza o URL de token, sem métodos adicionais de configuração. Por padrão, as operações usam os endpoints `/TokenEnrollment`, `/TokenPayment` e `/TokenCancel` em `https://mc.vinti4net.cv/BizMPIOnUsSisp`. Consulte o [guia de tokenização](docs/tokenization.md) e o [exemplo interativo](examples/token_example.php).
+Esta funcionalidade está em desenvolvimento e ainda não está incluída na versão estável indicada na instalação. O construtor de `Vinti4Net` mantém os três argumentos existentes. O argumento opcional `endpoint` também personaliza o URL de token, sem métodos adicionais de configuração. Por padrão, as operações usam os endpoints `/TokenEnrollment`, `/TokenPayment` e `/TokenCancel` em `https://mc.vinti4net.cv/BizMPIOnUsSisp`. Consulte o [guia de tokenização](docs/tokenization.md) e o [exemplo interativo](examples/token_example.php).
 
 ```php
 $client = new Vinti4Net(
@@ -107,43 +111,43 @@ if ($response->isSuccess()) {
 }
 ```
 
-Cada preparação substitui a operação anterior. Gere o formulário depois da operação pretendida. Tokens mantêm-se strings; não converta para inteiro. O enrollment não debita o montante mínimo. A assinatura de versão 1 é independente de `Payment` e os callbacks A/B/C só resultam em sucesso após validação. Correlacione referência/sessão com o pedido antes de guardar dados ou atualizar estados.
+Cada preparação substitui a operação anterior. Gere o formulário depois da operação pretendida. Tokens mantêm-se strings; não converta para inteiro. A adesão não debita o montante mínimo. Os dados do cartão e o código de utilização única (OTP) são recolhidos na página da SISP; a aplicação guarda o token e o consentimento do cliente após validar a resposta. A assinatura de versão 1 é independente de `Payment` e os callbacks A/B/C só resultam em sucesso após validação. Correlacione a referência e a sessão com o pedido antes de guardar dados ou atualizar estados. O SDK prepara formulários e valida respostas; o agendamento de cobranças, as notificações e a reconciliação ficam a cargo da aplicação.
 
 Para desenvolvimento, callbacks HTTP em `localhost`, `127.0.0.1` e `::1` são aceites pelo SDK. Para testar o retorno real da SISP, utilize HTTPS local ou um túnel HTTPS público; veja as notas de sessão no guia.
 
-### Tokenization (English)
-
-The Composer SDK supports enrollment (`5`), token purchase (`6`), service payment (`2`), recharge (`3`) and token cancellation (`7`, amount zero). The original three-argument `Vinti4Net` constructor is unchanged. Token operations default to the SISP routes `/TokenEnrollment`, `/TokenPayment` and `/TokenCancel` under `https://mc.vinti4net.cv/BizMPIOnUsSisp`. The existing optional `endpoint` overrides the complete URL for token operations as well as Payment/Refund.
-
-Pass a complete custom URL as the existing constructor endpoint argument; no configuration setter is needed. Merchant references and sessions must be non-empty, with no fixed SDK length; generated references still have 15 characters. Use the five `prepareToken*` methods above followed by `createPaymentForm()`. Each call replaces the prepared operation. Enrollment collects card details and OTP on the SISP page; the merchant application stores the returned opaque string token and consent. Request fingerprints include the token and use version 1 without changing Payment fingerprints.
-
-Call `processTokenResponse($_POST, $expectedTransactionCode)` with an operation code from your persisted request. Signed callbacks use A for enrollment, B for payments and C for cancellation. The facade expects C for cancellation. Advanced integrations can configure the B alternative directly in `Core\Token` after confirmation. Always check `isSuccess()` and correlate merchant reference/session before storing `getToken()` or `getTokenLimits()`. The SDK prepares forms and validates callbacks; scheduling, notifications and reconciliation remain merchant responsibilities. Tokenization is available in the Composer API, with full details in the [tokenization guide](docs/tokenization.md).
-
 ### Pagamento de serviço
 
+Exemplo de pagamento de uma fatura de Águas de Santiago. Use o montante e a referência da fatura; o número abaixo é ilustrativo.
+
 ```php
+use Erilshk\Sisp\Entity;
 $vinti4
     ->setMerchant($reference)
     ->prepareServicePayment(
         amount: 2500,
-        entity: 10001,
+        entity: Entity::SERVICE_AGUAS_SANTIAGO,
         number: '123456789',
     );
 ```
 
 ### Recarga
 
+Exemplo de recarga Alou de 500 CVE. Substitua o número ilustrativo pelo número indicado pelo cliente.
+
 ```php
+use Erilshk\Sisp\Entity;
 $vinti4
-    ->setMerchant($refenrece)
+    ->setMerchant($reference)
     ->prepareRecharge(
         amount: 500,
-        entity: 10021,
+        entity: Entity::RECHARGE_ALOU,
         number: '9912345',
     );
 ```
 
 ### Reembolso
+
+Recupere o identificador da transação e o período de compensação guardados após a compra aprovada. Os valores abaixo são ilustrativos.
 
 ```php
 $vinti4
@@ -171,23 +175,21 @@ require_once __DIR__ . '/vendor/autoload.php';
 use Erilshk\Sisp\Exceptions\Vinti4Exception;
 use Erilshk\Sisp\Vinti4Net;
 
-// criar o cliente (credenciais do SISP)
+// Use as mesmas credenciais POS do pedido.
 $vinti4 = new Vinti4Net(
     getenv('VINTI4_POS_ID'),
     getenv('VINTI4_AUTH_CODE'),
 );
 
 try {
-    // enviar o body da resposta do sisp para o processResponse
+    // Validar os dados enviados pela SISP.
     $response = $vinti4->processResponse($_POST);
 
-    // validar o fingerprint (segurança anti-fraude)
+    // Rejeitar uma resposta com assinatura inválida.
     if ($response->hasInvalidFingerprint()) {
         http_response_code(400);
         exit('Resposta inválida.');
     }
-
-    // tratar a resposta
 
     if ($response->isSuccess()) {
         $transactionId = $response->getTransactionId();
@@ -233,7 +235,7 @@ echo $response->renderRefundReceipt(
 );
 ```
 
-### Template próprio
+### Modelo personalizado
 
 ```php
 echo $response->renderReceipt(
@@ -242,7 +244,7 @@ echo $response->renderReceipt(
 );
 ```
 
-Templates `.php`, `.html` e `.htm` são aceitos. Templates PHP recebem `$receipt` e `$data`; templates HTML utilizam placeholders como `{{ merchantReference }}` e `{{ dcc.amount }}`.
+São aceites modelos `.php`, `.html` e `.htm`. Os modelos PHP recebem `$receipt` e `$data`; os modelos HTML utilizam marcadores como `{{ merchantReference }}` e `{{ dcc.amount }}`.
 
 ### Recibo DCC
 
@@ -272,11 +274,11 @@ try {
     // integração
 } catch (Vinti4Exception $exception) {
     error_log($exception->getMessage());
-    //! trate e resolva como erro de desenvolvimento (+info na documentação)
+    // Registe o erro e apresente uma mensagem adequada ao cliente.
 }
 ```
 
-## Links
+## Documentação e recursos
 
 - [Documentação](https://erilshackle.github.io/vinti4net-php/)
 - [Packagist](https://packagist.org/packages/erilshk/vinti4net)
@@ -285,4 +287,4 @@ try {
 ## Licença
 
 Distribuído sob a licença MIT. Consulte a licença do repositório.
-by Erilando TS Carvalho
+Desenvolvido por Erilando TS Carvalho.
