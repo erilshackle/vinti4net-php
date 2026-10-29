@@ -91,6 +91,23 @@ Use uma operação por envio; preparar outra substitui os dados da anterior.
 
 ## Retorno e recibos
 
+### Por que o retorno é bloqueado ou o cliente aparece sem sessão? {#retorno-e-sessao}
+
+A URL de resposta deve aceitar o POST externo da SISP, sem exigir que o cliente
+esteja autenticado. Verifique se os middlewares de origem/CORS, CSRF ou autenticação
+estão a bloquear essa rota. O retorno por formulário não depende de autorização
+CORS no navegador; permita esse fluxo na rota de resposta, mantendo as proteções
+nas restantes rotas da aplicação.
+
+A SISP não fornece o cookie de sessão da sua aplicação. No retorno pelo navegador,
+o cookie pode não acompanhar o POST devido às regras `SameSite`, pelo que o cliente
+pode aparecer como não autenticado. Veja a [referência sobre cookies SameSite](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie#samesitesamesite-value).
+
+Guarde previamente o pedido e a associação ao cliente na base de dados. No retorno,
+valide o fingerprint e confira a referência, a sessão da operação e os restantes
+dados esperados contra esse registo. `merchantSession` identifica a tentativa;
+não autentica o utilizador nem substitui a sessão de login.
+
 ### O que fazer com fingerprint inválido ou erro da SISP?
 
 Verifique primeiro `hasInvalidFingerprint()`. Se for verdadeiro, rejeite a

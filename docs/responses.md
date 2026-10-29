@@ -9,6 +9,12 @@ $response = $vinti4->processResponse($_POST);
 
 Um array vazio lança `Vinti4Exception`.
 
+::: tip Retorno bloqueado ou sessão ausente
+O endereço de resposta deve aceitar o POST externo sem depender da sessão de login.
+Se houver bloqueios de origem/CORS, CSRF ou autenticação, ou se o cliente aparecer
+sem sessão, consulte [Retorno e sessão no FAQ](faq.md#retorno-e-sessao).
+:::
+
 ## Ordem recomendada
 
 ```php

@@ -247,6 +247,8 @@ if ($response->isSuccess()) {
 
 A variável `$token` vem de `getToken()` após uma adesão bem-sucedida. Nos pagamentos seguintes, recupere esse valor do registo do cliente na sua aplicação. Mantenha-o como string, preservando eventuais zeros iniciais.
 
+O código esperado vem do pedido guardado na sua aplicação. Se for omitido, o SDK valida a assinatura e identifica a categoria da resposta, mas não a compara com a operação iniciada. Consulte os detalhes no [guia de tokenização](docs/tokenization.md).
+
 ### Pagar com o token
 
 Com `$token` recuperado do registo do cliente, prepare uma compra:
@@ -261,7 +263,39 @@ echo $vinti4->createPaymentForm('https://example.cv/tokens/pagamento-resposta');
 
 Para serviço, recarga ou cancelamento, escolha o método correspondente na tabela. Cada pedido utiliza um único `prepare*()`, seguido de `createPaymentForm()`.
 
-O código esperado vem do pedido guardado na sua aplicação. Se for omitido, o SDK valida a assinatura e identifica a categoria da resposta, mas não a compara com a operação iniciada. Consulte os detalhes no [guia de tokenização](docs/tokenization.md).
+Os parâmetros de cada alternativa são:
+
+```php
+use Erilshk\Sisp\Entity;
+
+// Pagamento de serviço: token, montante, entidade e referência da fatura.
+$vinti4->prepareTokenServicePayment(
+    token: $token,
+    amount: '2500',
+    entity: Entity::SERVICE_AGUAS_SANTIAGO,
+    number: '123456789',
+);
+```
+
+```php
+use Erilshk\Sisp\Entity;
+
+// Recarga: token, montante, entidade e número a recarregar.
+$vinti4->prepareTokenRecharge(
+    token: $token,
+    amount: '500',
+    entity: Entity::RECHARGE_ALOU,
+    number: '9912345',
+);
+```
+
+```php
+// Cancelamento: apenas o token a cancelar.
+$vinti4->prepareTokenCancellation(token: $token);
+```
+
+As referências e os números acima são ilustrativos. Para cada alternativa, defina uma nova referência com `setMerchant()`, guarde o pedido e apresente o formulário, como no exemplo de compra.
+
 
 ### Mais informações
 
