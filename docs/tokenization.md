@@ -45,6 +45,39 @@ Use tokens como strings opacas. Preserve zeros iniciais e não os converta para
 números. Cada método `prepareToken*()` substitui a operação anteriormente
 preparada: crie um formulário separado para cada operação.
 
+## Uso sem Composer
+
+O arquivo [vinti4net-standalone.php](../dist/vinti4net-standalone.php) inclui
+as mesmas operações de token sem dependência do Composer. A API usa a classe
+global `Vinti4Net` e devolve arrays em vez de `Vinti4Response`:
+
+```php
+require_once __DIR__ . '/../dist/vinti4net-standalone.php';
+
+$client = new \Vinti4Net($_ENV['VINTI4_POS_ID'], $_ENV['VINTI4_AUTH_CODE']);
+$reference = \Vinti4Net::generateMerchantRef();
+$client->setMerchant($reference)->prepareTokenRequest('100');
+
+$request = $client->getRequest();
+$form = $client->createPaymentForm($_ENV['VINTI4_TOKEN_CALLBACK_URL']);
+
+// Persista a referência, a sessão e o código esperado antes de mostrar o formulário.
+echo $form;
+```
+
+No callback, passe o código esperado recuperado do pedido persistido — não o
+valor enviado pelo browser. O resultado fornece `success`, `status`,
+`fingerprint_valid` e `data`; o PAN de enrollment é mascarado em `data`.
+
+```php
+$result = $client->processTokenResponse($_POST, $pending['transactionCode']);
+
+if ($result['fingerprint_valid'] && $result['success']) {
+    $token = $result['data']['token'];
+    // Confira referência e sessão e associe o token ao cliente autenticado.
+}
+```
+
 ## Preparar um pedido
 
 Crie o cliente no servidor com as credenciais guardadas em variáveis de

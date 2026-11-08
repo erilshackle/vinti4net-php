@@ -141,12 +141,11 @@ Estas chamadas preparam operações alternativas: use apenas uma por formulário
 
 Antes de enviar cada operação, defina e guarde referências e sessão não vazias com `setMerchant($reference, $session = null)`; o SDK não impõe comprimento fixo. A sessão é gerada por `setMerchant()` quando omitida; consulte-a em `$vinti4->getRequest()['merchantSession']`. `Vinti4Net::generateMerchantRef()` continua a gerar 15 caracteres: `R` + `ymdHis` + dois caracteres alfanuméricos aleatórios ou, com `random: true`, `R` + 14 caracteres hexadecimais aleatórios. A aplicação continua responsável pela unicidade. `setRequestParams()` aceita apenas `merchantRef`, `merchantSession`, `languageMessages` e `timeStamp`. Depois da preparação, use `createPaymentForm($callbackUrl, 'pt')`.
 
-## Tokenização (API Composer, v2.5.0 em desenvolvimento)
+## Tokenização
 
-A tokenização foi adicionada à API Composer na 2.5.0, ainda em desenvolvimento.
-O comando de instalação acima continua na linha estável 2.4.x e
-`dist/standalone.php` não inclui estas operações. O guia prático, com exemplo de
-preparação e callback, está em
+A tokenização está disponível na API Composer 2.5.0 em desenvolvimento e no
+arquivo sem Composer `dist/vinti4net-standalone.php`. A versão estável publicada
+continua na linha 2.4.x. O guia prático, com exemplo de preparação e callback, está em
 https://erilshackle.github.io/vinti4net-php/tokenization/ .
 
 Operações: enrollment (`prepareTokenRequest`, código `5`), compra

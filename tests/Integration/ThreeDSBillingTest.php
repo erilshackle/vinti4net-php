@@ -9,7 +9,7 @@ use Erilshk\Sisp\Core\Payment;
 use Erilshk\Sisp\Exceptions\Vinti4Exception;
 use PHPUnit\Framework\TestCase;
 
-require_once __DIR__ . '/../../dist/standalone.php';
+require_once __DIR__ . '/../../dist/vinti4net-standalone.php';
 
 final class ThreeDSBillingTest extends TestCase
 {

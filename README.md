@@ -20,9 +20,9 @@ Requer PHP 8.1 ou superior.
 
 **Sem Composer:** descarregue o ficheiro abaixo e inclua-o com `require_once`:
 
-[Descarregar standalone.php](https://github.com/erilshackle/vinti4net-php/raw/refs/heads/main/dist/standalone.php)
+[Descarregar vinti4net-standalone.php](https://github.com/erilshackle/vinti4net-php/raw/refs/heads/main/dist/vinti4net-standalone.php)
 
-A versão standalone utiliza a classe global `Vinti4Net` e devolve respostas em arrays. Os exemplos deste README utilizam a API Composer.
+A versão standalone utiliza a classe global `Vinti4Net`, não requer Composer e devolve respostas em arrays. Inclui operações com token; os exemplos deste README utilizam a API Composer.
 
 ## Compra com 3D Secure
 

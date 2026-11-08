@@ -17,6 +17,8 @@ All notable changes to this project are documented in this file.
 - Documentation for the Composer tokenization API, local callback limits, endpoint behavior, expected callback operation and token persistence.
 
 - Convert all 249 assigned ISO 3166-1 alpha-2 country codes to three-digit numeric strings in billing and shipping addresses, preserving existing numeric and unmapped values.
+- Tokenization operations and callback validation in `dist/vinti4net-standalone.php`, with a compatibility include at the old `dist/standalone.php` path.
+- Remove the redundant low-level `SispVinti4Net` implementation and its dedicated tests.
 
 ## [2.4.0] - 2026-10-04
 

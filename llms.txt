@@ -14,7 +14,7 @@ Comece pelo [guia rápido](https://erilshackle.github.io/vinti4net-php/quickstar
 ## Operações
 
 - [Pagamentos](https://erilshackle.github.io/vinti4net-php/payments/): compra, serviço e recarga.
-- [Tokenização (v2.5)](https://erilshackle.github.io/vinti4net-php/tokenization/): adesão, pagamentos e cancelamento de token; planeada para a API Composer 2.5.0.
+- [Tokenização (v2.5)](https://erilshackle.github.io/vinti4net-php/tokenization/): adesão, pagamentos e cancelamento de token na API Composer e no arquivo standalone.
 - [Billing 3DS](https://erilshackle.github.io/vinti4net-php/billing/): dados de faturação, contactos, entrega e conta.
 - [Estornos](https://erilshackle.github.io/vinti4net-php/refunds/): devolução integral e recibo de estorno.
 - [Respostas](https://erilshackle.github.io/vinti4net-php/responses/): sucesso, erro, cancelamento e validação.

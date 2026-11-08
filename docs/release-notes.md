@@ -15,7 +15,12 @@ PHP 8.1+ e o namespace `Erilshk\Sisp`.
   descrição e limites do enrollment através de `Vinti4Response`.
 - Os métodos de serviço, recarga e compra tokenizados recebem `$token` como
   primeiro argumento. O construtor e os métodos já publicados mantêm as suas
-  assinaturas. A integração `dist/standalone.php` mantém as operações anteriores.
+  assinaturas. A integração `dist/vinti4net-standalone.php` disponibiliza as
+  mesmas operações tokenizadas com respostas em arrays e sem Composer.
+- A implementação redundante `SispVinti4Net` foi removida. O arquivo sem
+  Composer passou a chamar-se `dist/vinti4net-standalone.php`; mantém as
+  conversões de moedas e países e ganha suporte a tokenização. O caminho antigo
+  `dist/standalone.php` permanece como include de compatibilidade.
 - Os endpoints padrão são enrollment, pagamento e cancelamento em
   `https://mc.vinti4net.cv/BizMPIOnUsSisp`. O argumento `endpoint` já existente
   em `Vinti4Net` também substitui o URL completo usado na tokenização, sem
